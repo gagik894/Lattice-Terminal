@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "2.2.21"
+    kotlin("jvm")
     id("me.champeau.jmh") version "0.7.2"
 }
 

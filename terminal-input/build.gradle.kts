@@ -1,6 +1,6 @@
 plugins {
     id("java-library")
-    kotlin("jvm") version "2.2.21"
+    kotlin("jvm")
 }
 
 group = "com.gagik"
