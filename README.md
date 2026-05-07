@@ -27,6 +27,8 @@ without touching grid internals or transport-specific code.
   abstractions, and viewport/scrollbar model.
 - **terminal-pty** exposes PTY4J-backed local processes as transport connectors.
 - **terminal-testkit** provides connector fakes for cross-module tests.
+- **terminal-benchmarks** contains JMH benchmarks for performance-sensitive
+  terminal paths.
 - **TerminalBuffer** is the facade that coordinates the state, mutation, cursor,
   mode, and reader/inspector surfaces.
 - **ScreenBuffer** owns one complete screen arena: `HistoryRing`, `ClusterStore`,

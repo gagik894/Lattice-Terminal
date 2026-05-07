@@ -33,6 +33,8 @@ The project is split into strict layers:
   viewport/scrollbar model.
 - `terminal-testkit`: reusable public test fakes for connector/session tests.
 - `terminal-pty`: local PTY process lifecycle exposed as transport connectors.
+- `terminal-benchmarks`: JMH benchmarks for performance-sensitive terminal
+  paths.
 
 Keep these boundaries intact:
 
@@ -144,8 +146,10 @@ A change is not done until:
 - Core tests: `./gradlew :terminal-core:test`
 - Integration tests: `./gradlew :terminal-integration:test`
 - Session tests: `./gradlew :terminal-session:test`
+- Render cache tests: `./gradlew :terminal-render-cache:test`
 - Swing UI tests: `./gradlew :terminal-ui-swing:test`
 - PTY tests: `./gradlew :terminal-pty:test`
+- Benchmarks: `./gradlew :terminal-benchmarks:jmh`
 
 In sandboxed sessions, Gradle may need approval because wrapper/cache writes can
 leave the workspace.
@@ -155,4 +159,4 @@ leave the workspace.
 - Feature backlog: `docs/terminal-feature-gap-map.md`
 - Core contract: `terminal-core/docs/terminal-core-contract.md`
 - Project skills index: `docs/agent-skills.md`
-- Repo-local Codex skills: `.codex/skills/*/SKILL.md`
+- Repo-local Codex skills: `.agents/skills/*/SKILL.md`

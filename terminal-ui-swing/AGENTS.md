@@ -4,14 +4,14 @@
 render frames and user input into a desktop component without knowing which
 transport produced the byte stream.
 
-This module is the shared UI foundation for both standalone desktop usage and
-IntelliJ integration.
+This module is the shared UI foundation for standalone desktop usage, IDE
+integration, and other Swing hosts.
 
 ## Responsibilities
 
 `terminal-ui-swing` owns:
 
-- the public Swing terminal component.
+- public Swing terminal component APIs.
 - internal Swing component layering.
 - terminal content painting.
 - cursor presentation.
@@ -23,16 +23,9 @@ IntelliJ integration.
 - viewport and scrollbar model.
 - Swing-side render-frame consumption.
 
-The public component is `TerminalPanel`.
-
-Internal structure:
-
-    TerminalPanel : JLayeredPane
-      ├── TerminalSurface : JComponent
-      └── CursorOverlay   : JComponent
-
-`TerminalPanel` owns its internal layers. Host modules must not manually assemble
-`TerminalSurface` and `CursorOverlay`.
+When a public terminal component is introduced, it should own its internal
+layers. Host modules should configure the public component through narrow
+interfaces rather than assembling internal painting/cursor pieces themselves.
 
 ## Allowed Dependencies
 
@@ -74,7 +67,7 @@ boundaries.
 
 ## Rendering Contract
 
-Rendering must be terminal-native and run-based, not cell-based.
+Rendering should be terminal-native and run-based, not cell-object based.
 
 The renderer should operate in terms of:
 
@@ -82,7 +75,7 @@ The renderer should operate in terms of:
 - text runs.
 - decoration runs.
 - selection ranges.
-- cursor overlay.
+- cursor presentation.
 - complex cluster fallback.
 
 Avoid `drawString` once per cell.
@@ -173,10 +166,10 @@ Host modules provide environment-specific adapters.
 
 Examples:
 
-- IntelliJ module provides IDE settings, IDE clipboard, IDE font fallback,
-  tool-window lifecycle, and IntelliJ actions.
-- Standalone module provides JFrame assembly, system clipboard, system font
-  fallback, local config, and PTY startup.
+- IDE integration can provide settings, clipboard, font fallback, tool-window
+  lifecycle, actions, and disposal hooks.
+- Standalone integration can provide window assembly, system clipboard, system
+  font fallback, local config, PTY startup, and app lifecycle.
 
 Those host concepts must enter `terminal-ui-swing` only through small
 interfaces.
@@ -193,8 +186,7 @@ Tests should cover:
 - cursor visibility and repaint bounds.
 - color resolution.
 - resize-to-columns/rows calculation.
-- dirty-row repaint behavior.
 - render cache consumption.
-- and much more
+- render cache resize and dirty-row behavior.
 
 Avoid tests that require a real PTY or IntelliJ runtime.
