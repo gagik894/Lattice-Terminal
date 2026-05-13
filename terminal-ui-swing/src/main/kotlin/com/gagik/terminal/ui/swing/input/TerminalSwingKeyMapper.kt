@@ -110,7 +110,7 @@ internal object TerminalSwingKeyMapper {
         if (keyCode in KeyEvent.VK_A..KeyEvent.VK_Z) {
             return 'a'.code + keyCode - KeyEvent.VK_A
         }
-        if (keyCode in KeyEvent.VK_0..KeyEvent.VK_9) {
+        if (keyCode in KeyEvent.VK_0..KeyEvent.VK_9 && keyCode != KeyEvent.VK_6) {
             return '0'.code + keyCode - KeyEvent.VK_0
         }
 
