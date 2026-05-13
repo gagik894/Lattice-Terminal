@@ -240,9 +240,10 @@ internal class TerminalTextPainter(
             return
         }
 
-        val text = String(textRun.chars, 0, textRun.length)
         val glyphVector = asciiGlyphVectors.glyphVector(
-            text = text,
+            chars = textRun.chars,
+            offset = 0,
+            length = textRun.length,
             font = g.font,
             style = fontStyle,
             cellWidth = metrics.cellWidth,

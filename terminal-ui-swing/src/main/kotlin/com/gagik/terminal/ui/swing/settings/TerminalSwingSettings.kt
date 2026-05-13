@@ -19,13 +19,15 @@ import java.awt.RenderingHints
  * @property fractionalMetrics fractional font metrics hint used during painting.
  * @property fallbackFonts ordered fonts used by the complex-text renderer when
  * [font] cannot display a non-ASCII cluster.
- * @property useSystemFallbackFonts whether the complex-text renderer may scan
- * installed system fonts after [fallbackFonts] fail.
+ * @property useSystemFallbackFonts whether the complex-text renderer may use
+ * installed system fonts after [fallbackFonts] fail. System font discovery is
+ * asynchronous and disabled by default to keep Swing startup and painting
+ * responsive.
  */
 data class TerminalSwingSettings(
     val font: Font = Font(Font.MONOSPACED, Font.PLAIN, 14),
     val fallbackFonts: List<Font> = defaultFallbackFonts(),
-    val useSystemFallbackFonts: Boolean = true,
+    val useSystemFallbackFonts: Boolean = false,
     val palette: TerminalColorPalette = TerminalColorPalette(),
     val columns: Int = 80,
     val rows: Int = 24,

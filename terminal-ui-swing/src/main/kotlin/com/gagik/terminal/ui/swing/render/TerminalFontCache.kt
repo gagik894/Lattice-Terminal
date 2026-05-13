@@ -1,7 +1,6 @@
 package com.gagik.terminal.ui.swing.render
 
 import java.awt.Font
-import java.awt.GraphicsEnvironment
 
 /**
  * Caches terminal font style variants for one settings snapshot.
@@ -9,11 +8,19 @@ import java.awt.GraphicsEnvironment
 internal class TerminalFontCache {
     private var baseFont: Font? = null
     private var fallbackBaseFonts: List<Font> = emptyList()
+    private var systemFallbackBaseFonts: List<Font> = emptyList()
     private var useSystemFallbackFonts: Boolean = false
     private val styleFonts = arrayOfNulls<Font>(STYLE_COUNT)
     private var fallbackStyleFonts: Array<Array<Font?>> = emptyArray()
     private var systemStyleFonts: Array<Array<Font?>> = emptyArray()
     private val resolvedTextFonts = Array(STYLE_COUNT) { HashMap<String, Font>() }
+    private var fontGeneration: Int = 0
+
+    /**
+     * Increments whenever font resolution can produce different fonts.
+     */
+    val generation: Int
+        get() = fontGeneration
 
     /**
      * Rebuilds cached style variants when [font] changes.
@@ -36,14 +43,16 @@ internal class TerminalFontCache {
         styleFonts.fill(null)
         styleFonts[font.style and STYLE_MASK] = font
         fallbackStyleFonts = Array(fallbackFonts.size) { arrayOfNulls(STYLE_COUNT) }
-        systemStyleFonts = if (useSystemFallbackFonts) {
-            Array(systemFallbackFonts.size) { arrayOfNulls(STYLE_COUNT) }
+        systemFallbackBaseFonts = if (useSystemFallbackFonts) {
+            TerminalSystemFallbackFonts.fontsOrStartLoading()
         } else {
-            emptyArray()
+            emptyList()
         }
+        systemStyleFonts = Array(systemFallbackBaseFonts.size) { arrayOfNulls(STYLE_COUNT) }
         for (cache in resolvedTextFonts) {
             cache.clear()
         }
+        fontGeneration++
         return true
     }
 
@@ -89,8 +98,9 @@ internal class TerminalFontCache {
         }
 
         if (useSystemFallbackFonts) {
+            refreshSystemFallbackFonts()
             index = 0
-            while (index < systemFallbackFonts.size) {
+            while (index < systemFallbackBaseFonts.size) {
                 val fallback = systemFallbackFont(index, normalizedStyle)
                 if (fallback.canDisplayUpTo(text) < 0) {
                     styleResolvedTextFonts[text] = fallback
@@ -101,6 +111,26 @@ internal class TerminalFontCache {
         }
 
         return primary
+    }
+
+    /**
+     * Refreshes asynchronously loaded system fallback fonts, if enabled.
+     *
+     * @return `true` when font resolution changed.
+     */
+    fun refreshSystemFallbackFonts(): Boolean {
+        if (!useSystemFallbackFonts) return false
+
+        val loadedFonts = TerminalSystemFallbackFonts.fontsOrStartLoading()
+        if (loadedFonts == systemFallbackBaseFonts) return false
+
+        systemFallbackBaseFonts = loadedFonts
+        systemStyleFonts = Array(loadedFonts.size) { arrayOfNulls(STYLE_COUNT) }
+        for (cache in resolvedTextFonts) {
+            cache.clear()
+        }
+        fontGeneration++
+        return true
     }
 
     private fun fallbackFont(index: Int, style: Int): Font {
@@ -125,7 +155,7 @@ internal class TerminalFontCache {
         val base = requireNotNull(baseFont) {
             "TerminalFontCache.update must be called before systemFallbackFont"
         }
-        val fallback = systemFallbackFonts[index]
+        val fallback = systemFallbackBaseFonts[index]
             .deriveFont(normalizedStyle, base.size2D)
         systemStyleFonts[index][normalizedStyle] = fallback
         return fallback
@@ -134,12 +164,5 @@ internal class TerminalFontCache {
     private companion object {
         private const val STYLE_COUNT = 4
         private const val STYLE_MASK = Font.BOLD or Font.ITALIC
-
-        private val systemFallbackFonts: List<Font> by lazy {
-            GraphicsEnvironment
-                .getLocalGraphicsEnvironment()
-                .allFonts
-                .distinctBy { it.family }
-        }
     }
 }

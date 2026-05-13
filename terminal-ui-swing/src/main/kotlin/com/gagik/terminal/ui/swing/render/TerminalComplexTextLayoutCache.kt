@@ -28,6 +28,7 @@ internal class TerminalComplexTextLayoutCache(
         StringTextLayoutLru(clusterCapacityPerStyle)
     }
     private var fontRenderContext: FontRenderContext? = null
+    private var fontGeneration: Int = -1
 
     /**
      * Clears cached layouts.
@@ -49,7 +50,8 @@ internal class TerminalComplexTextLayoutCache(
         fontRenderContext: FontRenderContext,
         fontCache: TerminalFontCache,
     ): TextLayout {
-        prepare(fontRenderContext)
+        fontCache.refreshSystemFallbackFonts()
+        prepare(fontRenderContext, fontCache.generation)
         val normalizedStyle = style and STYLE_MASK
         val key = codePointKey(codePoint, normalizedStyle)
         val cached = codePointLayouts[key]
@@ -70,7 +72,8 @@ internal class TerminalComplexTextLayoutCache(
         fontRenderContext: FontRenderContext,
         fontCache: TerminalFontCache,
     ): TextLayout {
-        prepare(fontRenderContext)
+        fontCache.refreshSystemFallbackFonts()
+        prepare(fontRenderContext, fontCache.generation)
         val normalizedStyle = style and STYLE_MASK
         val styleLayouts = clusterLayouts[normalizedStyle]
         val cached = styleLayouts[text]
@@ -81,10 +84,11 @@ internal class TerminalComplexTextLayoutCache(
         return layout
     }
 
-    private fun prepare(nextFontRenderContext: FontRenderContext) {
-        if (nextFontRenderContext == fontRenderContext) return
+    private fun prepare(nextFontRenderContext: FontRenderContext, nextFontGeneration: Int) {
+        if (nextFontRenderContext == fontRenderContext && nextFontGeneration == fontGeneration) return
 
         fontRenderContext = nextFontRenderContext
+        fontGeneration = nextFontGeneration
         codePointLayouts.clear()
         for (cache in clusterLayouts) {
             cache.clear()

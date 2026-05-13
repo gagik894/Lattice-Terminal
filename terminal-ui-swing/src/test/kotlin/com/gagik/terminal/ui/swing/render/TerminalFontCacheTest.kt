@@ -30,6 +30,23 @@ class TerminalFontCacheTest {
     }
 
     @Test
+    fun `generation changes only when font settings change`() {
+        val base = Font(Font.MONOSPACED, Font.PLAIN, 14)
+        val fallback = Font("Dialog", Font.PLAIN, 14)
+        val cache = TerminalFontCache()
+
+        val initialGeneration = cache.generation
+        assertTrue(cache.update(base, emptyList(), useSystemFallbackFonts = false))
+        val firstGeneration = cache.generation
+        assertFalse(cache.update(base, emptyList(), useSystemFallbackFonts = false))
+        assertEquals(firstGeneration, cache.generation)
+        assertTrue(cache.update(base, listOf(fallback), useSystemFallbackFonts = false))
+
+        assertEquals(initialGeneration + 1, firstGeneration)
+        assertEquals(firstGeneration + 1, cache.generation)
+    }
+
+    @Test
     fun `fontForText uses configured fallback when primary cannot display text`() {
         val primary = Font("Courier New", Font.PLAIN, 17)
         val fallback = Font("Dialog", Font.PLAIN, 11)
