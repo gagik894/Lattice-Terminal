@@ -3,19 +3,29 @@ package com.gagik.terminal.ui.swing.render
 import java.awt.Color
 
 /**
- * Primitive-keyed cache for packed ARGB AWT colors.
+ * Bounded primitive-keyed LRU cache for packed ARGB AWT colors.
  *
  * Rendering resolves colors as packed integers in hot paths. This cache avoids
- * per-cell boxing and only creates [Color] instances the first time a distinct
- * ARGB value is painted.
+ * per-cell boxing for recently used colors while bounding retained [Color]
+ * instances for truecolor streams such as gradients, images, and animations.
  */
 internal class AwtColorCache(
-    initialCapacity: Int = DEFAULT_CAPACITY,
+    private val capacity: Int = DEFAULT_CAPACITY,
 ) {
-    private var keys = IntArray(normalizeCapacity(initialCapacity))
-    private var values = arrayOfNulls<Color>(keys.size)
-    private var used = BooleanArray(keys.size)
+    init {
+        require(capacity > 0) { "capacity must be > 0, was $capacity" }
+    }
+
+    private val entryKeys = IntArray(capacity)
+    private val entryColors = arrayOfNulls<Color>(capacity)
+    private val previous = IntArray(capacity) { EMPTY }
+    private val next = IntArray(capacity) { EMPTY }
+    private val hashKeys = IntArray(hashCapacity(capacity))
+    private val hashEntries = IntArray(hashKeys.size) { EMPTY }
+    private val hashMask = hashKeys.size - 1
     private var size = 0
+    private var head = EMPTY
+    private var tail = EMPTY
 
     /**
      * Returns a cached AWT color for [argb].
@@ -24,74 +34,127 @@ internal class AwtColorCache(
      * @return reusable AWT color instance.
      */
     fun color(argb: Int): Color {
-        var index = index(argb, keys.size)
-        while (used[index]) {
-            if (keys[index] == argb) {
-                return values[index]!!
-            }
-            index = (index + 1) and (keys.size - 1)
-        }
-
-        if ((size + 1) * 2 >= keys.size) {
-            grow()
-            index = index(argb, keys.size)
-            while (used[index]) {
-                index = (index + 1) and (keys.size - 1)
-            }
+        val existing = findEntry(argb)
+        if (existing != EMPTY) {
+            moveToHead(existing)
+            return entryColors[existing]!!
         }
 
         val color = Color(argb, true)
-        used[index] = true
-        keys[index] = argb
-        values[index] = color
-        size++
+        put(argb, color)
         return color
     }
 
-    private fun grow() {
-        val oldKeys = keys
-        val oldValues = values
-        val oldUsed = used
+    private fun put(argb: Int, color: Color) {
+        val entry = if (size < entryKeys.size) {
+            size++
+        } else {
+            val evicted = tail
+            removeHashEntry(entryKeys[evicted], evicted)
+            unlink(evicted)
+            evicted
+        }
 
-        keys = IntArray(oldKeys.size * 2)
-        values = arrayOfNulls(keys.size)
-        used = BooleanArray(keys.size)
-        size = 0
+        entryKeys[entry] = argb
+        entryColors[entry] = color
+        linkHead(entry)
+        insertHashEntry(argb, entry)
+    }
 
-        var oldIndex = 0
-        while (oldIndex < oldKeys.size) {
-            if (oldUsed[oldIndex]) {
-                insertExisting(oldKeys[oldIndex], oldValues[oldIndex]!!)
-            }
-            oldIndex++
+    private fun findEntry(argb: Int): Int {
+        var slot = hashSlot(argb)
+        while (true) {
+            val entry = hashEntries[slot]
+            if (entry == EMPTY) return EMPTY
+            if (hashKeys[slot] == argb) return entry
+            slot = (slot + 1) and hashMask
         }
     }
 
-    private fun insertExisting(argb: Int, color: Color) {
-        var index = index(argb, keys.size)
-        while (used[index]) {
-            index = (index + 1) and (keys.size - 1)
+    private fun insertHashEntry(argb: Int, entry: Int) {
+        var slot = hashSlot(argb)
+        while (hashEntries[slot] != EMPTY) {
+            slot = (slot + 1) and hashMask
         }
-        used[index] = true
-        keys[index] = argb
-        values[index] = color
-        size++
+        hashKeys[slot] = argb
+        hashEntries[slot] = entry
+    }
+
+    private fun removeHashEntry(argb: Int, entry: Int) {
+        var slot = hashSlot(argb)
+        while (true) {
+            if (hashEntries[slot] == entry && hashKeys[slot] == argb) {
+                hashEntries[slot] = EMPTY
+                reinsertHashCluster((slot + 1) and hashMask)
+                return
+            }
+            slot = (slot + 1) and hashMask
+        }
+    }
+
+    private fun reinsertHashCluster(startSlot: Int) {
+        var slot = startSlot
+        while (hashEntries[slot] != EMPTY) {
+            val argb = hashKeys[slot]
+            val entry = hashEntries[slot]
+            hashEntries[slot] = EMPTY
+            insertHashEntry(argb, entry)
+            slot = (slot + 1) and hashMask
+        }
+    }
+
+    private fun moveToHead(entry: Int) {
+        if (entry == head) return
+        unlink(entry)
+        linkHead(entry)
+    }
+
+    private fun unlink(entry: Int) {
+        val previousEntry = previous[entry]
+        val nextEntry = next[entry]
+        if (previousEntry != EMPTY) {
+            next[previousEntry] = nextEntry
+        } else {
+            head = nextEntry
+        }
+        if (nextEntry != EMPTY) {
+            previous[nextEntry] = previousEntry
+        } else {
+            tail = previousEntry
+        }
+        previous[entry] = EMPTY
+        next[entry] = EMPTY
+    }
+
+    private fun linkHead(entry: Int) {
+        previous[entry] = EMPTY
+        next[entry] = head
+        if (head != EMPTY) {
+            previous[head] = entry
+        } else {
+            tail = entry
+        }
+        head = entry
+    }
+
+    private fun hashSlot(argb: Int): Int {
+        var hash = argb
+        hash = hash xor (hash ushr 16)
+        hash *= -2048144789
+        hash = hash xor (hash ushr 13)
+        return hash and hashMask
     }
 
     private companion object {
-        private const val DEFAULT_CAPACITY = 64
+        private const val DEFAULT_CAPACITY = 4096
+        private const val EMPTY = -1
 
-        private fun normalizeCapacity(capacity: Int): Int {
-            var normalized = 1
-            while (normalized < capacity) {
-                normalized = normalized shl 1
+        private fun hashCapacity(entryCapacity: Int): Int {
+            var capacity = 1
+            while (capacity < entryCapacity * 2) {
+                capacity = capacity shl 1
             }
-            return maxOf(DEFAULT_CAPACITY, normalized)
-        }
-
-        private fun index(argb: Int, capacity: Int): Int {
-            val mixed = argb xor (argb ushr 16)
-            return mixed and (capacity - 1)
+            return capacity
         }
     }
 }
