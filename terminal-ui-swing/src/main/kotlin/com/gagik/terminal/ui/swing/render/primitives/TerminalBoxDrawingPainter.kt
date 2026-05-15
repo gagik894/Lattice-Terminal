@@ -19,6 +19,8 @@ import java.awt.geom.Path2D
  * Paints Unicode box-drawing glyphs from packed glyph metadata.
  */
 internal class TerminalBoxDrawingPainter {
+    private val roundedCornerPath = Path2D.Double()
+
     fun paint(g: Graphics2D, codePoint: Int, x: Int, y: Int, width: Int, height: Int) {
         val roundedFallback = TerminalBoxDrawingGlyphs.roundedFallbackEdges(codePoint)
         if (roundedFallback != NONE) {
@@ -171,7 +173,8 @@ internal class TerminalBoxDrawingPainter {
         val rx = width / 2.0
         val ry = height / 2.0
 
-        val path = Path2D.Double()
+        val path = roundedCornerPath
+        path.reset()
 
         // Map endpoints explicitly to the boundary edges connecting to the adjacent cells.
         when (codePoint) {
@@ -213,20 +216,14 @@ internal class TerminalBoxDrawingPainter {
         val oldStroke = g.stroke
         val oldHint = g.getRenderingHint(RenderingHints.KEY_ANTIALIASING)
 
-        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-
-        // CAP_BUTT guarantees the stroke terminates flush with the cell boundary,
-        // creating a seamless weld with the adjacent fillRect without bleeding over.
-        g.stroke = BasicStroke(
-            thickness.toFloat(),
-            BasicStroke.CAP_BUTT,
-            BasicStroke.JOIN_MITER
-        )
-
-        g.draw(path)
-
-        g.stroke = oldStroke
-        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldHint)
+        try {
+            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+            g.stroke = LIGHT_ROUNDED_STROKE
+            g.draw(path)
+        } finally {
+            g.stroke = oldStroke
+            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, oldHint)
+        }
     }
 
     private fun paintDiagonal(g: Graphics2D, x: Int, y: Int, width: Int, height: Int, mask: Int) {
@@ -268,7 +265,11 @@ internal class TerminalBoxDrawingPainter {
 
     private companion object {
         private const val LIGHT_THICKNESS = 1
-        // Magic constant for a perfect circular arc approximation using a cubic Bézier curve
         private const val KAPPA = 0.552284749831
+        private val LIGHT_ROUNDED_STROKE = BasicStroke(
+            LIGHT_THICKNESS.toFloat(),
+            BasicStroke.CAP_BUTT,
+            BasicStroke.JOIN_MITER,
+        )
     }
 }

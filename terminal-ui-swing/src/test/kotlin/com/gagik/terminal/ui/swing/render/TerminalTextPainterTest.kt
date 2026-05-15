@@ -268,7 +268,7 @@ class TerminalTextPainterTest {
             val centerX = fixture.metrics.cellWidth / 2
             val centerY = fixture.metrics.cellHeight / 2
             assertTrue(fixture.image.getRGB(centerX, centerY) != TEST_RED)
-            assertTrue(fixture.image.containsColorInRange(TEST_RED, centerX, fixture.metrics.cellWidth))
+            assertTrue(fixture.image.containsNonBackgroundInRange(centerX, fixture.metrics.cellWidth, 0, fixture.metrics.cellHeight))
         }
 
         @Test
@@ -368,6 +368,40 @@ class TerminalTextPainterTest {
         }
 
         @Test
+        fun `shade blocks preserve foreground color and relative density`() {
+            val fixture = fixture()
+            val cache = renderCache(TestRenderFrame.text("\u2591\u2592\u2593"))
+
+            fixture.paintRow(cache)
+
+            val light = fixture.image.countColorInRange(
+                TEST_RED,
+                xStart = 0,
+                xEnd = fixture.metrics.cellWidth,
+                yStart = 0,
+                yEnd = fixture.metrics.cellHeight,
+            )
+            val medium = fixture.image.countColorInRange(
+                TEST_RED,
+                xStart = fixture.metrics.cellWidth,
+                xEnd = fixture.metrics.cellWidth * 2,
+                yStart = 0,
+                yEnd = fixture.metrics.cellHeight,
+            )
+            val dark = fixture.image.countColorInRange(
+                TEST_RED,
+                xStart = fixture.metrics.cellWidth * 2,
+                xEnd = fixture.metrics.cellWidth * 3,
+                yStart = 0,
+                yEnd = fixture.metrics.cellHeight,
+            )
+
+            assertTrue(light > 0)
+            assertTrue(light < medium)
+            assertTrue(medium < dark)
+        }
+
+        @Test
         fun `cursor foreground repaints box drawing primitive`() {
             val fixture = fixture(foreground = TEST_WHITE)
             val cache = renderCache(TestRenderFrame.text("\u2500"))
@@ -404,7 +438,7 @@ class TerminalTextPainterTest {
             val yStart = if (quadrant.lower) midY else 0
             val yEnd = if (quadrant.lower) fixture.metrics.cellHeight else midY + 1
 
-            val painted = fixture.image.countColorInRange(TEST_RED, xStart, xEnd, yStart, yEnd)
+            val painted = fixture.image.countNonBackgroundInRange(xStart, xEnd, yStart, yEnd)
             assertTrue(painted > 0, "rounded corner at column ${quadrant.column} did not paint the expected quadrant")
         }
     }
@@ -510,5 +544,33 @@ class TerminalTextPainterTest {
         )
         g.dispose()
         return image
+    }
+
+    private fun BufferedImage.containsNonBackgroundInRange(
+        xStart: Int,
+        xEnd: Int,
+        yStart: Int,
+        yEnd: Int,
+    ): Boolean {
+        return countNonBackgroundInRange(xStart, xEnd, yStart, yEnd) > 0
+    }
+
+    private fun BufferedImage.countNonBackgroundInRange(
+        xStart: Int,
+        xEnd: Int,
+        yStart: Int,
+        yEnd: Int,
+    ): Int {
+        var count = 0
+        var y = yStart
+        while (y < yEnd) {
+            var x = xStart
+            while (x < xEnd) {
+                if (getRGB(x, y) != TEST_BLACK) count++
+                x++
+            }
+            y++
+        }
+        return count
     }
 }

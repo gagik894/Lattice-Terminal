@@ -5,11 +5,14 @@ import com.gagik.terminal.ui.swing.render.primitives.TerminalBlockElementGlyphs.
 import com.gagik.terminal.ui.swing.render.primitives.TerminalBlockElementGlyphs.UPPER_LEFT
 import com.gagik.terminal.ui.swing.render.primitives.TerminalBlockElementGlyphs.UPPER_RIGHT
 import java.awt.Graphics2D
+import java.awt.Paint
 
 /**
  * Paints Unicode block element glyphs.
  */
 internal class TerminalBlockElementPainter {
+    private val shadeTextures = TerminalShadeTextureCache()
+
     fun paint(g: Graphics2D, codePoint: Int, x: Int, y: Int, width: Int, height: Int) {
         when (codePoint) {
             0x2580 -> paintUpperBlock(g, x, y, width, height, 4)
@@ -19,12 +22,14 @@ internal class TerminalBlockElementPainter {
             0x2590 -> paintRightBlock(g, x, y, width, height, 4)
             0x2594 -> paintUpperBlock(g, x, y, width, height, 1)
             0x2595 -> paintRightBlock(g, x, y, width, height, 1)
-            0x2591 -> paintShade(g, x, y, width, height, step = 4)
-            0x2592 -> paintShade(g, x, y, width, height, step = 2)
-            0x2593 -> paintDarkShade(g, x, y, width, height)
             else -> {
-                val mask = TerminalBlockElementGlyphs.quadrantMask(codePoint)
-                if (mask != 0) paintQuadrants(g, x, y, width, height, mask)
+                val shadeKind = TerminalBlockElementGlyphs.shadeKind(codePoint)
+                if (shadeKind != 0) {
+                    paintShade(g, x, y, width, height, shadeKind)
+                } else {
+                    val mask = TerminalBlockElementGlyphs.quadrantMask(codePoint)
+                    if (mask != 0) paintQuadrants(g, x, y, width, height, mask)
+                }
             }
         }
     }
@@ -58,29 +63,13 @@ internal class TerminalBlockElementPainter {
         }
     }
 
-    private fun paintShade(g: Graphics2D, x: Int, y: Int, width: Int, height: Int, step: Int) {
-        var row = 0
-        while (row < height) {
-            var column = (row and 1) * (step / 2)
-            while (column < width) {
-                g.fillRect(x + column, y + row, 1, 1)
-                column += step
-            }
-            row++
-        }
-    }
-
-    private fun paintDarkShade(g: Graphics2D, x: Int, y: Int, width: Int, height: Int) {
-        var row = 0
-        while (row < height) {
-            var column = 0
-            while (column < width) {
-                if ((row + column) and 0x3 != 0) {
-                    g.fillRect(x + column, y + row, 1, 1)
-                }
-                column++
-            }
-            row++
+    private fun paintShade(g: Graphics2D, x: Int, y: Int, width: Int, height: Int, kind: Int) {
+        val previousPaint: Paint = g.paint
+        try {
+            g.paint = shadeTextures.texture(kind, g.color.rgb)
+            g.fillRect(x, y, width, height)
+        } finally {
+            g.paint = previousPaint
         }
     }
 }
