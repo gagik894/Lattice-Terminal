@@ -15,12 +15,26 @@ import kotlin.math.floor
  */
 internal class TerminalSwingRepaintPlanner {
     private var lastCursor: TerminalRenderCursor? = null
+    private var lastColumns: Int = 0
+    private var lastRows: Int = 0
+    private var lastStructureGeneration: Long = UNINITIALIZED_GENERATION
+    private var lastScrollbackOffset: Int = UNINITIALIZED_OFFSET
+    private var lastActiveBufferOrdinal: Int = UNINITIALIZED_ACTIVE_BUFFER
+    private var lastLineGenerations: LongArray = LongArray(0)
+    private var lastLineWrapped: BooleanArray = BooleanArray(0)
 
     /**
      * Clears remembered cursor state when the component unbinds or resets.
      */
     fun reset() {
         lastCursor = null
+        lastColumns = 0
+        lastRows = 0
+        lastStructureGeneration = UNINITIALIZED_GENERATION
+        lastScrollbackOffset = UNINITIALIZED_OFFSET
+        lastActiveBufferOrdinal = UNINITIALIZED_ACTIVE_BUFFER
+        lastLineGenerations = LongArray(0)
+        lastLineWrapped = BooleanArray(0)
     }
 
     /**
@@ -36,14 +50,15 @@ internal class TerminalSwingRepaintPlanner {
         contentYOffset: Double,
         repaintSink: TerminalRepaintSink,
     ) {
-        if (cache.resizedOnLastUpdate) {
+        if (requiresFullRepaint(cache)) {
+            snapshotCacheState(cache)
             lastCursor = cache.cursor
             repaintSink.requestFullRepaint()
             return
         }
 
         val visibleRows = visibleRows(cache, metrics, componentHeight)
-        repaintDirtyRows(
+        repaintChangedRows(
             cache = cache,
             metrics = metrics,
             componentWidth = componentWidth,
@@ -53,7 +68,7 @@ internal class TerminalSwingRepaintPlanner {
             repaintSink = repaintSink,
         )
 
-        if (cache.cursorChangedOnLastUpdate) {
+        if (lastCursor != cache.cursor) {
             repaintCursorIfNeeded(
                 cursor = lastCursor,
                 cache = cache,
@@ -62,7 +77,7 @@ internal class TerminalSwingRepaintPlanner {
                 componentHeight = componentHeight,
                 visibleRows = visibleRows,
                 contentYOffset = contentYOffset,
-                skipDirtyRows = true,
+                skipChangedRows = true,
                 repaintSink = repaintSink,
             )
             repaintCursorIfNeeded(
@@ -73,11 +88,12 @@ internal class TerminalSwingRepaintPlanner {
                 componentHeight = componentHeight,
                 visibleRows = visibleRows,
                 contentYOffset = contentYOffset,
-                skipDirtyRows = true,
+                skipChangedRows = true,
                 repaintSink = repaintSink,
             )
         }
 
+        snapshotCacheState(cache)
         lastCursor = cache.cursor
     }
 
@@ -103,12 +119,12 @@ internal class TerminalSwingRepaintPlanner {
             componentHeight = componentHeight,
             visibleRows = visibleRows(cache, metrics, componentHeight),
             contentYOffset = contentYOffset,
-            skipDirtyRows = false,
+            skipChangedRows = false,
             repaintSink = repaintSink,
         )
     }
 
-    private fun repaintDirtyRows(
+    private fun repaintChangedRows(
         cache: TerminalRenderCache,
         metrics: TerminalSwingMetrics,
         componentWidth: Int,
@@ -119,14 +135,14 @@ internal class TerminalSwingRepaintPlanner {
     ) {
         var row = 0
         while (row < visibleRows) {
-            if (!cache.dirtyRows[row]) {
+            if (!rowChanged(cache, row)) {
                 row++
                 continue
             }
 
             val startRow = row
             row++
-            while (row < visibleRows && cache.dirtyRows[row]) {
+            while (row < visibleRows && rowChanged(cache, row)) {
                 row++
             }
 
@@ -150,12 +166,12 @@ internal class TerminalSwingRepaintPlanner {
         componentHeight: Int,
         visibleRows: Int,
         contentYOffset: Double,
-        skipDirtyRows: Boolean,
+        skipChangedRows: Boolean,
         repaintSink: TerminalRepaintSink,
     ): Boolean {
         if (cursor == null || !cursor.visible) return false
         if (cursor.column !in 0 until cache.columns || cursor.row !in 0 until visibleRows) return false
-        if (skipDirtyRows && cache.dirtyRows[cursor.row]) return false
+        if (skipChangedRows && rowChanged(cache, cursor.row)) return false
 
         val x = cursor.column * metrics.cellWidth
         if (x >= componentWidth) return false
@@ -232,5 +248,47 @@ internal class TerminalSwingRepaintPlanner {
         componentHeight: Int,
     ): Int {
         return minOf(cache.rows, componentHeight / metrics.cellHeight + 1)
+    }
+
+    private fun rowChanged(cache: TerminalRenderCache, row: Int): Boolean {
+        return lastLineGenerations[row] != cache.lineGenerations[row] ||
+            lastLineWrapped[row] != cache.lineWrapped[row]
+    }
+
+    private fun requiresFullRepaint(cache: TerminalRenderCache): Boolean {
+        return cache.resizedOnLastUpdate ||
+            lastColumns != cache.columns ||
+            lastRows != cache.rows ||
+            lastLineGenerations.size != cache.rows ||
+            lastLineWrapped.size != cache.rows ||
+            lastStructureGeneration != cache.structureGeneration ||
+            lastScrollbackOffset != cache.scrollbackOffset ||
+            lastActiveBufferOrdinal != cache.activeBuffer.ordinal
+    }
+
+    private fun snapshotCacheState(cache: TerminalRenderCache) {
+        if (lastLineGenerations.size != cache.rows) {
+            lastLineGenerations = LongArray(cache.rows)
+            lastLineWrapped = BooleanArray(cache.rows)
+        }
+
+        var row = 0
+        while (row < cache.rows) {
+            lastLineGenerations[row] = cache.lineGenerations[row]
+            lastLineWrapped[row] = cache.lineWrapped[row]
+            row++
+        }
+
+        lastColumns = cache.columns
+        lastRows = cache.rows
+        lastStructureGeneration = cache.structureGeneration
+        lastScrollbackOffset = cache.scrollbackOffset
+        lastActiveBufferOrdinal = cache.activeBuffer.ordinal
+    }
+
+    private companion object {
+        private const val UNINITIALIZED_GENERATION = -1L
+        private const val UNINITIALIZED_OFFSET = Int.MIN_VALUE
+        private const val UNINITIALIZED_ACTIVE_BUFFER = -1
     }
 }

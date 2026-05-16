@@ -25,7 +25,6 @@ class TerminalRenderCacheTest {
         assertAll(
             { assertEquals("abc", cache.rowText(0)) },
             { assertEquals("def", cache.rowText(1)) },
-            { assertTrue(cache.dirtyRows.contentEquals(booleanArrayOf(true, true))) },
             { assertEquals(frame.frameGeneration, cache.frameGeneration) },
             { assertEquals(frame.structureGeneration, cache.structureGeneration) },
             { assertEquals(frame.cursor, cache.cursor) },
@@ -45,7 +44,6 @@ class TerminalRenderCacheTest {
         cache.updateFrom(frame.reader)
 
         assertAll(
-            { assertTrue(cache.dirtyRows.contentEquals(booleanArrayOf(false, false))) },
             { assertEquals(1, frame.copyCounts[0]) },
             { assertEquals(1, frame.copyCounts[1]) },
         )
@@ -65,7 +63,6 @@ class TerminalRenderCacheTest {
         assertAll(
             { assertEquals("abc", cache.rowText(0)) },
             { assertEquals("xyz", cache.rowText(1)) },
-            { assertTrue(cache.dirtyRows.contentEquals(booleanArrayOf(false, true))) },
             { assertEquals(1, frame.copyCounts[0]) },
             { assertEquals(2, frame.copyCounts[1]) },
         )
@@ -83,7 +80,6 @@ class TerminalRenderCacheTest {
         cache.updateFrom(frame.reader)
 
         assertAll(
-            { assertTrue(cache.dirtyRows.contentEquals(booleanArrayOf(true, true))) },
             { assertEquals(2, frame.copyCounts[0]) },
             { assertEquals(2, frame.copyCounts[1]) },
         )
@@ -102,7 +98,6 @@ class TerminalRenderCacheTest {
             { assertEquals(2, cache.columns) },
             { assertEquals(1, cache.rows) },
             { assertEquals("ab", cache.rowText(0)) },
-            { assertTrue(cache.dirtyRows.contentEquals(booleanArrayOf(true))) },
         )
     }
 
@@ -138,7 +133,6 @@ class TerminalRenderCacheTest {
         assertAll(
             { assertTrue(cache.cursorChangedOnLastUpdate) },
             { assertEquals(2, cache.cursor?.column) },
-            { assertTrue(cache.dirtyRows.contentEquals(booleanArrayOf(false))) },
             { assertEquals(1, frame.copyCounts[0]) },
         )
     }
@@ -166,7 +160,6 @@ class TerminalRenderCacheTest {
             { assertEquals("old", cache.rowText(0)) },
             { assertEquals(2, cache.historySize) },
             { assertEquals(1, cache.scrollbackOffset) },
-            { assertTrue(cache.dirtyRows.contentEquals(booleanArrayOf(true))) },
             { assertFalse(cache.cursor?.visible == true) },
             { assertTrue(cache.cursorChangedOnLastUpdate) },
             { assertEquals(2, frame.copyCount) },

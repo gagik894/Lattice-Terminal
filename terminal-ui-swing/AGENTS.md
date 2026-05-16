@@ -207,6 +207,6 @@ Tests should cover:
 - color resolution.
 - resize-to-columns/rows calculation.
 - render cache consumption.
-- render cache resize and dirty-row behavior.
+- render cache resize and generation-based repaint behavior.
 
 Avoid tests that require a real PTY or IntelliJ runtime.

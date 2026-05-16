@@ -8,7 +8,7 @@ import kotlin.test.assertEquals
 
 class TerminalSwingRepaintPlannerTest {
     @Test
-    fun `dirty rows repaint only changed row runs`() {
+    fun `changed rows repaint only changed row runs`() {
         val frame = MutableFrame(columns = 4, rows = 4)
         val cache = TerminalRenderCache(columns = 4, rows = 4)
         val planner = TerminalSwingRepaintPlanner()
@@ -33,7 +33,7 @@ class TerminalSwingRepaintPlannerTest {
     }
 
     @Test
-    fun `contiguous dirty rows are coalesced into one repaint region`() {
+    fun `contiguous changed rows are coalesced into one repaint region`() {
         val frame = MutableFrame(columns = 4, rows = 4)
         val cache = TerminalRenderCache(columns = 4, rows = 4)
         val planner = TerminalSwingRepaintPlanner()
@@ -56,6 +56,34 @@ class TerminalSwingRepaintPlannerTest {
         )
 
         assertEquals(listOf(Region(0, CELL_HEIGHT, WIDTH, 2 * CELL_HEIGHT)), repaintSink.regions)
+    }
+
+    @Test
+    fun `row repaint compares against last EDT snapshot when a cache buffer skipped a frame`() {
+        val frame = MutableFrame(columns = 4, rows = 4)
+        val paintedCache = TerminalRenderCache(columns = 4, rows = 4)
+        val skippedCache = TerminalRenderCache(columns = 4, rows = 4)
+        val planner = TerminalSwingRepaintPlanner()
+
+        paintedCache.updateFrom(frame.reader)
+        planner.requestFrameRepaint(paintedCache, METRICS, WIDTH, HEIGHT, 0.0, NoOpRepaintSink)
+
+        frame.setRow(1, "BBBB")
+        skippedCache.updateFrom(frame.reader)
+        frame.setRow(0, "ZZZZ")
+        skippedCache.updateFrom(frame.reader)
+
+        val repaintSink = RecordingRepaintSink(failOnFullRepaint = true)
+        planner.requestFrameRepaint(
+            cache = skippedCache,
+            metrics = METRICS,
+            componentWidth = WIDTH,
+            componentHeight = HEIGHT,
+            contentYOffset = 0.0,
+            repaintSink = repaintSink,
+        )
+
+        assertEquals(listOf(Region(0, 0, WIDTH, 2 * CELL_HEIGHT)), repaintSink.regions)
     }
 
     @Test
@@ -92,6 +120,42 @@ class TerminalSwingRepaintPlannerTest {
     }
 
     @Test
+    fun `cursor repaint compares against last EDT snapshot when a cache buffer skipped a frame`() {
+        val frame = MutableFrame(columns = 4, rows = 4)
+        val paintedCache = TerminalRenderCache(columns = 4, rows = 4)
+        val skippedCache = TerminalRenderCache(columns = 4, rows = 4)
+        val planner = TerminalSwingRepaintPlanner()
+
+        frame.cursor = cursor(column = 0, row = 0, generation = 1)
+        paintedCache.updateFrom(frame.reader)
+        planner.requestFrameRepaint(paintedCache, METRICS, WIDTH, HEIGHT, 0.0, NoOpRepaintSink)
+
+        frame.cursor = cursor(column = 3, row = 2, generation = 2)
+        frame.frameGeneration++
+        skippedCache.updateFrom(frame.reader)
+        frame.frameGeneration++
+        skippedCache.updateFrom(frame.reader)
+
+        val repaintSink = RecordingRepaintSink(failOnFullRepaint = true)
+        planner.requestFrameRepaint(
+            cache = skippedCache,
+            metrics = METRICS,
+            componentWidth = WIDTH,
+            componentHeight = HEIGHT,
+            contentYOffset = 0.0,
+            repaintSink = repaintSink,
+        )
+
+        assertEquals(
+            listOf(
+                Region(0, 0, CELL_WIDTH, CELL_HEIGHT),
+                Region(3 * CELL_WIDTH, 2 * CELL_HEIGHT, CELL_WIDTH, CELL_HEIGHT),
+            ),
+            repaintSink.regions,
+        )
+    }
+
+    @Test
     fun `cursor blink repaints only the cursor cell`() {
         val frame = MutableFrame(columns = 4, rows = 4)
         frame.cursor = cursor(column = 2, row = 1, blinking = true, generation = 1)
@@ -112,7 +176,7 @@ class TerminalSwingRepaintPlannerTest {
     }
 
     @Test
-    fun `fractional content offset shifts dirty row repaint bounds`() {
+    fun `fractional content offset shifts changed row repaint bounds`() {
         val frame = MutableFrame(columns = 4, rows = 4)
         val cache = TerminalRenderCache(columns = 4, rows = 4)
         val planner = TerminalSwingRepaintPlanner()
@@ -137,7 +201,7 @@ class TerminalSwingRepaintPlannerTest {
     }
 
     @Test
-    fun `fractional content offset clips dirty row repaint bounds at component top`() {
+    fun `fractional content offset clips changed row repaint bounds at component top`() {
         val frame = MutableFrame(columns = 4, rows = 4)
         val cache = TerminalRenderCache(columns = 4, rows = 4)
         val planner = TerminalSwingRepaintPlanner()

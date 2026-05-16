@@ -439,7 +439,7 @@ professional emulator needs explicit contracts for it.
   generation-based row invalidation.
 - `DONE(host)`: dependency-free primitive `TerminalRenderCache` consumer model
   that copies frame rows, clusters, attrs, hyperlinks, wrap flags, cursor state,
-  and dirty-row metadata from `TerminalRenderFrameReader`.
+  and line-generation metadata from `TerminalRenderFrameReader`.
 - `DONE(host/ui)`: reusable `:terminal-ui-swing` module exists with a public
   Swing terminal component, immutable settings/metrics snapshots, packed ARGB
   palette resolution, and a basic Java2D painter backed by

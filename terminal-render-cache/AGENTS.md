@@ -2,14 +2,14 @@
 
 `terminal-render-cache` owns renderer-side copies of primitive render frames. It
 lets UI consumers work from stable cached row, cluster, attribute, hyperlink,
-wrap, cursor, and dirty-row data without reaching back into core storage.
+wrap, cursor, and generation data without reaching back into core storage.
 
 ## Boundary
 
 Render cache owns:
 
 - copying `TerminalRenderFrameReader` data from `terminal-render-api`.
-- tracking row dirtiness from structure and line generations.
+- retaining copied structure and line generations for renderer-side comparison.
 - retaining copied cluster text and primitive row arrays.
 - publishing cache snapshots with clear ownership between render workers and UI
   readers.
@@ -26,6 +26,6 @@ cluster rows deliberately when copied frame data changes.
 
 ## Testing
 
-Tests should assert copy semantics, dirty-row behavior, resize behavior, cluster
-clearing, cursor updates, and publisher ownership rules. Use fake
+Tests should assert copy semantics, resize behavior, cluster clearing, cursor
+updates, and publisher ownership rules. Use fake
 `TerminalRenderFrameReader` instances rather than a live terminal session.

@@ -12,19 +12,7 @@ import com.gagik.terminal.transport.TerminalConnectorListener
 import com.gagik.terminal.ui.swing.api.TerminalSwingTerminal
 import com.gagik.terminal.ui.swing.settings.TerminalSwingSettings
 import com.gagik.terminal.ui.swing.settings.TerminalSwingSettingsProvider
-import org.openjdk.jmh.annotations.Benchmark
-import org.openjdk.jmh.annotations.BenchmarkMode
-import org.openjdk.jmh.annotations.Fork
-import org.openjdk.jmh.annotations.Level
-import org.openjdk.jmh.annotations.Measurement
-import org.openjdk.jmh.annotations.Mode
-import org.openjdk.jmh.annotations.OutputTimeUnit
-import org.openjdk.jmh.annotations.Param
-import org.openjdk.jmh.annotations.Scope
-import org.openjdk.jmh.annotations.Setup
-import org.openjdk.jmh.annotations.State
-import org.openjdk.jmh.annotations.TearDown
-import org.openjdk.jmh.annotations.Warmup
+import org.openjdk.jmh.annotations.*
 import org.openjdk.jmh.infra.Blackhole
 import java.awt.Graphics2D
 import java.awt.image.BufferedImage
@@ -112,7 +100,16 @@ open class TerminalRenderPublishBenchmark {
         publisher.updateAndPublish(renderReader, scrollbackOffset)
         val cache = publisher.current()
         blackhole.consume(cache?.scrollbackOffset)
-        blackhole.consume(cache?.dirtyRows?.count { it })
+        val generations = cache?.lineGenerations
+        if (generations != null) {
+            var checksum = 0L
+            var row = 0
+            while (row < generations.size) {
+                checksum = checksum xor generations[row]
+                row++
+            }
+            blackhole.consume(checksum)
+        }
     }
 }
 

@@ -123,16 +123,6 @@ class TerminalRenderCache(
         private set
 
     /**
-     * Rows copied by the most recent [updateFrom] call.
-     *
-     * Renderers can consume this and mark only those row layout caches dirty.
-     * The array instance is stable until resize and its contents are overwritten
-     * on each update.
-     */
-    var dirtyRows: BooleanArray = BooleanArray(0)
-        private set
-
-    /**
      * Whether the most recent [updateFrom] call resized the primitive storage.
      */
     var resizedOnLastUpdate: Boolean = false
@@ -239,7 +229,6 @@ class TerminalRenderCache(
                 structureGeneration = UNINITIALIZED_GENERATION
             }
 
-            dirtyRows.fill(false)
             cursorChangedOnLastUpdate = false
 
             val viewportChanged = this.scrollbackOffset != frame.scrollbackOffset
@@ -280,7 +269,6 @@ class TerminalRenderCache(
 
                     lineGenerations[row] = lineGeneration
                     lineWrapped[row] = wrapped
-                    dirtyRows[row] = true
                 } else {
                     preserveClusterRow(row)
                 }
@@ -323,7 +311,6 @@ class TerminalRenderCache(
 
         lineGenerations = LongArray(newRows) { UNINITIALIZED_GENERATION }
         lineWrapped = BooleanArray(newRows)
-        dirtyRows = BooleanArray(newRows)
 
         cursor = null
         historySize = 0
