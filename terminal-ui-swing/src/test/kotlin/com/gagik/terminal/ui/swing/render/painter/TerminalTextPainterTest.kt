@@ -252,7 +252,6 @@ class TerminalTextPainterTest {
             fixture.painter.paintCellForeground(
                 fixture.g,
                 cache,
-                fixture.settings.palette,
                 fixture.metrics,
                 column = 0,
                 row = 0,
@@ -277,7 +276,6 @@ class TerminalTextPainterTest {
             fixture.painter.paintCellForeground(
                 fixture.g,
                 cache,
-                fixture.settings.palette,
                 fixture.metrics,
                 column = 0,
                 row = 0,

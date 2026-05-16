@@ -103,7 +103,6 @@ internal class TerminalTextPainter(
     fun paintCellForeground(
         g: Graphics2D,
         cache: TerminalRenderCache,
-        palette: TerminalColorPalette,
         metrics: TerminalSwingMetrics,
         column: Int,
         row: Int,
@@ -125,11 +124,13 @@ internal class TerminalTextPainter(
             if (flags and TerminalRenderCellFlags.CLUSTER == 0 && cellPrimitives.canPaint(codeWord)) {
                 cellPrimitives.paint(g, codeWord, column, row, metrics)
             } else if (flags and TerminalRenderCellFlags.CLUSTER != 0) {
-                val cluster = cache.clusters[row][column]
-                if (cluster != null) {
+                val clusterRef = cache.clusterRefs[row][column]
+                if (clusterRef != 0L) {
                     drawComplexCluster(
                         g = g,
-                        text = cluster,
+                        codepoints = cache.clusterCodepoints,
+                        offset = cache.clusterOffset(clusterRef),
+                        length = cache.clusterLength(clusterRef),
                         fontStyle = terminalFontStyle(attr),
                         x = column * metrics.cellWidth,
                         baselineY = baselineY,
@@ -222,9 +223,18 @@ internal class TerminalTextPainter(
         if (flags and TerminalRenderCellFlags.CLUSTER == 0 && cellPrimitives.canPaint(codeWord)) {
             cellPrimitives.paint(g, codeWord, column, row, metrics)
         } else if (flags and TerminalRenderCellFlags.CLUSTER != 0) {
-            val cluster = cache.clusters[row][column]
-            if (cluster != null) {
-                drawComplexCluster(g, cluster, fontStyle, column * metrics.cellWidth, baselineY, fontRenderContext)
+            val clusterRef = cache.clusterRefs[row][column]
+            if (clusterRef != 0L) {
+                drawComplexCluster(
+                    g = g,
+                    codepoints = cache.clusterCodepoints,
+                    offset = cache.clusterOffset(clusterRef),
+                    length = cache.clusterLength(clusterRef),
+                    fontStyle = fontStyle,
+                    x = column * metrics.cellWidth,
+                    baselineY = baselineY,
+                    fontRenderContext = fontRenderContext,
+                )
             }
         } else {
             drawComplexCodePoint(
@@ -268,14 +278,16 @@ internal class TerminalTextPainter(
 
     private fun drawComplexCluster(
         g: Graphics2D,
-        text: String,
+        codepoints: IntArray,
+        offset: Int,
+        length: Int,
         fontStyle: Int,
         x: Int,
         baselineY: Int,
         fontRenderContext: FontRenderContext,
     ) {
         complexTextLayouts
-            .clusterLayout(text, fontStyle, fontRenderContext, fontCache)
+            .clusterLayout(codepoints, offset, length, fontStyle, fontRenderContext, fontCache)
             .draw(g, x.toFloat(), baselineY.toFloat())
     }
 

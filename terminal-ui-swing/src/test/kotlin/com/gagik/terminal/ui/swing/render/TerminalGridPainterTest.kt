@@ -332,7 +332,7 @@ class TerminalGridPainterTest {
 
     private class TextFrame(
         private val text: String,
-        private val cursorVisible: Boolean,
+        cursorVisible: Boolean,
         private val attrs: LongArray = LongArray(text.length) { TerminalRenderAttrs.DEFAULT },
         private val extraAttrs: LongArray = LongArray(text.length) { TerminalRenderExtraAttrs.DEFAULT },
     ) : TerminalRenderFrameReader, TerminalRenderFrame {
@@ -371,6 +371,7 @@ class TerminalGridPainterTest {
             hyperlinkIds: IntArray?,
             hyperlinkOffset: Int,
             clusterSink: TerminalRenderClusterSink?,
+            clusterDataSink: TerminalRenderClusterDataSink?,
         ) {
             var column = 0
             while (column < columns) {

@@ -14,7 +14,6 @@ internal const val TEST_WHITE: Int = 0xFFFFFFFF.toInt()
 internal const val TEST_RED: Int = 0xFFFF0000.toInt()
 internal const val TEST_GREEN: Int = 0xFF00FF00.toInt()
 internal const val TEST_BLUE: Int = 0xFF0000FF.toInt()
-internal const val TEST_YELLOW: Int = 0xFFFFFF00.toInt()
 
 internal fun defaultTestSettings(
     foreground: Int = TEST_WHITE,
@@ -148,6 +147,7 @@ internal class TestRenderFrame(
         hyperlinkIds: IntArray?,
         hyperlinkOffset: Int,
         clusterSink: TerminalRenderClusterSink?,
+        clusterDataSink: TerminalRenderClusterDataSink?,
     ) {
         var column = 0
         while (column < columns) {
@@ -159,9 +159,23 @@ internal class TestRenderFrame(
             hyperlinkIds?.set(hyperlinkOffset + column, 0)
             if (cell.cluster != null) {
                 clusterSink?.onCluster(column, cell.cluster)
+                val codepoints = clusterCodepoints(cell.cluster)
+                clusterDataSink?.onCluster(column, codepoints, 0, codepoints.size)
             }
             column++
         }
+    }
+
+    private fun clusterCodepoints(text: String): IntArray {
+        val codepoints = IntArray(text.codePointCount(0, text.length))
+        var codepointIndex = 0
+        var charIndex = 0
+        while (charIndex < text.length) {
+            val codepoint = Character.codePointAt(text, charIndex)
+            codepoints[codepointIndex++] = codepoint
+            charIndex += Character.charCount(codepoint)
+        }
+        return codepoints
     }
 
     companion object {

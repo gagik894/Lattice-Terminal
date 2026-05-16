@@ -113,13 +113,13 @@ class TerminalRenderCacheTest {
         val cache = TerminalRenderCache(columns = 3, rows = 1)
         cache.updateFrom(frame.reader)
 
-        assertEquals("e\u0301", cache.clusters[0][0])
+        assertEquals("e\u0301", cache.clusterText(0, 0))
 
         frame.setRow(0, "abc")
         cache.updateFrom(frame.reader)
 
         assertAll(
-            { assertNull(cache.clusters[0][0]) },
+            { assertNull(cache.clusterText(0, 0)) },
             { assertEquals("abc", cache.rowText(0)) },
         )
     }
@@ -266,6 +266,7 @@ class TerminalRenderCacheTest {
             hyperlinkIds: IntArray?,
             hyperlinkOffset: Int,
             clusterSink: TerminalRenderClusterSink?,
+            clusterDataSink: TerminalRenderClusterDataSink?,
         ) {
             copyCounts[row]++
             var col = 0
@@ -278,9 +279,22 @@ class TerminalRenderCacheTest {
                 val cluster = clusters[row][col]
                 if (cluster != null) {
                     clusterSink?.onCluster(col, cluster)
+                    clusterDataSink?.onCluster(col, clusterCodepoints(cluster), 0, cluster.codePointCount(0, cluster.length))
                 }
                 col++
             }
+        }
+
+        private fun clusterCodepoints(text: String): IntArray {
+            val codepoints = IntArray(text.codePointCount(0, text.length))
+            var codepointIndex = 0
+            var charIndex = 0
+            while (charIndex < text.length) {
+                val codepoint = Character.codePointAt(text, charIndex)
+                codepoints[codepointIndex++] = codepoint
+                charIndex += Character.charCount(codepoint)
+            }
+            return codepoints
         }
     }
 
@@ -357,6 +371,7 @@ class TerminalRenderCacheTest {
             hyperlinkIds: IntArray?,
             hyperlinkOffset: Int,
             clusterSink: TerminalRenderClusterSink?,
+            clusterDataSink: TerminalRenderClusterDataSink?,
         ) {
             copyCount++
             val text = if (currentOffset == 0) "new" else "old"

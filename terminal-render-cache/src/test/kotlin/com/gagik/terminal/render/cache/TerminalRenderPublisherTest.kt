@@ -114,10 +114,23 @@ class TerminalRenderPublisherTest {
         frame.releaseOverscanRowCopy()
         writer.join(1_000)
 
+        val current = publisher.current()
+        assertNotNull(current)
+        val clusterRef = current!!.clusterRefs[30][0]
+        val clusterOffset = current.clusterOffset(clusterRef)
+        val clusterLength = current.clusterLength(clusterRef)
         assertNull(exception)
         assertAll(
-            { assertEquals(31, publisher.current()?.rows) },
-            { assertEquals("e\u0301", publisher.current()?.clusters?.get(30)?.get(0)) },
+            { assertEquals(31, current.rows) },
+            { assertNotEquals(0L, clusterRef) },
+            { assertEquals(2, clusterLength) },
+            {
+                assertArrayEquals(
+                    intArrayOf('e'.code, 0x0301),
+                    current.clusterCodepoints.copyOfRange(clusterOffset, clusterOffset + clusterLength),
+                )
+            },
+            { assertEquals("e\u0301", current.clusterText(30, 0)) },
         )
     }
 
@@ -271,7 +284,8 @@ class TerminalRenderPublisherTest {
             extraAttrOffset: Int,
             hyperlinkIds: IntArray?,
             hyperlinkOffset: Int,
-            clusterSink: TerminalRenderClusterSink?
+            clusterSink: TerminalRenderClusterSink?,
+            clusterDataSink: TerminalRenderClusterDataSink?,
         ) {
             for (i in 0 until columns) {
                 codeWords[codeOffset + i] = text.getOrNull(i)?.code ?: 0
@@ -304,7 +318,8 @@ class TerminalRenderPublisherTest {
             extraAttrOffset: Int,
             hyperlinkIds: IntArray?,
             hyperlinkOffset: Int,
-            clusterSink: TerminalRenderClusterSink?
+            clusterSink: TerminalRenderClusterSink?,
+            clusterDataSink: TerminalRenderClusterDataSink?
         ) {
             copyEntered.countDown()
             assertTrue(releaseCopy.await(1, TimeUnit.SECONDS), "copyLine was not released")
@@ -321,6 +336,7 @@ class TerminalRenderPublisherTest {
                 hyperlinkIds,
                 hyperlinkOffset,
                 clusterSink,
+                clusterDataSink,
             )
         }
 
@@ -373,6 +389,7 @@ class TerminalRenderPublisherTest {
             hyperlinkIds: IntArray?,
             hyperlinkOffset: Int,
             clusterSink: TerminalRenderClusterSink?,
+            clusterDataSink: TerminalRenderClusterDataSink?,
         ) {
             attrWords[attrOffset] = TerminalRenderAttrs.DEFAULT
             extraAttrWords?.set(extraAttrOffset, TerminalRenderExtraAttrs.DEFAULT)
@@ -384,6 +401,7 @@ class TerminalRenderPublisherTest {
                 codeWords[codeOffset] = 0
                 flags[flagOffset] = TerminalRenderCellFlags.CLUSTER
                 clusterSink?.onCluster(0, "e\u0301")
+                clusterDataSink?.onCluster(0, intArrayOf('e'.code, 0x0301), 0, 2)
             } else {
                 codeWords[codeOffset] = 'x'.code
                 flags[flagOffset] = TerminalRenderCellFlags.CODEPOINT
@@ -443,7 +461,8 @@ class TerminalRenderPublisherTest {
             extraAttrOffset: Int,
             hyperlinkIds: IntArray?,
             hyperlinkOffset: Int,
-            clusterSink: TerminalRenderClusterSink?
+            clusterSink: TerminalRenderClusterSink?,
+            clusterDataSink: TerminalRenderClusterDataSink?
         ) {
             val text = if (resolvedOffset == 0) "new" else "old"
             for (i in 0 until columns) {

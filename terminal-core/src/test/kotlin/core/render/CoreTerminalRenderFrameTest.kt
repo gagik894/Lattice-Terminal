@@ -102,12 +102,40 @@ class CoreTerminalRenderFrameTest {
 
         reader.readRenderFrame { frame ->
             val clusters = mutableMapOf<Int, String>()
-            val row = copyRow(frame) { col, text -> clusters[col] = text }
+            val row = copyRow(frame, clusterSink = { col, text -> clusters[col] = text })
 
             assertAll(
                 { assertEquals(TerminalRenderCellFlags.CLUSTER, row.flags[0]) },
                 { assertEquals(0, row.codeWords[0]) },
                 { assertEquals("e\u0301", clusters[0]) },
+            )
+        }
+    }
+
+    @Test
+    fun `cluster cells can copy primitive cluster data without text sink`() {
+        val buffer = TerminalBuffer(initialWidth = 4, initialHeight = 1)
+        buffer.writeCluster(intArrayOf('e'.code, 0x0301), length = 2)
+        val reader = buffer as TerminalRenderFrameReader
+
+        reader.readRenderFrame { frame ->
+            val copiedCluster = IntArray(4)
+            var copiedColumn = -1
+            var copiedLength = 0
+            val row = copyRow(
+                frame = frame,
+                clusterDataSink = { column, codepoints, offset, length ->
+                    copiedColumn = column
+                    copiedLength = length
+                    System.arraycopy(codepoints, offset, copiedCluster, 0, length)
+                },
+            )
+
+            assertAll(
+                { assertEquals(TerminalRenderCellFlags.CLUSTER, row.flags[0]) },
+                { assertEquals(0, copiedColumn) },
+                { assertEquals(2, copiedLength) },
+                { assertEquals(listOf('e'.code, 0x0301), copiedCluster.copyOf(copiedLength).toList()) },
             )
         }
     }
@@ -120,7 +148,7 @@ class CoreTerminalRenderFrameTest {
 
         reader.readRenderFrame { frame ->
             val clusters = mutableMapOf<Int, String>()
-            val row = copyRow(frame) { col, text -> clusters[col] = text }
+            val row = copyRow(frame, clusterSink = { col, text -> clusters[col] = text })
 
             assertAll(
                 {
@@ -351,9 +379,10 @@ class CoreTerminalRenderFrameTest {
     }
 
     private fun copyRow(
-        frame: com.gagik.terminal.render.api.TerminalRenderFrame,
+        frame: TerminalRenderFrame,
         row: Int = 0,
         clusterSink: ((Int, String) -> Unit)? = null,
+        clusterDataSink: ((Int, IntArray, Int, Int) -> Unit)? = null,
     ): CopiedRow {
         val copied = CopiedRow(frame.columns)
         frame.copyLine(
@@ -366,7 +395,12 @@ class CoreTerminalRenderFrameTest {
             clusterSink = if (clusterSink == null) {
                 null
             } else {
-                com.gagik.terminal.render.api.TerminalRenderClusterSink(clusterSink)
+                TerminalRenderClusterSink(clusterSink)
+            },
+            clusterDataSink = if (clusterDataSink == null) {
+                null
+            } else {
+                TerminalRenderClusterDataSink(clusterDataSink)
             },
         )
         copied.flags.forEach {
@@ -375,7 +409,7 @@ class CoreTerminalRenderFrameTest {
         return copied
     }
 
-    private fun rowText(frame: com.gagik.terminal.render.api.TerminalRenderFrame, row: Int): String {
+    private fun rowText(frame: TerminalRenderFrame, row: Int): String {
         return copyRow(frame, row).codeWords
             .map { if (it == 0) ' ' else it.toChar() }
             .joinToString("")

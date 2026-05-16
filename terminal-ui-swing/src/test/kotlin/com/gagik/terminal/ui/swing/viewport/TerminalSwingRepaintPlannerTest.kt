@@ -263,6 +263,7 @@ class TerminalSwingRepaintPlannerTest {
             hyperlinkIds: IntArray?,
             hyperlinkOffset: Int,
             clusterSink: TerminalRenderClusterSink?,
+            clusterDataSink: TerminalRenderClusterDataSink?,
         ) {
             var column = 0
             while (column < columns) {

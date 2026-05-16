@@ -86,9 +86,10 @@ interface TerminalRenderFrame {
      * their respective offsets. [extraAttrWords] and [hyperlinkIds] are optional
      * because not every renderer needs those channels.
      *
-     * [clusterSink] is called for cells marked [TerminalRenderCellFlags.CLUSTER].
-     * The receiver must copy or cache the text if it needs it after this method
-     * returns.
+     * [clusterDataSink] is the preferred zero-allocation path for cells marked
+     * [TerminalRenderCellFlags.CLUSTER]. [clusterSink] is retained for callers
+     * that need text directly; implementations may avoid constructing cluster
+     * strings when only [clusterDataSink] is supplied.
      *
      * @param row zero-based visible row index.
      * @param codeWords destination for Unicode scalar values or zero for empty,
@@ -104,6 +105,8 @@ interface TerminalRenderFrame {
      * where zero means no hyperlink.
      * @param hyperlinkOffset first destination index in [hyperlinkIds].
      * @param clusterSink optional receiver for cluster text on cluster cells.
+     * @param clusterDataSink optional receiver for primitive cluster code points
+     * on cluster cells.
      */
     fun copyLine(
         row: Int,
@@ -118,5 +121,6 @@ interface TerminalRenderFrame {
         hyperlinkIds: IntArray? = null,
         hyperlinkOffset: Int = 0,
         clusterSink: TerminalRenderClusterSink? = null,
+        clusterDataSink: TerminalRenderClusterDataSink? = null,
     )
 }

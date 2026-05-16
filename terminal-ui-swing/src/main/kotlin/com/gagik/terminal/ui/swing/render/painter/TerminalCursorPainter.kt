@@ -53,7 +53,6 @@ internal class TerminalCursorPainter(
             textPainter.paintCellForeground(
                 g = g,
                 cache = cache,
-                palette = palette,
                 metrics = metrics,
                 column = cursor.column,
                 row = cursor.row,

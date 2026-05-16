@@ -756,6 +756,7 @@ class TerminalSessionTest {
                     hyperlinkIds: IntArray?,
                     hyperlinkOffset: Int,
                     clusterSink: TerminalRenderClusterSink?,
+            clusterDataSink: TerminalRenderClusterDataSink?,
                 ) {
                     copyEntered.countDown()
                     check(releaseCopy.await(1, TimeUnit.SECONDS)) {
@@ -910,6 +911,7 @@ class TerminalSessionTest {
             hyperlinkIds: IntArray?,
             hyperlinkOffset: Int,
             clusterSink: TerminalRenderClusterSink?,
+            clusterDataSink: TerminalRenderClusterDataSink?,
         ) = Unit
     }
 
@@ -945,6 +947,7 @@ class TerminalSessionTest {
             hyperlinkIds: IntArray?,
             hyperlinkOffset: Int,
             clusterSink: TerminalRenderClusterSink?,
+            clusterDataSink: TerminalRenderClusterDataSink?,
         ) {
             var column = 0
             while (column < columns) {

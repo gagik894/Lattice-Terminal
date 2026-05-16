@@ -79,6 +79,7 @@ class TerminalRenderFrameReaderTest {
             hyperlinkIds: IntArray?,
             hyperlinkOffset: Int,
             clusterSink: TerminalRenderClusterSink?,
+            clusterDataSink: TerminalRenderClusterDataSink?,
         ) {
             throw UnsupportedOperationException("not needed for callback contract test")
         }

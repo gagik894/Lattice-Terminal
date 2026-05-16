@@ -122,6 +122,7 @@ internal class CoreTerminalRenderFrame(
         hyperlinkIds: IntArray?,
         hyperlinkOffset: Int,
         clusterSink: TerminalRenderClusterSink?,
+        clusterDataSink: TerminalRenderClusterDataSink?,
     ) {
         checkValid()
         checkRow(row)
@@ -148,6 +149,7 @@ internal class CoreTerminalRenderFrame(
             hyperlinkIds = hyperlinkIds,
             hyperlinkOffset = hyperlinkOffset,
             clusterSink = clusterSink,
+            clusterDataSink = clusterDataSink,
             attrTranslator = attrTranslator,
             clusterScratch = clusterScratch,
             reverseVideo = state.modes.isReverseVideo,

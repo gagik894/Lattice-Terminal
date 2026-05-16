@@ -160,7 +160,7 @@ class TerminalSwingTerminalScrollbackTest {
         }
 
         assertTrue(awaitOffset(session, 1), "fractional scroll did not publish crossed line offset")
-        assertTrue(session.publisher.current()?.rows ?: 0 > 1, "fractional scroll did not request overscan rows")
+        assertTrue((session.publisher.current()?.rows ?: 0) > 1, "fractional scroll did not request overscan rows")
         session.close()
     }
 
@@ -257,6 +257,7 @@ class TerminalSwingTerminalScrollbackTest {
             hyperlinkIds: IntArray?,
             hyperlinkOffset: Int,
             clusterSink: TerminalRenderClusterSink?,
+            clusterDataSink: TerminalRenderClusterDataSink?,
         ) {
             var column = 0
             while (column < columns) {

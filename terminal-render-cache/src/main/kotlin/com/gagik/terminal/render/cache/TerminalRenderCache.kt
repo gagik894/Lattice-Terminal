@@ -73,9 +73,17 @@ class TerminalRenderCache(
         private set
 
     /**
-     * Copied cluster text by row and column. Non-cluster cells contain `null`.
+     * Copied cluster references by row and column. Zero means no cluster; other
+     * values pack a codepoint offset in the high 32 bits and a codepoint length
+     * in the low 32 bits.
      */
-    var clusters: Array<Array<String?>> = EMPTY_CLUSTER_ROWS
+    var clusterRefs: Array<LongArray> = EMPTY_LONG_ROWS
+        private set
+
+    /**
+     * Packed codepoint storage referenced by [clusterRefs].
+     */
+    var clusterCodepoints: IntArray = IntArray(0)
         private set
 
     /**
@@ -136,8 +144,11 @@ class TerminalRenderCache(
     var cursorChangedOnLastUpdate: Boolean = false
         private set
 
+    private var clusterCodepointCount: Int = 0
+    private var nextClusterCodepoints: IntArray = IntArray(INITIAL_CLUSTER_CODEPOINT_CAPACITY)
+    private var nextClusterCodepointCount: Int = 0
     private var clusterSinkRow: Int = NO_CLUSTER_SINK_ROW
-    private var clusterSinkClusters: Array<Array<String?>> = EMPTY_CLUSTER_ROWS
+    private var clusterSinkRefs: Array<LongArray> = EMPTY_LONG_ROWS
 
     /**
      * Reused sink to avoid allocating one capturing lambda per copied row.
@@ -145,21 +156,21 @@ class TerminalRenderCache(
      * [clusterSinkRow] is set immediately before [TerminalRenderFrame.copyLine]
      * and reset immediately after it. This object must not escape this cache.
      */
-    private val reusableClusterSink = TerminalRenderClusterSink { column, text ->
+    private val reusableClusterDataSink = TerminalRenderClusterDataSink { column, codepoints, offset, length ->
         val row = clusterSinkRow
-        val copiedClusters = clusterSinkClusters
+        val copiedRefs = clusterSinkRefs
         check(row != NO_CLUSTER_SINK_ROW) {
-            "TerminalRenderClusterSink invoked outside copyLine"
+            "TerminalRenderClusterDataSink invoked outside copyLine"
         }
-        check(row in copiedClusters.indices) {
-            "Cluster sink row out of bounds: row=$row, rows=${copiedClusters.size}"
+        check(row in copiedRefs.indices) {
+            "Cluster sink row out of bounds: row=$row, rows=${copiedRefs.size}"
         }
-        val clusterRow = copiedClusters[row]
-        check(column in clusterRow.indices) {
-            "Cluster sink column out of bounds: column=$column, columns=${clusterRow.size}"
+        val refRow = copiedRefs[row]
+        check(column in refRow.indices) {
+            "Cluster sink column out of bounds: column=$column, columns=${refRow.size}"
         }
 
-        clusterRow[column] = text
+        refRow[column] = appendNextCluster(codepoints, offset, length)
     }
 
     init {
@@ -236,6 +247,7 @@ class TerminalRenderCache(
             if (structureChanged) {
                 clearAllClusters()
             }
+            beginClusterCopy()
 
             var row = 0
             while (row < frame.rows) {
@@ -250,7 +262,7 @@ class TerminalRenderCache(
                     clearClusterRow(row)
 
                     clusterSinkRow = row
-                    clusterSinkClusters = clusters
+                    clusterSinkRefs = clusterRefs
                     try {
                         frame.copyLine(
                             row = row,
@@ -259,20 +271,23 @@ class TerminalRenderCache(
                             flags = flags[row],
                             extraAttrWords = extraAttrWords[row],
                             hyperlinkIds = hyperlinkIds[row],
-                            clusterSink = reusableClusterSink,
+                            clusterDataSink = reusableClusterDataSink,
                         )
                     } finally {
                         clusterSinkRow = NO_CLUSTER_SINK_ROW
-                        clusterSinkClusters = EMPTY_CLUSTER_ROWS
+                        clusterSinkRefs = EMPTY_LONG_ROWS
                     }
 
                     lineGenerations[row] = lineGeneration
                     lineWrapped[row] = wrapped
                     dirtyRows[row] = true
+                } else {
+                    preserveClusterRow(row)
                 }
 
                 row++
             }
+            finishClusterCopy()
 
             activeBuffer = frame.activeBuffer
 
@@ -301,7 +316,10 @@ class TerminalRenderCache(
         flags = Array(newRows) { IntArray(newColumns) }
         extraAttrWords = Array(newRows) { LongArray(newColumns) }
         hyperlinkIds = Array(newRows) { IntArray(newColumns) }
-        clusters = Array(newRows) { arrayOfNulls(newColumns) }
+        clusterRefs = Array(newRows) { LongArray(newColumns) }
+        clusterCodepoints = IntArray(0)
+        clusterCodepointCount = 0
+        nextClusterCodepointCount = 0
 
         lineGenerations = LongArray(newRows) { UNINITIALIZED_GENERATION }
         lineWrapped = BooleanArray(newRows)
@@ -315,7 +333,7 @@ class TerminalRenderCache(
         activeBuffer = TerminalRenderBufferKind.PRIMARY
         cursorChangedOnLastUpdate = false
         clusterSinkRow = NO_CLUSTER_SINK_ROW
-        clusterSinkClusters = EMPTY_CLUSTER_ROWS
+        clusterSinkRefs = EMPTY_LONG_ROWS
     }
 
     private fun clearAllClusters() {
@@ -327,17 +345,92 @@ class TerminalRenderCache(
     }
 
     private fun clearClusterRow(row: Int) {
-        clusters[row].fill(null)
+        clusterRefs[row].fill(NO_CLUSTER_REF)
     }
+
+    private fun beginClusterCopy() {
+        nextClusterCodepointCount = 0
+    }
+
+    private fun finishClusterCopy() {
+        val previous = clusterCodepoints
+        clusterCodepoints = nextClusterCodepoints
+        clusterCodepointCount = nextClusterCodepointCount
+        nextClusterCodepoints = previous
+        nextClusterCodepointCount = 0
+    }
+
+    private fun preserveClusterRow(row: Int) {
+        val refs = clusterRefs[row]
+        var column = 0
+        while (column < refs.size) {
+            val ref = refs[column]
+            if (ref != NO_CLUSTER_REF) {
+                val offset = clusterOffset(ref)
+                val length = clusterLength(ref)
+                refs[column] = appendNextCluster(clusterCodepoints, offset, length)
+            }
+            column++
+        }
+    }
+
+    private fun appendNextCluster(codepoints: IntArray, offset: Int, length: Int): Long {
+        require(length > 0) { "cluster length must be > 0, was $length" }
+        require(offset >= 0 && codepoints.size - offset >= length) {
+            "cluster source has insufficient capacity: size=${codepoints.size}, offset=$offset, length=$length"
+        }
+        ensureNextClusterCapacity(nextClusterCodepointCount + length)
+        val nextOffset = nextClusterCodepointCount
+        System.arraycopy(codepoints, offset, nextClusterCodepoints, nextOffset, length)
+        nextClusterCodepointCount += length
+        return packClusterRef(nextOffset, length)
+    }
+
+    private fun ensureNextClusterCapacity(required: Int) {
+        if (required <= nextClusterCodepoints.size) return
+
+        var newCapacity = maxOf(INITIAL_CLUSTER_CODEPOINT_CAPACITY, nextClusterCodepoints.size * 2)
+        while (newCapacity < required) {
+            newCapacity *= 2
+        }
+        nextClusterCodepoints = nextClusterCodepoints.copyOf(newCapacity)
+    }
+
+    /**
+     * Returns cluster text for diagnostics or compatibility callers.
+     *
+     * Rendering should consume [clusterRefs] and [clusterCodepoints] directly so
+     * repeated paint passes do not allocate strings for cache hits.
+     */
+    fun clusterText(row: Int, column: Int): String? {
+        val ref = clusterRefs[row][column]
+        if (ref == NO_CLUSTER_REF) return null
+        return String(clusterCodepoints, clusterOffset(ref), clusterLength(ref))
+    }
+
+    /**
+     * Returns the codepoint offset encoded in [ref].
+     */
+    fun clusterOffset(ref: Long): Int = (ref ushr 32).toInt()
+
+    /**
+     * Returns the codepoint length encoded in [ref].
+     */
+    fun clusterLength(ref: Long): Int = (ref and 0xFFFF_FFFFL).toInt()
 
     private companion object {
         private const val UNINITIALIZED_GENERATION = -1L
         private const val NO_CLUSTER_SINK_ROW = -1
+        private const val NO_CLUSTER_REF = 0L
+        private const val INITIAL_CLUSTER_CODEPOINT_CAPACITY = 256
 
         private val EMPTY_INT_ROWS: Array<IntArray> = emptyArray()
 
         private val EMPTY_LONG_ROWS: Array<LongArray> = emptyArray()
 
-        private val EMPTY_CLUSTER_ROWS: Array<Array<String?>> = emptyArray()
+        private fun packClusterRef(offset: Int, length: Int): Long {
+            return (offset.toLong() shl 32) or (length.toLong() and 0xFFFF_FFFFL)
+        }
+
     }
 }

@@ -17,3 +17,23 @@ fun interface TerminalRenderClusterSink {
      */
     fun onCluster(column: Int, text: String)
 }
+
+/**
+ * Receives grapheme cluster code points while a row is copied.
+ *
+ * This is the allocation-conscious cluster handoff for render caches. The
+ * supplied [codepoints] range is valid only for the duration of the callback;
+ * receivers that retain it must copy the primitive range into their own
+ * storage before returning.
+ */
+fun interface TerminalRenderClusterDataSink {
+    /**
+     * Called during `copyLine()` for a [TerminalRenderCellFlags.CLUSTER] cell.
+     *
+     * @param column zero-based visual column of the cluster-leading cell.
+     * @param codepoints source code point buffer.
+     * @param offset first code point in [codepoints].
+     * @param length number of code points in the cluster.
+     */
+    fun onCluster(column: Int, codepoints: IntArray, offset: Int, length: Int)
+}

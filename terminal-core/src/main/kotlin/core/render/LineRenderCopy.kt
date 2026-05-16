@@ -4,6 +4,7 @@ import com.gagik.core.codec.AttributeCodec
 import com.gagik.core.model.Line
 import com.gagik.core.model.TerminalConstants
 import com.gagik.terminal.render.api.TerminalRenderCellFlags
+import com.gagik.terminal.render.api.TerminalRenderClusterDataSink
 import com.gagik.terminal.render.api.TerminalRenderClusterSink
 
 internal fun Line.copyToRenderAbi(
@@ -19,6 +20,7 @@ internal fun Line.copyToRenderAbi(
     hyperlinkIds: IntArray?,
     hyperlinkOffset: Int,
     clusterSink: TerminalRenderClusterSink?,
+    clusterDataSink: TerminalRenderClusterDataSink?,
     attrTranslator: RenderAttrTranslator,
     clusterScratch: RenderClusterScratch,
     reverseVideo: Boolean,
@@ -50,8 +52,14 @@ internal fun Line.copyToRenderAbi(
                 codeWords[codeOffset + col] = 0
             }
             raw <= TerminalConstants.CLUSTER_HANDLE_MAX -> {
-                if (clusterSink != null) {
-                    clusterSink.onCluster(col, clusterScratch.clusterText(this, col))
+                if (clusterDataSink != null || clusterSink != null) {
+                    val length = clusterScratch.readCluster(this, col)
+                    if (clusterDataSink != null) {
+                        clusterDataSink.onCluster(col, clusterScratch.codepoints, 0, length)
+                    }
+                    if (clusterSink != null) {
+                        clusterSink.onCluster(col, String(clusterScratch.codepoints, 0, length))
+                    }
                 }
             }
             else -> {
@@ -85,15 +93,16 @@ private fun Line.isWideLeading(col: Int): Boolean =
     col + 1 < width && rawCodepoint(col + 1) == TerminalConstants.WIDE_CHAR_SPACER
 
 internal class RenderClusterScratch {
-    private var codepoints = IntArray(16)
+    var codepoints = IntArray(16)
+        private set
 
-    fun clusterText(line: Line, col: Int): String {
+    fun readCluster(line: Line, col: Int): Int {
         val raw = line.rawCodepoint(col)
         val length = line.store.length(raw)
         if (codepoints.size < length) {
             codepoints = IntArray(length)
         }
         line.readCluster(col, codepoints)
-        return String(codepoints, 0, length)
+        return length
     }
 }
