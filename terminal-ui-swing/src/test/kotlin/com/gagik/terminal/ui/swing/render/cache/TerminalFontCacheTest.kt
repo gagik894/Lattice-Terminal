@@ -1,14 +1,13 @@
 package com.gagik.terminal.ui.swing.render.cache
 
 import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
 import java.awt.Font
 
 class TerminalFontCacheTest {
     @Test
     fun `font returns cached primary style variant`() {
-        val base = Font(Font.MONOSPACED, Font.PLAIN, 14)
+        val base = TerminalCacheTestFonts.primary(14f)
         val cache = TerminalFontCache()
 
         cache.update(base, emptyList(), useSystemFallbackFonts = false)
@@ -19,8 +18,8 @@ class TerminalFontCacheTest {
 
     @Test
     fun `update reports whether font settings changed`() {
-        val base = Font(Font.MONOSPACED, Font.PLAIN, 14)
-        val fallback = Font("Dialog", Font.PLAIN, 14)
+        val base = TerminalCacheTestFonts.primary(14f)
+        val fallback = TerminalCacheTestFonts.fallback(14f)
         val cache = TerminalFontCache()
 
         Assertions.assertTrue(cache.update(base, emptyList(), useSystemFallbackFonts = false))
@@ -31,8 +30,8 @@ class TerminalFontCacheTest {
 
     @Test
     fun `generation changes only when font settings change`() {
-        val base = Font(Font.MONOSPACED, Font.PLAIN, 14)
-        val fallback = Font("Dialog", Font.PLAIN, 14)
+        val base = TerminalCacheTestFonts.primary(14f)
+        val fallback = TerminalCacheTestFonts.fallback(14f)
         val cache = TerminalFontCache()
 
         val initialGeneration = cache.generation
@@ -48,17 +47,17 @@ class TerminalFontCacheTest {
 
     @Test
     fun `fontForText uses configured fallback when primary cannot display text`() {
-        val primary = Font("Courier New", Font.PLAIN, 17)
-        val fallback = Font("Dialog", Font.PLAIN, 11)
-        val thai = "\u0E01\u0E34"
+        val primary = TerminalCacheTestFonts.primary(17f)
+        val fallback = TerminalCacheTestFonts.fallback(11f)
+        val fallbackOnlyText = TerminalCacheTestFonts.FALLBACK_ONLY_TEXT
 
-        Assumptions.assumeTrue(primary.canDisplayUpTo(thai) >= 0)
-        Assumptions.assumeTrue(fallback.canDisplayUpTo(thai) < 0)
+        Assertions.assertTrue(primary.canDisplayUpTo(fallbackOnlyText) >= 0)
+        Assertions.assertTrue(fallback.canDisplayUpTo(fallbackOnlyText) < 0)
 
         val cache = TerminalFontCache()
         cache.update(primary, listOf(fallback), useSystemFallbackFonts = false)
 
-        val resolved = cache.fontForText(thai, Font.BOLD)
+        val resolved = cache.fontForText(fallbackOnlyText, Font.BOLD)
 
         Assertions.assertEquals(Font.BOLD, resolved.style)
         Assertions.assertEquals(primary.size2D, resolved.size2D)
@@ -67,18 +66,18 @@ class TerminalFontCacheTest {
 
     @Test
     fun `fontForText caches fallback fonts per style`() {
-        val primary = Font("Courier New", Font.PLAIN, 17)
-        val fallback = Font("Dialog", Font.PLAIN, 11)
-        val thai = "\u0E01\u0E34"
+        val primary = TerminalCacheTestFonts.primary(17f)
+        val fallback = TerminalCacheTestFonts.fallback(11f)
+        val fallbackOnlyText = TerminalCacheTestFonts.FALLBACK_ONLY_TEXT
 
-        Assumptions.assumeTrue(primary.canDisplayUpTo(thai) >= 0)
-        Assumptions.assumeTrue(fallback.canDisplayUpTo(thai) < 0)
+        Assertions.assertTrue(primary.canDisplayUpTo(fallbackOnlyText) >= 0)
+        Assertions.assertTrue(fallback.canDisplayUpTo(fallbackOnlyText) < 0)
 
         val cache = TerminalFontCache()
         cache.update(primary, listOf(fallback), useSystemFallbackFonts = false)
 
-        val plain = cache.fontForText(thai, Font.PLAIN)
-        val bold = cache.fontForText(thai, Font.BOLD)
+        val plain = cache.fontForText(fallbackOnlyText, Font.PLAIN)
+        val bold = cache.fontForText(fallbackOnlyText, Font.BOLD)
 
         Assertions.assertEquals(Font.PLAIN, plain.style)
         Assertions.assertEquals(Font.BOLD, bold.style)
@@ -88,10 +87,10 @@ class TerminalFontCacheTest {
 
     @Test
     fun `fontForText caches missing glyph resolution to primary font`() {
-        val primary = Font(Font.MONOSPACED, Font.PLAIN, 14)
-        val missing = String(Character.toChars(0x10FFFF))
+        val primary = TerminalCacheTestFonts.primary(14f)
+        val missing = String(Character.toChars(TerminalCacheTestFonts.MISSING_CODE_POINT))
 
-        Assumptions.assumeTrue(primary.canDisplayUpTo(missing) >= 0)
+        Assertions.assertTrue(primary.canDisplayUpTo(missing) >= 0)
 
         val cache = TerminalFontCache()
         cache.update(primary, emptyList(), useSystemFallbackFonts = false)
@@ -104,10 +103,10 @@ class TerminalFontCacheTest {
 
     @Test
     fun `fontForText caches missing glyph resolution per style`() {
-        val primary = Font(Font.MONOSPACED, Font.PLAIN, 14)
-        val missing = String(Character.toChars(0x10FFFF))
+        val primary = TerminalCacheTestFonts.primary(14f)
+        val missing = String(Character.toChars(TerminalCacheTestFonts.MISSING_CODE_POINT))
 
-        Assumptions.assumeTrue(primary.canDisplayUpTo(missing) >= 0)
+        Assertions.assertTrue(primary.canDisplayUpTo(missing) >= 0)
 
         val cache = TerminalFontCache()
         cache.update(primary, emptyList(), useSystemFallbackFonts = false)
@@ -121,7 +120,7 @@ class TerminalFontCacheTest {
 
     @Test
     fun `fontForText evicts old cluster fallback entries`() {
-        val primary = Font(Font.MONOSPACED, Font.PLAIN, 14)
+        val primary = TerminalCacheTestFonts.primary(14f)
         val cache = TerminalFontCache(textFallbackCapacityPerStyle = 2)
         cache.update(primary, emptyList(), useSystemFallbackFonts = false)
 
@@ -134,10 +133,10 @@ class TerminalFontCacheTest {
 
     @Test
     fun `fontForCodePoint uses primitive bounded cache`() {
-        val primary = Font(Font.MONOSPACED, Font.PLAIN, 14)
-        val codePoint = 0x10FFFF
+        val primary = TerminalCacheTestFonts.primary(14f)
+        val codePoint = TerminalCacheTestFonts.MISSING_CODE_POINT
 
-        Assumptions.assumeTrue(!primary.canDisplay(codePoint))
+        Assertions.assertFalse(primary.canDisplay(codePoint))
 
         val cache = TerminalFontCache(codePointFallbackCapacityPerStyle = 2)
         cache.update(primary, emptyList(), useSystemFallbackFonts = false)
@@ -151,10 +150,10 @@ class TerminalFontCacheTest {
 
     @Test
     fun `fontForCodePoint evicts old primitive fallback entries`() {
-        val primary = Font(Font.MONOSPACED, Font.PLAIN, 14)
-        Assumptions.assumeTrue(!primary.canDisplay(0x10FFFF))
-        Assumptions.assumeTrue(!primary.canDisplay(0x10FFFE))
-        Assumptions.assumeTrue(!primary.canDisplay(0x10FFFD))
+        val primary = TerminalCacheTestFonts.primary(14f)
+        Assertions.assertFalse(primary.canDisplay(0x10FFFF))
+        Assertions.assertFalse(primary.canDisplay(0x10FFFE))
+        Assertions.assertFalse(primary.canDisplay(0x10FFFD))
 
         val cache = TerminalFontCache(codePointFallbackCapacityPerStyle = 2)
         cache.update(primary, emptyList(), useSystemFallbackFonts = false)
