@@ -297,9 +297,24 @@ internal class TerminalTextPainter(
         baselineY: Int,
         fontRenderContext: FontRenderContext,
     ) {
-        complexTextLayouts
-            .clusterLayout(codepoints, offset, length, fontStyle, fontRenderContext, fontCache)
-            .draw(g, x.toFloat(), baselineY.toFloat())
+        val shapedLength = minOf(length, TerminalComplexTextLayoutCache.MAX_CLUSTER_LENGTH)
+        val baseline = baselineY.toFloat()
+        var drawX = x.toFloat()
+
+        val layout = complexTextLayouts
+            .clusterLayout(codepoints, offset, shapedLength, fontStyle, fontRenderContext, fontCache)
+        layout.draw(g, drawX, baseline)
+        drawX += layout.advance
+
+        var index = offset + shapedLength
+        val end = offset + length
+        while (index < end) {
+            val codePointLayout = complexTextLayouts
+                .codePointLayout(codepoints[index], fontStyle, fontRenderContext, fontCache)
+            codePointLayout.draw(g, drawX, baseline)
+            drawX += codePointLayout.advance
+            index++
+        }
     }
 
     private fun drawComplexCodePoint(

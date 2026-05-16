@@ -1,7 +1,6 @@
 package com.gagik.terminal.ui.swing.render.cache
 
-import org.junit.jupiter.api.Assertions.assertNotSame
-import org.junit.jupiter.api.Assertions.assertSame
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.awt.Font
@@ -162,38 +161,57 @@ class TerminalComplexTextLayoutCacheTest {
     }
 
     @Test
-    fun `clusterLayout normalizes pathological cluster sequences exceeding structural length limits`() {
+    fun `clusterLayout shapes bounded prefix for sequences exceeding structural length limits`() {
         // Arrange
         val fontCache = fontCache()
         val layoutCache = TerminalComplexTextLayoutCache(clusterCapacityPerStyle = 4)
         val frc = FontRenderContext(null, false, false)
-        val pathologicalInput = "A".repeat(33) // Exceeds MAX_CLUSTER_LENGTH (32)
+        val longInput = "A".repeat(TerminalComplexTextLayoutCache.MAX_CLUSTER_LENGTH + 1)
 
         // Act
-        val adversarialLayout = layoutCache.clusterLayout(pathologicalInput, Font.PLAIN, frc, fontCache)
-        val expectedReplacementLayout = layoutCache.clusterLayout("\uFFFD", Font.PLAIN, frc, fontCache)
+        val layout = layoutCache.clusterLayout(longInput, Font.PLAIN, frc, fontCache)
+        val replacementLayout = layoutCache.clusterLayout("\uFFFD", Font.PLAIN, frc, fontCache)
 
         // Assert
-        assertSame(expectedReplacementLayout, adversarialLayout,
-            "Sequences exceeding length constraints must collapse into the uniform replacement character layout to insulate OpenType processes")
+        assertEquals(TerminalComplexTextLayoutCache.MAX_CLUSTER_LENGTH, layout.characterCount)
+        assertNotSame(
+            replacementLayout,
+            layout,
+            "Long clusters must preserve a visible bounded prefix instead of collapsing to U+FFFD",
+        )
     }
 
     @Test
-    fun `adversarial cluster mitigation intercepts varying long inputs and maps them onto an identical cache instance`() {
+    fun `clusterLayout reuses identical bounded prefixes for long inputs`() {
         // Arrange
         val fontCache = fontCache()
         val layoutCache = TerminalComplexTextLayoutCache(clusterCapacityPerStyle = 4)
         val frc = FontRenderContext(null, false, false)
         val attackSequenceAlpha = "X".repeat(40)
-        val attackSequenceBeta = "Y".repeat(100)
+        val attackSequenceBeta = "X".repeat(100)
 
         // Act
         val firstLayout = layoutCache.clusterLayout(attackSequenceAlpha, Font.PLAIN, frc, fontCache)
         val secondLayout = layoutCache.clusterLayout(attackSequenceBeta, Font.PLAIN, frc, fontCache)
 
         // Assert
-        assertSame(firstLayout, secondLayout,
-            "Distinct out-of-bounds adversarial inputs must collapse onto the same cache line to provide O(1) mitigation performance")
+        assertSame(
+            firstLayout,
+            secondLayout,
+            "Long inputs with the same bounded prefix should reuse one shaped layout",
+        )
+    }
+
+    @Test
+    fun `clusterLayout does not collapse distinct long visible prefixes`() {
+        val fontCache = fontCache()
+        val layoutCache = TerminalComplexTextLayoutCache(clusterCapacityPerStyle = 4)
+        val frc = FontRenderContext(null, false, false)
+
+        val firstLayout = layoutCache.clusterLayout("X".repeat(40), Font.PLAIN, frc, fontCache)
+        val secondLayout = layoutCache.clusterLayout("Y".repeat(40), Font.PLAIN, frc, fontCache)
+
+        assertNotSame(firstLayout, secondLayout)
     }
 
     private fun fontCache(): TerminalFontCache {

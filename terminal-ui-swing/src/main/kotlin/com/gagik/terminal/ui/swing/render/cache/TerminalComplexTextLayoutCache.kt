@@ -1,5 +1,6 @@
 package com.gagik.terminal.ui.swing.render.cache
 
+import com.gagik.terminal.ui.swing.render.cache.TerminalComplexTextLayoutCache.Companion.MAX_CLUSTER_LENGTH
 import java.awt.Font
 import java.awt.font.FontRenderContext
 import java.awt.font.TextLayout
@@ -83,14 +84,12 @@ internal class TerminalComplexTextLayoutCache(
     }
 
     /**
-     * Resolves a shaped text layout for a multi-code-unit grapheme cluster, enforcing size limits
-     * to insulate the rendering pipeline from resource exhaustion.
+     * Resolves a shaped text layout for a multi-code-unit grapheme cluster.
      *
-     * This method handles the complex text shaping pipeline. It applies a defensive length filter
-     * to neutralize adversarial input sequences (e.g., pathological Zero-Width Joiner loops)
-     * *prior* to cache interrogation. This design choice collapses unbounded variants into a
-     * uniform tracking token, guaranteeing an upper bound on memory consumption and preventing
-     * cache thrashing.
+     * Shaping is capped to [MAX_CLUSTER_LENGTH] code points so adversarial cluster
+     * sequences cannot force unbounded OpenType work. Callers that pass longer
+     * clusters should render the remaining code points through the single-code-point
+     * path to preserve data visibility.
      *
      * @param style The packed integer bitmask specifying the target font style (Bold/Italic variants).
      * @param fontRenderContext The active Java2D graphics context specifying scaling and anti-aliasing configurations.
@@ -112,12 +111,10 @@ internal class TerminalComplexTextLayoutCache(
         if (length == 0) {
             return codePointLayout(REPLACEMENT_CODE_POINT, style, fontRenderContext, fontCache)
         }
-        if (length > MAX_CLUSTER_LENGTH) {
-            return codePointLayout(REPLACEMENT_CODE_POINT, style, fontRenderContext, fontCache)
-        }
         if (length == 1) {
             return codePointLayout(codepoints[offset], style, fontRenderContext, fontCache)
         }
+        val shapedLength = minOf(length, MAX_CLUSTER_LENGTH)
 
         fontCache.refreshSystemFallbackFonts()
         prepare(fontRenderContext, fontCache.generation)
@@ -125,17 +122,17 @@ internal class TerminalComplexTextLayoutCache(
         val normalizedStyle = style and STYLE_MASK
         val styleLayouts = clusterLayouts[normalizedStyle]
 
-        val hash = styleLayouts.contentHash(codepoints, offset, length)
-        val slot = styleLayouts.findSlot(codepoints, offset, length, hash)
+        val hash = styleLayouts.contentHash(codepoints, offset, shapedLength)
+        val slot = styleLayouts.findSlot(codepoints, offset, shapedLength, hash)
         val cached = styleLayouts.layoutAtSlot(slot)
         if (cached != null) return cached
 
         // TextLayout and Font.canDisplayUpTo require text objects. Construct
         // them only on cache misses; repeated paint passes compare primitive
         // codepoint slices directly.
-        val text = String(codepoints, offset, length)
+        val text = String(codepoints, offset, shapedLength)
         val layout = TextLayout(text, fontCache.fontForText(text, normalizedStyle), fontRenderContext)
-        styleLayouts.putAtMissSlot(codepoints, offset, length, hash, layout, slot)
+        styleLayouts.putAtMissSlot(codepoints, offset, shapedLength, hash, layout, slot)
         return layout
     }
 
@@ -502,7 +499,7 @@ internal class TerminalComplexTextLayoutCache(
 
     }
 
-    private companion object {
+    companion object {
         private const val DEFAULT_CODE_POINT_CAPACITY = 4096
         private const val DEFAULT_CLUSTER_CAPACITY_PER_STYLE = 1024
         private const val STYLE_COUNT = 4
@@ -510,11 +507,10 @@ internal class TerminalComplexTextLayoutCache(
         private const val EMPTY = -1
 
         /**
-         * The absolute upper bound for permitted UTF-16 code units within a single cluster.
-         * Designed to safely accommodate complex multi-modifier emojis (e.g., standard family
-         * configurations) while intercepting malicious deep-nested styling exploits.
+         * Maximum code points shaped as one cluster before the renderer falls
+         * back to drawing the remainder as individual code points.
          */
-        private const val MAX_CLUSTER_LENGTH = 32
+        internal const val MAX_CLUSTER_LENGTH = 32
 
         private const val REPLACEMENT_CODE_POINT = 0xFFFD
 
