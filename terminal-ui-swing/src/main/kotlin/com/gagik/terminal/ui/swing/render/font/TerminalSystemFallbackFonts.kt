@@ -7,11 +7,23 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
 /**
- * Loads installed system fonts away from the Swing event-dispatch thread.
+ * Resolves installed system font family names away from the Swing event-dispatch thread.
+ *
+ * This intentionally avoids [GraphicsEnvironment.getAllFonts], which forces the
+ * JVM font manager to instantiate and retain every installed physical font.
+ * Rendering code turns these family names into concrete [Font] instances only
+ * after primary and configured fallbacks fail for a glyph.
  */
-internal object TerminalSystemFallbackFonts {
+internal interface TerminalSystemFontFamilies {
+    /**
+     * Returns loaded font family names, or starts background loading and returns empty.
+     */
+    fun familiesOrStartLoading(): List<String>
+}
+
+internal object TerminalSystemFallbackFonts : TerminalSystemFontFamilies {
     private val started = AtomicBoolean(false)
-    private val loadedFonts = AtomicReference<List<Font>?>(null)
+    private val loadedFamilies = AtomicReference<List<String>?>(null)
     private val executor = Executors.newSingleThreadExecutor { runnable ->
         Thread(runnable, "terminal-ui-system-font-loader").apply {
             isDaemon = true
@@ -19,26 +31,27 @@ internal object TerminalSystemFallbackFonts {
     }
 
     /**
-     * Returns loaded fonts, or starts a background load and returns empty.
+     * Returns loaded font family names, or starts a background load and returns empty.
      */
-    fun fontsOrStartLoading(): List<Font> {
-        val loaded = loadedFonts.get()
+    override fun familiesOrStartLoading(): List<String> {
+        val loaded = loadedFamilies.get()
         if (loaded != null) return loaded
 
         if (started.compareAndSet(false, true)) {
             executor.execute {
-                loadedFonts.compareAndSet(null, loadSystemFonts())
+                loadedFamilies.compareAndSet(null, loadSystemFontFamilies())
             }
         }
         return emptyList()
     }
 
-    private fun loadSystemFonts(): List<Font> {
+    private fun loadSystemFontFamilies(): List<String> {
         return try {
             GraphicsEnvironment
                 .getLocalGraphicsEnvironment()
-                .allFonts
-                .distinctBy { it.family }
+                .availableFontFamilyNames
+                .asList()
+                .distinct()
         } catch (_: RuntimeException) {
             emptyList()
         }

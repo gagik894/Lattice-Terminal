@@ -1,5 +1,6 @@
 package com.gagik.terminal.ui.swing.render.cache
 
+import com.gagik.terminal.ui.swing.render.font.TerminalSystemFontFamilies
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import java.awt.Font
@@ -165,6 +166,25 @@ class TerminalFontCacheTest {
         Assertions.assertEquals(2, cache.resolvedCodePointFontCacheSize(Font.PLAIN))
     }
 
+    @Test
+    fun `system fallback uses lazy family fonts after configured fallbacks miss`() {
+        val primary = TerminalCacheTestFonts.primary(17f)
+        val fallbackFamily = TerminalCacheTestFonts.registerFallbackFamily()
+        val systemFamilies = RecordingSystemFontFamilies(listOf(fallbackFamily))
+        val fallbackOnlyText = TerminalCacheTestFonts.FALLBACK_ONLY_TEXT
+
+        Assertions.assertTrue(primary.canDisplayUpTo(fallbackOnlyText) >= 0)
+
+        val cache = TerminalFontCache(systemFontFamilies = systemFamilies)
+        cache.update(primary, emptyList(), useSystemFallbackFonts = true)
+        Assertions.assertEquals(0, systemFamilies.calls)
+
+        val resolved = cache.fontForText(fallbackOnlyText, Font.PLAIN)
+
+        Assertions.assertEquals(fallbackFamily, resolved.family)
+        Assertions.assertEquals(1, systemFamilies.calls)
+    }
+
     @Suppress("UNCHECKED_CAST")
     private fun TerminalFontCache.resolvedTextFontCache(style: Int): Map<String, Font> {
         val field = TerminalFontCache::class.java.getDeclaredField("resolvedTextFonts")
@@ -181,5 +201,17 @@ class TerminalFontCacheTest {
         val sizeField = caches[style and (Font.BOLD or Font.ITALIC)].javaClass.getDeclaredField("size")
         sizeField.isAccessible = true
         return sizeField.getInt(caches[style and (Font.BOLD or Font.ITALIC)])
+    }
+
+    private class RecordingSystemFontFamilies(
+        private val families: List<String>,
+    ) : TerminalSystemFontFamilies {
+        var calls = 0
+            private set
+
+        override fun familiesOrStartLoading(): List<String> {
+            calls++
+            return families
+        }
     }
 }

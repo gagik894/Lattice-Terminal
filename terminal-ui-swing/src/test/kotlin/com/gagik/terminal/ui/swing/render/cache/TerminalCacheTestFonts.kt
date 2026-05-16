@@ -1,6 +1,7 @@
 package com.gagik.terminal.ui.swing.render.cache
 
 import java.awt.Font
+import java.awt.GraphicsEnvironment
 
 internal object TerminalCacheTestFonts {
     const val FALLBACK_ONLY_TEXT: String = "\u03A9"
@@ -12,6 +13,12 @@ internal object TerminalCacheTestFonts {
 
     fun fallback(size: Float): Font {
         return load("fonts/DroidSans.ttf", size)
+    }
+
+    fun registerFallbackFamily(size: Float = 14f): String {
+        val font = fallback(size)
+        GraphicsEnvironment.getLocalGraphicsEnvironment().registerFont(font)
+        return font.family
     }
 
     private fun load(path: String, size: Float): Font {
