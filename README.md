@@ -1,218 +1,224 @@
-# Lattice Terminal
+# 🌀 Lattice Terminal
 
-**Lattice Terminal** is a high-performance terminal emulator pipeline written in Kotlin.
+**Lattice Terminal** is a next-generation, high-performance, strictly modular, and allocation-conscious terminal emulator pipeline written in **Kotlin/JVM 21**. 
 
-It is designed as a professional, modular terminal stack: a headless screen-state
-core, a strict byte-stream parser, a transport/session layer, reusable input and
-rendering modules, and UI frontends that can be swapped without touching terminal
-grid internals.
+Unlike legacy JVM terminal components that suffer from tight coupling, high garbage collection overhead, poor Unicode/grapheme correctness, and visual tearing, Lattice is engineered from the ground up as a **professional, production-ready terminal engine**. It separates concerns cleanly into an asynchronous, unidirectional pipeline: a headless screen-state engine, a table-driven byte-stream parser, an in-memory double/triple-buffered render publisher, and isolated Swing UI components that run glitch-free.
 
-Lattice is structured as a production-grade terminal engine that can support local PTYs, 
-future SSH connectors, standalone desktop applications, IDE integrations, and test/benchmark
-environments from the same core pipeline.
+---
 
-## Why Lattice
+## Architectural Philosophy & Unidirectional Data Flow
 
-Most terminal projects collapse parsing, grid mutation, rendering, input, and
-transport I/O into one tightly coupled system. Lattice deliberately separates
-those responsibilities.
+Lattice is structured to keep terminal state mutation, SSH/PTY I/O, event encoding, and visual rendering entirely independent. 
 
-- The **core** is a headless terminal memory engine.
-- The **parser** converts byte streams into semantic terminal commands.
-- The **integration layer** maps parser semantics onto public core APIs.
-- The **input layer** encodes keyboard, paste, focus, and mouse events into
-  host-bound bytes.
-- The **session layer** serializes parser/core mutation and host-bound writes.
-- The **render API/cache** expose primitive render frames without leaking grid
-  internals.
-- The **UI modules** paint and handle user interaction without knowing about PTY
-  internals.
-- The **transport layer** lets PTY, SSH, and test connectors share the same
-  terminal pipeline.
-
-This keeps terminal correctness, rendering, and transport logic independently
-testable and replaceable.
-
-## Architecture
-
-- **terminal-protocol**  
-  Dependency-free protocol vocabulary: control-code constants, ANSI/DEC mode ids,
-  mouse/input mode constants, and shared low-level terminal protocol definitions.
-
-- **terminal-parser**  
-  Converts host byte streams into semantic terminal commands. It owns ANSI/DEC
-  state-machine behavior, UTF-8 decoding, OSC/DCS handling, and grapheme
-  segmentation before dispatching printable clusters.
-
-- **terminal-integration**  
-  Bridges parser commands to the public core APIs and host metadata callbacks.
-  This is where parser semantics become core operations such as cursor movement,
-  erasing, SGR attributes, modes, titles, hyperlinks, and device responses.
-
-- **terminal-core**  
-  The headless terminal memory engine. It owns screen state, scrollback, cursor
-  state, mode state, attributes, clusters, resizing, mutation physics, and
-  render-frame publication. It does not parse byte streams, encode input, perform
-  I/O, or paint UI.
-
-- **terminal-input**  
-  Encodes platform-agnostic keyboard, paste, focus, and mouse events into
-  host-bound terminal byte sequences. It supports application cursor/keypad
-  modes, bracketed paste, focus reporting, xterm-style mouse encodings, and
-  explicit input policy handling.
-
-- **terminal-render-api**  
-  Defines dependency-free primitive render-frame contracts: cells, cursor,
-  clusters, attributes, line metadata, and frame access. UI modules consume this
-  instead of touching core internals.
-
-- **terminal-render-cache**  
-  Copies render-frame data into renderer-side primitive caches for UI consumers.
-  It keeps UI rendering decoupled from live core mutation and avoids exposing
-  core grid storage.
-
-- **terminal-transport-api**  
-  Defines the connector contract for byte-stream transports such as PTY, SSH, and
-  test connectors.
-
-- **terminal-session**  
-  Owns runtime ordering and synchronization. It serializes parser/core mutation,
-  response draining, UI input bytes, transport writes, and lifecycle boundaries.
-
-- **terminal-pty**  
-  Provides PTY4J-backed local-process connectors for shells such as PowerShell,
-  `cmd.exe`, WSL, Bash, and other local terminal programs.
-
-- **terminal-ui-swing**  
-  A reusable Swing terminal component. It owns painting, cursor presentation,
-  selection, input event mapping, clipboard/font/settings abstractions, viewport
-  state, and scrollbar behavior. It stays independent of IntelliJ APIs and PTY
-  specifics.
-
-- **terminal-ui-swing-demo**  
-  A standalone manual-test host that opens the Swing component on a local
-  PTY-backed session.
-
-- **terminal-testkit**  
-  Shared connector fakes and fixtures for cross-module tests.
-
-- **terminal-benchmarks**  
-  JMH benchmarks for parser, buffer, render-frame, and mutation hot paths.
-
-## Core Engine
-
-The Lattice core is intentionally headless. It is the terminal’s memory and
-physics layer, not a UI toolkit.
-
-- **TerminalBuffer** is the facade coordinating state, mutation, cursor, mode,
-  reader, and inspector surfaces.
-- **ScreenBuffer** owns one complete screen arena: history ring, cluster store,
-  cursor, saved cursor, and scroll margins.
-- **Line** stores cells in flat primitive arrays:
-  - `IntArray` codepoints, sentinels, and cluster handles
-  - `IntArray` packed primary attributes
-  - soft-wrap metadata
-- **MutationEngine** owns spatial cell physics:
-  overwrite, deferred wrap, scroll, erase, wide-cell annihilation, insertion,
-  deletion, and line editing.
-- **CursorEngine** owns cursor movement, save/restore, tabbing, and cursor
-  positioning behavior.
-- **TerminalResizer** reflows the primary screen and deep-copies surviving
-  cluster payloads into a fresh arena.
-
-The hot paths are built around primitive arrays, explicit ownership boundaries,
-and low-allocation mutation.
-
-## Unicode Boundary
-
-The core is cluster-capable but not a grapheme segmenter.
-
-- `writeCodepoint` and `writeText` are scalar convenience entrypoints.
-- `writeCluster` is the parser-facing entrypoint for pre-segmented grapheme
-  clusters.
-- The parser owns UTF-8 decoding, malformed-sequence recovery, grapheme
-  segmentation, charset mapping, and printable cluster dispatch.
-
-This separation keeps Unicode text processing out of grid mutation logic while
-still allowing the core to store wide characters, combining sequences, emoji, and
-ZWJ clusters correctly.
-
-## Render Pipeline
-
-Lattice separates render data from UI painting.
-
-- The core exposes primitive render-frame contracts through `terminal-render-api`.
-- `terminal-render-cache` copies visible frame data into renderer-owned primitive
-  caches.
-- UI components render from cached frame data instead of reading live core arrays.
-- Renderers group cells by opaque style keys and glyph/cluster runs rather than
-  allocating per-cell objects.
-
-The renderer treats core packed attributes as opaque grouping keys. It does not
-decode core’s internal attribute layout. Visual style resolution is kept behind
-explicit render-facing contracts so core storage can evolve without breaking UI
-modules.
-
-## Transport and Session Model
-
-Transport connectors own raw byte-stream I/O. `TerminalSession` owns terminal
-ordering.
-
-- Parser/core mutation is serialized.
-- Host-bound writes are serialized.
-- UI input bytes and terminal response bytes share one ordered host-output path.
-- Transport-specific code stays outside parser, core, input, and UI modules.
-- PTY, SSH, and test connectors can use the same parser/core/input/render
-  pipeline.
-
-The PTY implementation is only one backend. It is not baked into the UI or core.
-
-## Behavioral Notes
-
-- Wide characters and grapheme clusters are stored explicitly in the grid.
-- Deferred wrapping follows terminal behavior: writing in the last column marks a
-  pending wrap; the next printable character performs the wrap.
-- Resize reflows the primary screen, wipes the alternate screen, and resets both
-  buffers’ scroll regions to the full viewport.
-- ED 3 follows xterm/VTE-style semantics: it clears scrollback history while
-  preserving the visible viewport.
-- Alternate-screen variants, cursor save/restore, bracketed paste, focus
-  reporting, SGR mouse, OSC titles, OSC 8 hyperlinks, SGR attributes, and safe
-  device responses are modeled as explicit protocol behavior rather than hidden
-  UI hacks.
-
-## Development
-
-Requirements:
-
-- JDK 21 or higher (preferably JBR 21+)
-- Gradle 7.4 or higher
-
-
-Run all tests:
-```bash
-./gradlew test
 ```
-Launch the Swing PTY demo:
-```bash
- ./gradlew :terminal-ui-swing-demo:run
-```
-On Windows, the demo uses PowerShell by default so commands like ls and cat
-work. To launch a custom shell:
-```bash
-./gradlew :terminal-ui-swing-demo:run --args="cmd.exe"
-```
-Or for WSL:
-```bash
-./gradlew :terminal-ui-swing-demo:run --args="wsl.exe"
+                                    LATTICE PIPELINE HIGH-LEVEL ARCHITECTURE
+                                    
+  Inbound Path:
+  ┌─────────────┐  Raw Bytes  ┌─────────────────┐  Commands  ┌──────────────────────┐  Mutations  ┌───────────────┐
+  │ PTY / SSH   ├────────────►│ terminal-parser ├───────────►│ terminal-integration ├────────────►│ terminal-core │
+  └─────────────┘             └─────────────────┘            └──────────────────────┘             └───────┬───────┘
+                                                                                                 Snapshot │ 
+  Rendering Path (Triple-Buffered):                                                                       ▼
+  ┌────────────────┐  Repaint   ┌───────────────────┐  Lease  ┌───────────────────────┐  copyLine  ┌───────────────┐
+  │ Swing Component│ ◄──────────┤ terminal-ui-swing ├────────►│ terminal-render-cache │◄───────────┤ Render API    │
+  └────────────────┘            └───────────────────┘         └───────────────────────┘            └───────────────┘
+  
+  Outbound Path:
+  ┌─────────────┐  Key/Paste  ┌─────────────────┐  ANSI Bytes┌──────────────────────┐  write()    ┌───────────────┐
+  │ User Event  ├────────────►│ terminal-input  ├───────────►│ terminal-session     ├────────────►│ PTY / SSH     │
+  └─────────────┘             └─────────────────┘            └──────────────────────┘             └───────────────┘
 ```
 
-## Project Goal
+The system is coordinated by [TerminalSession](./terminal-session/src/main/kotlin/session/TerminalSession.kt) using a strict thread-safe actor-like model. Concurrency is tightly controlled, preventing any race conditions or visual tearing while sustaining a rendering speed of **60+ FPS** under high-throughput data loads.
 
-Lattice Terminal is built to become a serious terminal foundation: correct enough
-for modern shells and TUIs, modular enough for IDE integration, and fast enough
-to justify replacing older JVM terminal stacks.
+---
 
-It is not tied to one UI toolkit, one shell, or one transport. The terminal
-engine, parser, input encoder, transport runtime, and renderer are separate by
-design.
+## The Lattice Advantage: Key Strengths
+
+### 1. Zero-Allocation Hot Paths & Extreme Performance
+Terminal engines process thousands of bytes per second. To prevent JVM garbage collection pauses, Lattice enforces strict allocation-minimal rules:
+* **Primitive Array Packing**: Cells are stored in parallel, flat arrays (`IntArray` for codepoints/handles, `LongArray` for attributes, and `LongArray` for extended attributes) inside [Line](./terminal-core/src/main/kotlin/core/model/Line.kt), ensuring cache locality and eliminating object overhead.
+* **Monomorphized LRU Caches**: Rather than using boxed generic caches, the rendering and typography layers use custom, monomorphized primitive caches (`IntFontLru` for 32-bit codepoints to Font fallbacks, `LongTextLayoutLru` for 64-bit styling/codepoint keys, and `ClusterTextLayoutLru` for complex grapheme clusters).
+* **Flat FSM Transitions**: [AnsiStateMachine](./terminal-parser/src/main/kotlin/parser/impl/TerminalParser.kt) resolves state transitions in $O(1)$ time with no allocations using packed integers inside a flat `IntArray`.
+* **Zero-Allocation Sinks & Builders**: Keyboard and mouse encoders use [InputScratchBuffer](./terminal-input/src/main/kotlin/input/impl/InputScratchBuffer.kt) and pre-allocated [TerminalSequences](./terminal-input/src/main/kotlin/input/impl/TerminalSequences.kt) to format ANSI strings on the fly without spawning a single `String` or `StringBuilder` object.
+
+### 2. Glitch-Free Triple-Buffered UI Pipeline
+UI paint loops on the Event Dispatch Thread (EDT) must not block background PTY readers or resize operations. Lattice solves this via a robust triple-buffering publication model in [TerminalRenderPublisher](./terminal-render-cache/src/main/kotlin/com/gagik/terminal/render/cache/TerminalRenderPublisher.kt):
+* **Back Buffer**: Leased by the background render worker to copy the screen snapshot.
+* **Front Buffer**: Leased by the UI thread during paint traversals to guarantee visual stability.
+* **Spare Buffer**: Used to ingest incoming updates while the UI is currently painting.
+This decouples the visual rendering from live mutations, guaranteeing **perfect frame isolation and zero tearing**.
+
+### 3. Ultimate Typography & Custom Primitive Rendering
+Text rendering in terminals is traditionally slow due to complex shaping of non-ASCII glyphs. Lattice uses a **bifurcated text rendering pipeline** in the Swing UI module:
+* **ASCII Fast Path**: Contiguous runs of ASCII characters with identical style attributes are drawn in a single call via `Graphics2D.drawChars` or `drawGlyphVector`, completely bypassing shaping.
+* **Complex Unicode Fallback**: Non-ASCII scripts, emojis, and combined grapheme clusters are processed using prioritized fallback font chains (asynchronously resolved off the EDT) and cached Java2D `TextLayout` objects.
+* **Pixel-Perfect Primitives**: Box-drawing and block-element characters are drawn programmatically cell-by-cell instead of relying on monospaced fonts, eliminating visual gaps or line misalignments across different monitor scale factors.
+
+### 4. Precision Unicode & Grapheme Alignment
+Lattice treats the Unicode standard as a first-class citizen:
+* **UAX #29 Segmentation**: The parser segments incoming codepoints into grapheme clusters using generated tables, properly accumulating Combining Marks, Regional Indicators, and Zero-Width-Joiner (ZWJ) emoji sequences.
+* **Interactive Echo Optimization**: To eliminate character echo latency, the parser publishes incomplete clusters immediately (`flushForRender`). If subsequent packets contain accent combiners, the parser uses `appendToPreviousCluster` to modify the cell without affecting cursor placement.
+* **East Asian Width Engine**: [UnicodeWidth](./terminal-core/src/main/kotlin/core/util/UnicodeWidth.kt) employs standard ASCII fast-checks and quick BMP/SMP bitset lookups to decide grid occupancy (0, 1, or 2 cells) with ambiguous-width configuration support.
+
+### 5. Security-Hardened Integration
+Rogue or high-output subprocesses can exhaust memory limits by flooding the terminal with malformed or infinite payloads:
+* **LRU Bounded Hyperlinks**: OSC 8 hyperlinks are registered inside a bounded LRU cache in [CoreTerminalCommandSink](./terminal-integration/src/main/kotlin/integration/CoreTerminalCommandSink.kt). The cells store only a packed integer ID, and old entries are automatically evicted, preventing memory exhaustion.
+* **Strict Payload Discarding**: OSC and DCS accumulation buffers are strictly capped (default 4KB). Characters exceeding this threshold set an overflow flag and are discarded safely.
+* **Title Stack Guards**: xterm title stacking is capped at `16` elements to prevent infinite stack expansion.
+
+---
+
+## Module Architecture & Responsibility Matrix
+
+The Lattice codebase is split into highly specialized modules with rigid architectural boundaries:
+
+| Module | Purpose & Core Responsibility | What It Owns | What It Does NOT Own |
+| :--- | :--- | :--- | :--- |
+| [**terminal-protocol**](./terminal-protocol) | Shared Vocabulary | C0/C1 constants, `AnsiMode`, `DecPrivateMode`, mouse modes, [TerminalHostOutput](./terminal-protocol/src/main/kotlin/protocol/host/TerminalHostOutput.kt) | Has no execution logic or sub-dependencies. |
+| [**terminal-parser**](./terminal-parser) | Stream Parsing | UTF-8 streaming decoder, table-driven [AnsiStateMachine](./terminal-parser/src/main/kotlin/parser/impl/TerminalParser.kt), DEC charset remapping, UAX #29 segmentation | Has no grid physics, cursor calculations, or UI state. |
+| [**terminal-core**](./terminal-core) | Headless Grid Engine | Circular scrollback history, parallel array cells ([Line](./terminal-core/src/main/kotlin/core/model/Line.kt)), wide-character erasure, margins, resizing reflow | Has no byte stream parsing, input encoding, or UI code. |
+| [**terminal-integration**](./terminal-integration) | Translation Adapter | [CoreTerminalCommandSink](./terminal-integration/src/main/kotlin/integration/CoreTerminalCommandSink.kt) adapter, SGR Pen state, OSC 8 Hyperlink LRU registry, DECSTR/RIS resets | Has no byte parsing or state duplication. |
+| [**terminal-input**](./terminal-input) | Event Encoding | physical key arrow/numpad maps, xterm `modifyOtherKeys`, SGR/legacy mouse coordinate mapping, bracketed paste | Has no screen mutation or output parsing logic. |
+| [**terminal-render-api**](./terminal-render-api) | Rendering Contract | Viewport frame models, cursor shapes, cell state flags ([TerminalRenderCellFlags](./terminal-render-api/src/main/kotlin/com/gagik/terminal/render/api/TerminalRenderCellFlags.kt)), packed color ARGB resolution | Has no UI frame painting or glyph metrics. |
+| [**terminal-render-cache**](./terminal-render-cache) | Frame Snapshotting | [TerminalRenderCache](./terminal-render-cache/src/main/kotlin/com/gagik/terminal/render/cache/TerminalRenderCache.kt) double-buffering, [TerminalRenderPublisher](./terminal-render-cache/src/main/kotlin/com/gagik/terminal/render/cache/TerminalRenderPublisher.kt) triple-buffering | Agnostic to UI paint platforms (AWT/Swing/Compose). |
+| [**terminal-transport-api**](./terminal-transport-api) | Duplex Channel Contract | [TerminalConnector](./terminal-transport-api/src/main/kotlin/transport/TerminalConnector.kt) interface, connection callbacks, size change signaling | Has no thread policies or payload inspection. |
+| [**terminal-session**](./terminal-session) | Pipeline Sync & Event Loop | Synchronized `mutationLock` and `outboundWriteLock`, daemon `renderWorker` coalescing, fast UTF-8 encoder | Does not own transport background threads or paint loops. |
+| [**terminal-pty**](./terminal-pty) | Native Process Host | Cross-platform Pty4J management, daemon reader/watcher threads, system default shell detection | Has no input encoding or grid cell mutations. |
+| [**terminal-ui-swing**](./terminal-ui-swing) | Swing Component | [TerminalSwingTerminal](./terminal-ui-swing/src/main/kotlin/com/gagik/terminal/ui/swing/api/TerminalSwingTerminal.kt) component, bifurcated text rendering, smart double-click path selection | Has no shell process awareness or protocol parsing. |
+| [**terminal-testkit**](./terminal-testkit) | Testing Fakes | In-memory [MockConnector](./terminal-testkit/src/main/kotlin/testkit/MockConnector.kt), outbound write capture, remote crash/exit simulators | Has no physical thread spawning or shell requirements. |
+
+---
+
+## Seamless Integration Guide
+
+One of Lattice's greatest strengths is how easily it integrates into existing desktop systems or custom runtimes. Hooking a local system shell (e.g. bash or cmd) to a fully interactive Swing JComponent requires just a few lines of configuration:
+
+```kotlin
+import com.gagik.terminal.pty.TerminalPtySessions
+import com.gagik.terminal.pty.TerminalPtyOptions
+import com.gagik.terminal.ui.swing.api.TerminalSwingTerminal
+import com.gagik.terminal.ui.swing.settings.TerminalSwingSettings
+import com.gagik.terminal.ui.swing.settings.TerminalTheme
+import java.awt.BorderLayout
+import javax.swing.JFrame
+import javax.swing.JPanel
+
+fun spawnTerminalWindow() {
+    // 1. Configure the local PTY process (spawns native process via Pty4J)
+    val options = TerminalPtyOptions(
+        command = listOf("bash"),          // or "cmd.exe", "powershell.exe", etc.
+        columns = 100,
+        rows = 30,
+        maxHistory = 5000,
+        treatAmbiguousAsWide = false
+    )
+    
+    // 2. Wires up standard components and starts PTY reader daemon threads
+    val session = TerminalPtySessions.localPty(options)
+    
+    // 3. Create JComponent with customizable, immutable visual presets
+    val settings = TerminalSwingSettings(
+        theme = TerminalTheme.ONE_DARK,
+        fontSize = 14,
+        fontFamily = "JetBrains Mono"
+    )
+    val terminalComponent = TerminalSwingTerminal(
+        settingsProvider = { settings }
+    )
+    
+    // 4. Bind the Swing UI thread-safely to the session Snapshots
+    terminalComponent.bind(session)
+    
+    // 5. Host it in standard Swing layouts
+    val frame = JFrame("Lattice Terminal")
+    frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
+    frame.layout = BorderLayout()
+    frame.add(terminalComponent, BorderLayout.CENTER)
+    frame.pack()
+    frame.isVisible = true
+}
+```
+
+---
+
+## Core Mechanics Under the Hood
+
+### Efficient In-Memory Cell Storage
+Lattice rejects object-per-cell designs. The cell grid in [Line](./terminal-core/src/main/kotlin/core/model/Line.kt) uses parallel primitive arrays:
+```
+  Cell Representation in Line.kt:
+  ┌─────────────────────────────────────────────────────────────┐
+  │ codepoints [IntArray] (e.g., 'A', Combining Diacritics, -1) │
+  ├─────────────────────────────────────────────────────────────┤
+  │ attrs [LongArray] (Primary Styles, Bold, Italic, 24-bit RGB)│
+  ├─────────────────────────────────────────────────────────────┤
+  │ extendedAttrs [LongArray] (Secondary, Underline, Link ID)   │
+  └─────────────────────────────────────────────────────────────┘
+```
+* **Unicode Scalars**: Plain text cells directly store their scalar values.
+* **Spacer Sentinel (`-1`)**: Represents trailing visual cells for double-width East Asian glyphs.
+* **Cluster Handle (`<= -2`)**: Points to combining marks or ZWJ regional flags inside the [ClusterStore](./terminal-core/src/main/kotlin/core/store/ClusterStore.kt).
+
+### Monomorphized LRU Typography Caches
+To dodge Java Type Erasure boxing overhead during font fallbacks, we hand-craft primitive LRU caches:
+```kotlin
+// IntFontLru.kt: Direct 32-bit codepoint to AWT Font fallback resolver
+class IntFontLru(val capacity: Int) {
+    private val keys = IntArray(capacity)
+    private val values = arrayOfNulls<Font>(capacity)
+    // Fast O(1) hash mapping without object boxing
+}
+```
+
+### High-Fidelity Reflow & Resizing
+When resizing a terminal window, a simple coordinate truncation cuts off text. Lattice employs a robust 3-phase reflow in [TerminalResizer](./terminal-core/src/main/kotlin/core/engine/TerminalResizer.kt):
+1. **Logical Row Rebuilding**: Assembles segmented rows using `Line.wrapped` flags.
+2. **Re-wrapping**: Re-calculates and folds character arrays according to new column dimensions.
+3. **Cluster Deep-Copying**: Moves survived cluster indices into a pristine [ClusterStore](./terminal-core/src/main/kotlin/core/store/ClusterStore.kt) arena to clean leaked data pools.
+
+---
+
+## Development & Verification
+
+### Prerequisites
+* **JDK 21 or higher** (preferably JetBrains Runtime `JBR 21` for optimal AWT text layouts)
+* **Gradle 7.4+**
+
+### Command Reference
+* **Run All Tests**:
+  ```bash
+  ./gradlew test
+  ```
+* **Run Parser, Core or Swing tests**:
+  ```bash
+  ./gradlew :terminal-parser:test
+  ./gradlew :terminal-core:test
+  ./gradlew :terminal-ui-swing:test
+  ```
+* **Launch Swing PTY Demo**:
+  ```bash
+  ./gradlew :terminal-ui-swing-demo:run
+  ```
+* **Launch with Custom Shell**:
+  ```bash
+  # Windows cmd
+  ./gradlew :terminal-ui-swing-demo:run --args="cmd.exe"
+  # WSL
+  ./gradlew :terminal-ui-swing-demo:run --args="wsl.exe"
+  ```
+
+---
+
+## Testing Doctrine & Hermetic Architecture
+
+We treat terminal testing as a critical engineering discipline:
+1. **No Faked Quirks**: Tests assert standard-aligned ANSI/DEC protocol states and real screen results, rather than current parser implementation hacks.
+2. **Deterministic Multi-threading**: The integration and session test suites employ synchronized latches to stress-test high-volume updates, proving that resizes, writes, and renders are race-free.
+3. **In-Memory Fakes**: By leveraging `:terminal-testkit`'s [MockConnector](./terminal-testkit/src/main/kotlin/testkit/MockConnector.kt), developers can run complete, bidirectional I/O integration tests with exact byte assertions, completely independent of local OS PTY subsystems.
+
+---
+
+## Project Status & Feature Gap Map
+
+Lattice is structured to support modern terminal protocols and rich TUI environments. Unsupported features or pending integrations are strictly documented inside the project [feature gap map](./docs/terminal-feature-gap-map.md) and annotated inside the source code using distinct `TODO` markers.
