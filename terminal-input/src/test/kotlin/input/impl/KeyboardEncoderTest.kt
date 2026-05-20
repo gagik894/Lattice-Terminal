@@ -208,14 +208,11 @@ class KeyboardEncoderTest {
             policy = TerminalInputPolicy(backspacePolicy = BackspacePolicy.BACKSPACE),
         )
         assertBytes(bytes(0x1b, 0x7f), TerminalKeyEvent.key(TerminalKey.BACKSPACE, TerminalModifiers.ALT))
-        assertBytes(bytes(), TerminalKeyEvent.key(TerminalKey.BACKSPACE, TerminalModifiers.CTRL))
+        assertBytes(bytes(0x08), TerminalKeyEvent.key(TerminalKey.BACKSPACE, TerminalModifiers.CTRL))
         assertBytes(
             expected = bytes(0x7f),
             event = TerminalKeyEvent.key(TerminalKey.BACKSPACE, TerminalModifiers.CTRL),
-            policy =
-                TerminalInputPolicy(
-                    unsupportedModifiedKeyPolicy = UnsupportedModifiedKeyPolicy.EMIT_UNMODIFIED,
-                ),
+            policy = TerminalInputPolicy(backspacePolicy = BackspacePolicy.BACKSPACE),
         )
         assertBytes(
             expected = bytes(),

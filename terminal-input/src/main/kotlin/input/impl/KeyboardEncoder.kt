@@ -105,9 +105,9 @@ internal class KeyboardEncoder(
 
             TerminalKey.TAB -> encodeTab(modifiers, modeBits)
 
-            TerminalKey.BACKSPACE -> encodeBackspace(modifiers)
+            TerminalKey.BACKSPACE -> encodeBackspace(modifiers, modeBits)
 
-            TerminalKey.ESCAPE -> encodeEscape(modifiers)
+            TerminalKey.ESCAPE -> encodeEscape(modifiers, modeBits)
 
             TerminalKey.UP ->
                 encodeArrow(
@@ -206,9 +206,25 @@ internal class KeyboardEncoder(
         }
     }
 
-    private fun encodeBackspace(modifiers: Int) {
+    private fun encodeBackspace(
+        modifiers: Int,
+        modeBits: Long,
+    ) {
+        if (shouldEncodeModifyOtherSpecial(BACKSPACE_CODEPOINT, modifiers, modeBits)) {
+            encodeModifyOtherKey(BACKSPACE_CODEPOINT, modifiers)
+            return
+        }
+
         val unsupportedModifier =
-            TerminalModifiers.hasShift(modifiers) || TerminalModifiers.hasCtrl(modifiers)
+            TerminalModifiers.hasShift(modifiers) ||
+                (
+                    TerminalModifiers.hasCtrl(modifiers) &&
+                        (
+                            TerminalModifiers.hasShift(modifiers) ||
+                                TerminalModifiers.hasAlt(modifiers) ||
+                                TerminalModifiers.hasMeta(modifiers)
+                        )
+                )
 
         if (unsupportedModifier) {
             when (policy.unsupportedModifiedKeyPolicy) {
@@ -223,12 +239,17 @@ internal class KeyboardEncoder(
             return
         }
 
-        val byte =
+        val baseByte =
             when (policy.backspacePolicy) {
                 BackspacePolicy.DELETE -> ControlCode.DEL
                 BackspacePolicy.BACKSPACE -> BS
             }
-        output.writeByte(byte)
+
+        if (TerminalModifiers.hasCtrl(modifiers)) {
+            output.writeByte(if (baseByte == ControlCode.DEL) BS else ControlCode.DEL)
+        } else {
+            output.writeByte(baseByte)
+        }
     }
 
     private fun encodeEnter(
@@ -264,7 +285,10 @@ internal class KeyboardEncoder(
         }
     }
 
-    private fun encodeEscape(modifiers: Int) {
+    private fun encodeEscape(
+        modifiers: Int,
+        modeBits: Long,
+    ) {
         val unsupportedModifier =
             TerminalModifiers.hasShift(modifiers) || TerminalModifiers.hasCtrl(modifiers)
 
@@ -733,6 +757,8 @@ internal class KeyboardEncoder(
 
     private companion object {
         private const val BS: Int = 0x08
+        private const val BACKSPACE_CODEPOINT: Int = 0x08
+        private const val ESCAPE_CODEPOINT: Int = 0x1b
         private const val ENTER_CODEPOINT: Int = 0x0d
         private const val MODIFY_OTHER_KEYS_PREFIX: Int = 27
         private const val TAB_CODEPOINT: Int = 0x09
