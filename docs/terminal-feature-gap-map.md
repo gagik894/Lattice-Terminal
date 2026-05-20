@@ -346,7 +346,9 @@ Missing:
 ## Integration Gaps
 
 - `DONE(integration)`: parser SGR inverse, 256-color indexed, and RGB/truecolor
-  attributes are mapped to core pen attributes without clamping.
+  attributes are mapped to core pen attributes without clamping. SGR 38:2/48:2
+  support includes robust subparameter chain length logic to handle explicit
+  and omitted color space IDs in colon-separated sequences.
 - `DONE(integration)`: map faint, blink, conceal, strikethrough, overline,
   underline style, and underline color SGR attributes to core pen storage.
 - `DONE(integration)`: parser DECSTR maps to core `softReset`.
@@ -406,7 +408,7 @@ Missing:
 - `DONE(input)`: xterm modifyOtherKeys mode 1/2 consumption from core packed
   mode bits for the original `CSI 27 ; modifier ; codepoint ~` format,
   including regression coverage for modified printable input and
-  control-equivalent Tab/Enter cases.
+  control-equivalent Tab/Enter/Backspace/Escape cases.
 - `TODO(input)`: broader modified-key encoding:
   - `formatOtherKeys=1` / CSI-u
   - modifyOtherKeys mode 3
