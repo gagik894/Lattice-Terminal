@@ -128,7 +128,7 @@ internal class ClusterStore {
         length: Int = codepoints.size,
     ): Int {
         require(length >= 1) { "cluster must have at least 1 codepoint, got $length" }
-        
+
         val bucket = bucketForCapacity(length)
         var slot = NO_FREE
 
@@ -184,7 +184,7 @@ internal class ClusterStore {
             throw IllegalStateException("Cluster handle $handle was freed more than once")
         }
         isLive[slot] = false
-        
+
         val bucket = bucketForCapacity(slotCapacities[slot])
         nextFree[slot] = freeHeads[bucket]
         freeHeads[bucket] = slot
@@ -284,14 +284,13 @@ internal class ClusterStore {
     // Private helpers
 
     /** Maps a physical capacity to one of the 4 size-classed buckets. */
-    private fun bucketForCapacity(capacity: Int): Int {
-        return when {
+    private fun bucketForCapacity(capacity: Int): Int =
+        when {
             capacity <= 2 -> 0
             capacity == 3 -> 1
             capacity == 4 -> 2
             else -> 3
         }
-    }
 
     /** Pops a slot index from a specific bucket, returning [NO_FREE] if empty. */
     private fun popSlot(bucket: Int): Int {

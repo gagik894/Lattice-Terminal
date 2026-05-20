@@ -287,9 +287,10 @@ class TerminalSessionTest {
                 connector = connector,
                 parser = RecordingParser(),
                 inputEncoder = NoOpInputEncoder,
-                hyperlinkResolver = TerminalHyperlinkResolver { id ->
-                    if (id == 42) "https://example.com" else null
-                },
+                hyperlinkResolver =
+                    TerminalHyperlinkResolver { id ->
+                        if (id == 42) "https://example.com" else null
+                    },
             )
 
         assertAll(

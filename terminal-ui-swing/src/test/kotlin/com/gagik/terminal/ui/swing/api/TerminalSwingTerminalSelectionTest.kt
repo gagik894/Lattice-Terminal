@@ -312,9 +312,10 @@ class TerminalSwingTerminalSelectionTest {
         val session =
             testSession(
                 frame = frame,
-                hyperlinkResolver = TerminalHyperlinkResolver { id ->
-                    if (id == 7) "https://example.com" else null
-                },
+                hyperlinkResolver =
+                    TerminalHyperlinkResolver { id ->
+                        if (id == 7) "https://example.com" else null
+                    },
             )
         val component =
             TerminalSwingTerminal {

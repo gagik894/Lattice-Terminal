@@ -732,7 +732,7 @@ class ClusterStoreTest {
             val hLarge = store.alloc(intArrayOf(1, 2, 3, 4))
             store.free(hLarge)
 
-            // Allocate a small cluster (length 2). 
+            // Allocate a small cluster (length 2).
             // It searches Bucket 0, 1, 2. Since Bucket 2 has the freed slot, it pops it.
             val hSmall = store.alloc(intArrayOf(5, 6))
             assertEquals(hLarge, hSmall, "Should reuse the large slot index")
