@@ -42,6 +42,7 @@ class TerminalModesTest {
             { assertEquals(MouseTrackingMode.OFF, modes.mouseTrackingMode) },
             { assertEquals(MouseEncodingMode.DEFAULT, modes.mouseEncodingMode) },
             { assertEquals(0, modes.modifyOtherKeysMode) },
+            { assertEquals(0, modes.formatOtherKeysMode) },
         )
     }
 
@@ -64,6 +65,7 @@ class TerminalModesTest {
         modes.mouseTrackingMode = MouseTrackingMode.ANY_EVENT
         modes.mouseEncodingMode = MouseEncodingMode.SGR
         modes.modifyOtherKeysMode = 2
+        modes.formatOtherKeysMode = 1
 
         modes.reset()
 
@@ -84,6 +86,7 @@ class TerminalModesTest {
             { assertEquals(MouseTrackingMode.OFF, modes.mouseTrackingMode) },
             { assertEquals(MouseEncodingMode.DEFAULT, modes.mouseEncodingMode) },
             { assertEquals(0, modes.modifyOtherKeysMode) },
+            { assertEquals(0, modes.formatOtherKeysMode) },
         )
     }
 
@@ -98,6 +101,7 @@ class TerminalModesTest {
         modes.mouseTrackingMode = MouseTrackingMode.BUTTON_EVENT
         modes.mouseEncodingMode = MouseEncodingMode.SGR
         modes.modifyOtherKeysMode = 2
+        modes.formatOtherKeysMode = 1
 
         val bits = modes.getModeBitsSnapshot()
         val snapshot = modes.getModeSnapshot()
@@ -111,6 +115,7 @@ class TerminalModesTest {
             { assertEquals(MouseTrackingMode.BUTTON_EVENT, snapshot.mouseTrackingMode) },
             { assertEquals(MouseEncodingMode.SGR, snapshot.mouseEncodingMode) },
             { assertEquals(2, snapshot.modifyOtherKeysMode) },
+            { assertEquals(1, snapshot.formatOtherKeysMode) },
         )
     }
 
@@ -133,6 +138,7 @@ class TerminalModesTest {
         modes.mouseTrackingMode = MouseTrackingMode.ANY_EVENT
         modes.mouseEncodingMode = MouseEncodingMode.URXVT
         modes.modifyOtherKeysMode = 2
+        modes.formatOtherKeysMode = 1
 
         modes.softReset()
 
@@ -153,6 +159,7 @@ class TerminalModesTest {
             { assertEquals(MouseTrackingMode.OFF, modes.mouseTrackingMode) },
             { assertEquals(MouseEncodingMode.URXVT, modes.mouseEncodingMode) },
             { assertEquals(0, modes.modifyOtherKeysMode) },
+            { assertEquals(0, modes.formatOtherKeysMode) },
         )
     }
 }

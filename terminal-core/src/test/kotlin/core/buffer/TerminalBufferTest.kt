@@ -204,6 +204,7 @@ class TerminalBufferTest {
             { assertEquals(MouseTrackingMode.OFF, snapshot.mouseTrackingMode) },
             { assertEquals(MouseEncodingMode.SGR, snapshot.mouseEncodingMode) },
             { assertEquals(0, snapshot.modifyOtherKeysMode) },
+            { assertEquals(0, snapshot.formatOtherKeysMode) },
             { assertEquals(0, state.primaryBuffer.scrollTop) },
             { assertEquals(3, state.primaryBuffer.scrollBottom) },
             { assertEquals(0, state.primaryBuffer.leftMargin) },
@@ -275,6 +276,7 @@ class TerminalBufferTest {
             { assertEquals(MouseTrackingMode.OFF, snapshot.mouseTrackingMode) },
             { assertEquals(MouseEncodingMode.DEFAULT, snapshot.mouseEncodingMode) },
             { assertEquals(0, snapshot.modifyOtherKeysMode) },
+            { assertEquals(0, snapshot.formatOtherKeysMode) },
             { assertEquals(0, buffer.cursorCol) },
             { assertEquals(0, buffer.cursorRow) },
         )

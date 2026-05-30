@@ -128,6 +128,22 @@ internal class TerminalModes : TerminalInputState {
                 value.coerceIn(0, 7),
             )
 
+    /**
+     * Format-other-keys wire format.
+     *
+     * `0` means xterm's original modifyOtherKeys format. Values are clamped to
+     * the packed 2-bit range until the protocol contract grows additional
+     * supported formats.
+     */
+    var formatOtherKeysMode: Int
+        get() = TerminalInputState.formatOtherKeysMode(currentBits)
+        set(value) =
+            setPacked(
+                TerminalModeBits.FORMAT_OTHER_KEYS_MASK,
+                TerminalModeBits.FORMAT_OTHER_KEYS_SHIFT,
+                value.coerceIn(0, 3),
+            )
+
     private val currentBits: Long
         get() = modeBits.get()
 
@@ -157,6 +173,7 @@ internal class TerminalModes : TerminalInputState {
             mouseTrackingMode = decodeMouseTracking(bits),
             mouseEncodingMode = decodeMouseEncoding(bits),
             modifyOtherKeysMode = TerminalInputState.modifyOtherKeysMode(bits),
+            formatOtherKeysMode = TerminalInputState.formatOtherKeysMode(bits),
         )
     }
 
