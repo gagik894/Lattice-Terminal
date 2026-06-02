@@ -13,15 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.gagik.terminal.protocol
+package com.gagik.terminal.protocol.keyboard
 
 /**
- * Xterm formatOtherKeys values stored in core's packed input-mode word.
+ * Kitty keyboard numeric codes for functional keys in the initial input slice.
+ *
+ * Printable Unicode scalar keys use their Unicode codepoint directly. These
+ * constants cover the non-printable control-equivalent keys planned for the
+ * first Kitty keyboard encoder milestone.
  */
-object FormatOtherKeysMode {
-    /** Use the original xterm `CSI 27 ; modifier ; codepoint ~` format. */
-    const val DEFAULT: Int = 0
+object KittyKeyboardFunctionalKeyCode {
+    /** Tab key. */
+    const val TAB: Int = 0x09
 
-    /** Use xterm's compact `CSI codepoint ; modifier u` format. */
-    const val CSI_U: Int = 1
+    /** Main Enter key. */
+    const val ENTER: Int = 0x0d
+
+    /** Escape key. */
+    const val ESCAPE: Int = 0x1b
+
+    /** Backspace key. */
+    const val BACKSPACE: Int = 0x7f
 }

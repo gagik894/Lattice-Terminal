@@ -13,22 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.gagik.terminal.protocol
+package com.gagik.terminal.protocol.keyboard
 
 /**
- * Kitty keyboard event-type values used in the second CSI-u parameter field.
- *
- * Values mirror kitty's "Comprehensive keyboard handling in terminals"
- * protocol:
- * <https://sw.kovidgoyal.net/kitty/keyboard-protocol/>.
+ * Xterm modifyOtherKeys mode values stored in core's packed input-mode word.
  */
-object KittyKeyboardEventType {
-    /** Key press event, the default when no event type subfield is present. */
-    const val PRESS: Int = 1
+object ModifyOtherKeysMode {
+    /** Do not use modifyOtherKeys encoding. */
+    const val DISABLED: Int = 0
 
-    /** Key repeat event. */
-    const val REPEAT: Int = 2
+    /** Encode ordinary modified keys whose legacy representation is ambiguous or missing. */
+    const val MODE_1: Int = 1
 
-    /** Key release event. */
-    const val RELEASE: Int = 3
+    /** Encode ordinary modified keys plus xterm's Tab/Enter control-equivalent exceptions. */
+    const val MODE_2: Int = 2
+
+    /** Encode ordinary keys even when no modifiers are active. */
+    const val MODE_3: Int = 3
 }

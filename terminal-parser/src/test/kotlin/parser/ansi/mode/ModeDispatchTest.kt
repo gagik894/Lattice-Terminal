@@ -21,8 +21,8 @@ import com.gagik.parser.fixture.TerminalParserFixture
 import com.gagik.parser.runtime.ParserState
 import com.gagik.terminal.protocol.AnsiMode
 import com.gagik.terminal.protocol.DecPrivateMode
-import com.gagik.terminal.protocol.XtermKeyFormatResource
-import com.gagik.terminal.protocol.XtermKeyModifierResource
+import com.gagik.terminal.protocol.keyboard.XtermKeyFormatResource
+import com.gagik.terminal.protocol.keyboard.XtermKeyModifierResource
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName

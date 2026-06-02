@@ -13,20 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.gagik.terminal.protocol
+package com.gagik.terminal.protocol.keyboard
 
 /**
- * Kitty keyboard progressive-enhancement flag application modes.
- *
- * These are the optional second parameter in `CSI = flags ; mode u`.
+ * Xterm formatOtherKeys values stored in core's packed input-mode word.
  */
-object KittyKeyboardFlagApplicationMode {
-    /** Replace the active flag word with the supplied flags. */
-    const val REPLACE: Int = 1
+object FormatOtherKeysMode {
+    /** Use the original xterm `CSI 27 ; modifier ; codepoint ~` format. */
+    const val DEFAULT: Int = 0
 
-    /** Set supplied bits and leave omitted bits unchanged. */
-    const val SET: Int = 2
-
-    /** Clear supplied bits and leave omitted bits unchanged. */
-    const val CLEAR: Int = 3
+    /** Use xterm's compact `CSI codepoint ; modifier u` format. */
+    const val CSI_U: Int = 1
 }

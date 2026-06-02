@@ -21,10 +21,10 @@ import com.gagik.core.model.AttributeColor
 import com.gagik.core.model.UnderlineStyle
 import com.gagik.parser.api.TerminalOutputParser
 import com.gagik.parser.api.TerminalParsers
-import com.gagik.terminal.protocol.FormatOtherKeysMode
-import com.gagik.terminal.protocol.ModifyOtherKeysMode
 import com.gagik.terminal.protocol.MouseEncodingMode
 import com.gagik.terminal.protocol.MouseTrackingMode
+import com.gagik.terminal.protocol.keyboard.FormatOtherKeysMode
+import com.gagik.terminal.protocol.keyboard.ModifyOtherKeysMode
 import com.gagik.terminal.render.api.TerminalRenderCursorShape
 import com.gagik.terminal.render.api.TerminalRenderFrameReader
 import org.junit.jupiter.api.Assertions.*

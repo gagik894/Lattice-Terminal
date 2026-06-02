@@ -13,17 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.gagik.terminal.protocol
+package com.gagik.terminal.protocol.keyboard
 
 /**
- * Xterm XTFMTKEYS resource ids used by `CSI > Pp ; Pv f`.
+ * Kitty keyboard event-type values used in the second CSI-u parameter field.
  *
- * Values mirror xterm's control-sequences table for "Set/reset key format
- * options (XTFMTKEYS)":
- * <https://invisible-island.net/xterm/ctlseqs/ctlseqs.html>.
- * In that table, `Pp = 4` selects formatOtherKeys.
+ * Values mirror kitty's "Comprehensive keyboard handling in terminals"
+ * protocol:
+ * <https://sw.kovidgoyal.net/kitty/keyboard-protocol/>.
  */
-object XtermKeyFormatResource {
-    /** formatOtherKeys resource id. */
-    const val FORMAT_OTHER_KEYS: Int = 4
+object KittyKeyboardEventType {
+    /** Key press event, the default when no event type subfield is present. */
+    const val PRESS: Int = 1
+
+    /** Key repeat event. */
+    const val REPEAT: Int = 2
+
+    /** Key release event. */
+    const val RELEASE: Int = 3
 }
