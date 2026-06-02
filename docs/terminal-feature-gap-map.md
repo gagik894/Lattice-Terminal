@@ -443,9 +443,18 @@ Missing:
 - `DONE(input)`: xterm input profile matrix tests covering application
   cursor/keypad, bracketed paste, focus, mouse tracking/encoding combinations,
   and modifyOtherKeys off/mode1/mode2.
-- `TODO(input)`: Kitty Keyboard Protocol, after the xterm input profile is
-  locked. Keep it as a separate protocol path rather than mixing it into the
-  xterm legacy/modifyOtherKeys encoder.
+- `DONE(protocol/core)`: Kitty Keyboard Protocol foundation:
+    - protocol constants for the five progressive-enhancement flags and flag
+      application modes
+    - packed core input-mode bits and snapshot helpers for active Kitty
+      keyboard flags
+    - public core setter and typed mode snapshot field for active Kitty
+      keyboard flags
+    - core tests for defaults, snapshots, reset/soft-reset behavior, masking,
+      controller routing, and input-mode bit decoding
+- `TODO(parser/integration/input)`: Kitty Keyboard Protocol behavior, after the
+  xterm input profile is locked. Keep it as a separate protocol path rather
+  than mixing it into the xterm legacy/modifyOtherKeys encoder.
 
 Planned Kitty Keyboard Protocol scope:
 
@@ -459,9 +468,10 @@ Planned Kitty Keyboard Protocol scope:
     - `terminal-parser`: recognize Kitty keyboard mode controls only. It should
       emit semantic sink calls for `CSI = flags ; mode u`, `CSI > flags u`,
       `CSI < number u`, and later `CSI ? u`; it must not encode keyboard input.
-    - `terminal-core`: store input-readable Kitty keyboard flags and a bounded
-      mode stack. The stack must eventually respect kitty's main-screen and
-      alternate-screen separation rule; do not fake this in integration.
+    - `terminal-core`: store input-readable Kitty keyboard flags and, once
+      push/pop controls are parsed, a bounded mode stack. The stack must
+      eventually respect kitty's main-screen and alternate-screen separation
+      rule; do not fake this in integration.
     - `terminal-integration`: map parser semantic mode controls to core APIs,
       with explicit no-op/TODO behavior for unsupported query responses.
     - `terminal-input`: add a dedicated Kitty encoder branch selected from core
@@ -481,6 +491,8 @@ Planned Kitty Keyboard Protocol scope:
     - support push/pop controls with a small bounded stack:
         - `CSI > flags u`: push current flags, then apply supplied flags
         - `CSI < number u`: pop one or more stack entries, defaulting to one
+      - `TODO(core)`: add bounded stack state when parser/integration starts
+        routing push/pop controls.
     - encode only key press events at first; report repeat/release events only
       after UI event vocabulary exposes them distinctly.
     - implement the high-value input slice first:
