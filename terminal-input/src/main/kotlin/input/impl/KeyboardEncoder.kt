@@ -16,7 +16,6 @@
 package com.gagik.terminal.input.impl
 
 import com.gagik.core.api.TerminalInputState
-import com.gagik.core.api.TerminalModeBits
 import com.gagik.terminal.input.event.TerminalKey
 import com.gagik.terminal.input.event.TerminalKeyEvent
 import com.gagik.terminal.input.event.TerminalModifiers
@@ -741,6 +740,7 @@ internal class KeyboardEncoder(
             3 -> TerminalSequences.DELETE
             5 -> TerminalSequences.PAGE_UP
             6 -> TerminalSequences.PAGE_DOWN
+            13 -> TerminalSequences.F3_KITTY
             15 -> TerminalSequences.F5
             17 -> TerminalSequences.F6
             18 -> TerminalSequences.F7
@@ -864,10 +864,240 @@ internal class KeyboardEncoder(
                     return
                 }
 
-                else -> {
-                    // Fallback to legacy encoding for arrows, functions, keypad, etc.
-                    val legacyModeBits = modeBits and TerminalModeBits.KITTY_KEYBOARD_FLAGS_MASK.inv()
-                    encodeSpecialKey(key, modifiers, legacyModeBits)
+                TerminalKey.UP -> {
+                    encodeKittyCsiLetter('A'.code, modifiers)
+                    return
+                }
+
+                TerminalKey.DOWN -> {
+                    encodeKittyCsiLetter('B'.code, modifiers)
+                    return
+                }
+
+                TerminalKey.RIGHT -> {
+                    encodeKittyCsiLetter('C'.code, modifiers)
+                    return
+                }
+
+                TerminalKey.LEFT -> {
+                    encodeKittyCsiLetter('D'.code, modifiers)
+                    return
+                }
+
+                TerminalKey.HOME -> {
+                    encodeKittyCsiLetter('H'.code, modifiers)
+                    return
+                }
+
+                TerminalKey.END -> {
+                    encodeKittyCsiLetter('F'.code, modifiers)
+                    return
+                }
+
+                TerminalKey.INSERT -> {
+                    encodeTildeKey(2, modifiers)
+                    return
+                }
+
+                TerminalKey.DELETE -> {
+                    encodeTildeKey(3, modifiers)
+                    return
+                }
+
+                TerminalKey.PAGE_UP -> {
+                    encodeTildeKey(5, modifiers)
+                    return
+                }
+
+                TerminalKey.PAGE_DOWN -> {
+                    encodeTildeKey(6, modifiers)
+                    return
+                }
+
+                TerminalKey.F1 -> {
+                    encodeKittyCsiLetter('P'.code, modifiers)
+                    return
+                }
+
+                TerminalKey.F2 -> {
+                    encodeKittyCsiLetter('Q'.code, modifiers)
+                    return
+                }
+
+                TerminalKey.F3 -> {
+                    encodeTildeKey(13, modifiers)
+                    return
+                }
+
+                TerminalKey.F4 -> {
+                    encodeKittyCsiLetter('S'.code, modifiers)
+                    return
+                }
+
+                TerminalKey.F5 -> {
+                    encodeTildeKey(15, modifiers)
+                    return
+                }
+
+                TerminalKey.F6 -> {
+                    encodeTildeKey(17, modifiers)
+                    return
+                }
+
+                TerminalKey.F7 -> {
+                    encodeTildeKey(18, modifiers)
+                    return
+                }
+
+                TerminalKey.F8 -> {
+                    encodeTildeKey(19, modifiers)
+                    return
+                }
+
+                TerminalKey.F9 -> {
+                    encodeTildeKey(20, modifiers)
+                    return
+                }
+
+                TerminalKey.F10 -> {
+                    encodeTildeKey(21, modifiers)
+                    return
+                }
+
+                TerminalKey.F11 -> {
+                    encodeTildeKey(23, modifiers)
+                    return
+                }
+
+                TerminalKey.F12 -> {
+                    encodeTildeKey(24, modifiers)
+                    return
+                }
+
+                TerminalKey.PF1 -> {
+                    encodeKittyCsiLetter('P'.code, modifiers)
+                    return
+                }
+
+                TerminalKey.PF2 -> {
+                    encodeKittyCsiLetter('Q'.code, modifiers)
+                    return
+                }
+
+                TerminalKey.PF3 -> {
+                    encodeTildeKey(13, modifiers)
+                    return
+                }
+
+                TerminalKey.PF4 -> {
+                    encodeKittyCsiLetter('S'.code, modifiers)
+                    return
+                }
+
+                TerminalKey.NUMPAD_0 -> {
+                    writeKittyCsiU(KittyKeyboardFunctionalKeyCode.KP_0, modifiers)
+                    return
+                }
+
+                TerminalKey.NUMPAD_1 -> {
+                    writeKittyCsiU(KittyKeyboardFunctionalKeyCode.KP_1, modifiers)
+                    return
+                }
+
+                TerminalKey.NUMPAD_2 -> {
+                    writeKittyCsiU(KittyKeyboardFunctionalKeyCode.KP_2, modifiers)
+                    return
+                }
+
+                TerminalKey.NUMPAD_3 -> {
+                    writeKittyCsiU(KittyKeyboardFunctionalKeyCode.KP_3, modifiers)
+                    return
+                }
+
+                TerminalKey.NUMPAD_4 -> {
+                    writeKittyCsiU(KittyKeyboardFunctionalKeyCode.KP_4, modifiers)
+                    return
+                }
+
+                TerminalKey.NUMPAD_5 -> {
+                    writeKittyCsiU(KittyKeyboardFunctionalKeyCode.KP_5, modifiers)
+                    return
+                }
+
+                TerminalKey.NUMPAD_6 -> {
+                    writeKittyCsiU(KittyKeyboardFunctionalKeyCode.KP_6, modifiers)
+                    return
+                }
+
+                TerminalKey.NUMPAD_7 -> {
+                    writeKittyCsiU(KittyKeyboardFunctionalKeyCode.KP_7, modifiers)
+                    return
+                }
+
+                TerminalKey.NUMPAD_8 -> {
+                    writeKittyCsiU(KittyKeyboardFunctionalKeyCode.KP_8, modifiers)
+                    return
+                }
+
+                TerminalKey.NUMPAD_9 -> {
+                    writeKittyCsiU(KittyKeyboardFunctionalKeyCode.KP_9, modifiers)
+                    return
+                }
+
+                TerminalKey.NUMPAD_DECIMAL -> {
+                    writeKittyCsiU(KittyKeyboardFunctionalKeyCode.KP_DECIMAL, modifiers)
+                    return
+                }
+
+                TerminalKey.NUMPAD_DIVIDE -> {
+                    writeKittyCsiU(KittyKeyboardFunctionalKeyCode.KP_DIVIDE, modifiers)
+                    return
+                }
+
+                TerminalKey.NUMPAD_MULTIPLY -> {
+                    writeKittyCsiU(KittyKeyboardFunctionalKeyCode.KP_MULTIPLY, modifiers)
+                    return
+                }
+
+                TerminalKey.NUMPAD_SUBTRACT -> {
+                    writeKittyCsiU(KittyKeyboardFunctionalKeyCode.KP_SUBTRACT, modifiers)
+                    return
+                }
+
+                TerminalKey.NUMPAD_ADD -> {
+                    writeKittyCsiU(KittyKeyboardFunctionalKeyCode.KP_ADD, modifiers)
+                    return
+                }
+
+                TerminalKey.NUMPAD_ENTER -> {
+                    writeKittyCsiU(KittyKeyboardFunctionalKeyCode.KP_ENTER, modifiers)
+                    return
+                }
+
+                TerminalKey.NUMPAD_EQUALS -> {
+                    writeKittyCsiU(KittyKeyboardFunctionalKeyCode.KP_EQUAL, modifiers)
+                    return
+                }
+
+                TerminalKey.NUMPAD_COMMA,
+                TerminalKey.NUMPAD_SEPARATOR,
+                -> {
+                    writeKittyCsiU(KittyKeyboardFunctionalKeyCode.KP_SEPARATOR, modifiers)
+                    return
+                }
+
+                TerminalKey.NUMPAD_BEGIN -> {
+                    writeKittyCsiU(KittyKeyboardFunctionalKeyCode.KP_BEGIN, modifiers)
+                    return
+                }
+
+                TerminalKey.NUMPAD_SPACE -> {
+                    writeKittyCsiU(32, modifiers)
+                    return
+                }
+
+                TerminalKey.NUMPAD_TAB -> {
+                    writeKittyCsiU(9, modifiers)
                     return
                 }
             }
@@ -901,6 +1131,25 @@ internal class KeyboardEncoder(
         }
         scratch.appendByte('u'.code)
         scratch.writeTo(output)
+    }
+
+    private fun encodeKittyCsiLetter(
+        finalByte: Int,
+        modifiers: Int,
+    ) {
+        if (modifiers != TerminalModifiers.NONE) {
+            encodeCsiModifierFinal(
+                prefixNumber = 1,
+                modifiers = modifiers,
+                finalByte = finalByte,
+            )
+        } else {
+            scratch.clear()
+            scratch.appendByte(ControlCode.ESC)
+            scratch.appendByte('['.code)
+            scratch.appendByte(finalByte)
+            scratch.writeTo(output)
+        }
     }
 
     private companion object {

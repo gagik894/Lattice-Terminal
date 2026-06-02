@@ -458,7 +458,7 @@ Missing:
       malformed parameters, and structural dispatch
     - integration routing for `CSI = flags ; mode u` replace/set/clear
       semantics into core's active Kitty keyboard flag state
-- `TODO(core/input)`: Kitty Keyboard Protocol behavior (first slice of input encoding for Ctrl+I and Ctrl+Enter is DONE; expanding key coverage to printables and special keys remains). Keep it as a separate protocol path rather than mixing it into the xterm legacy/modifyOtherKeys encoder.
+- `DONE(core/input)`: Kitty Keyboard Protocol behavior (expanded key coverage for printables, control keys, arrows, navigation keys, function keys, and numeric keypad keys). Implemented as a clean, separate protocol path.
 
 Planned Kitty Keyboard Protocol scope:
 

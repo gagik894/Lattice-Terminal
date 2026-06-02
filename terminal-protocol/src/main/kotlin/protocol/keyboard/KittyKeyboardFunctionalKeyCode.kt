@@ -34,4 +34,25 @@ object KittyKeyboardFunctionalKeyCode {
 
     /** Backspace key. */
     const val BACKSPACE: Int = 0x7f
+
+    // Keypad keys (mapped to Private Use Area)
+    const val KP_0: Int = 57399
+    const val KP_1: Int = 57400
+    const val KP_2: Int = 57401
+    const val KP_3: Int = 57402
+    const val KP_4: Int = 57403
+    const val KP_5: Int = 57404
+    const val KP_6: Int = 57405
+    const val KP_7: Int = 57406
+    const val KP_8: Int = 57407
+    const val KP_9: Int = 57408
+    const val KP_DECIMAL: Int = 57409
+    const val KP_DIVIDE: Int = 57410
+    const val KP_MULTIPLY: Int = 57411
+    const val KP_SUBTRACT: Int = 57412
+    const val KP_ADD: Int = 57413
+    const val KP_ENTER: Int = 57414
+    const val KP_EQUAL: Int = 57415
+    const val KP_SEPARATOR: Int = 57416
+    const val KP_BEGIN: Int = 57427
 }

@@ -590,17 +590,98 @@ class KeyboardEncoderTest {
     }
 
     @Test
-    fun `Kitty keyboard fallbacks map other keys to legacy`() {
+    fun `Kitty keyboard encodes arrows and navigation keys under protocol`() {
+        val bits = kittyKeyboardBits(KittyKeyboardProgressiveFlag.DISAMBIGUATE_ESCAPE_CODES)
+        val appCursorBits = bits or TerminalModeBits.APPLICATION_CURSOR_KEYS
+
+        // Unmodified arrows (should always use CSI, bypassing APPLICATION_CURSOR_KEYS)
+        assertBytes(esc("[A"), TerminalKeyEvent.key(TerminalKey.UP), bits)
+        assertBytes(esc("[B"), TerminalKeyEvent.key(TerminalKey.DOWN), bits)
+        assertBytes(esc("[C"), TerminalKeyEvent.key(TerminalKey.RIGHT), bits)
+        assertBytes(esc("[D"), TerminalKeyEvent.key(TerminalKey.LEFT), bits)
+
+        assertBytes(esc("[A"), TerminalKeyEvent.key(TerminalKey.UP), appCursorBits)
+        assertBytes(esc("[B"), TerminalKeyEvent.key(TerminalKey.DOWN), appCursorBits)
+
+        // Modified arrows
+        assertBytes(esc("[1;5A"), TerminalKeyEvent.key(TerminalKey.UP, TerminalModifiers.CTRL), bits)
+        assertBytes(esc("[1;2D"), TerminalKeyEvent.key(TerminalKey.LEFT, TerminalModifiers.SHIFT), bits)
+
+        // Navigation keys (Home/End use letter final, others use tilde)
+        assertBytes(esc("[H"), TerminalKeyEvent.key(TerminalKey.HOME), bits)
+        assertBytes(esc("[F"), TerminalKeyEvent.key(TerminalKey.END), bits)
+        assertBytes(esc("[H"), TerminalKeyEvent.key(TerminalKey.HOME), appCursorBits)
+        assertBytes(esc("[F"), TerminalKeyEvent.key(TerminalKey.END), appCursorBits)
+
+        assertBytes(esc("[1;5H"), TerminalKeyEvent.key(TerminalKey.HOME, TerminalModifiers.CTRL), bits)
+        assertBytes(esc("[1;5F"), TerminalKeyEvent.key(TerminalKey.END, TerminalModifiers.CTRL), bits)
+
+        assertBytes(esc("[2~"), TerminalKeyEvent.key(TerminalKey.INSERT), bits)
+        assertBytes(esc("[3~"), TerminalKeyEvent.key(TerminalKey.DELETE), bits)
+        assertBytes(esc("[5~"), TerminalKeyEvent.key(TerminalKey.PAGE_UP), bits)
+        assertBytes(esc("[6~"), TerminalKeyEvent.key(TerminalKey.PAGE_DOWN), bits)
+
+        assertBytes(esc("[2;5~"), TerminalKeyEvent.key(TerminalKey.INSERT, TerminalModifiers.CTRL), bits)
+        assertBytes(esc("[3;5~"), TerminalKeyEvent.key(TerminalKey.DELETE, TerminalModifiers.CTRL), bits)
+    }
+
+    @Test
+    fun `Kitty keyboard encodes function keys under protocol`() {
         val bits = kittyKeyboardBits(KittyKeyboardProgressiveFlag.DISAMBIGUATE_ESCAPE_CODES)
 
-        // Unmodified arrows/functions should fall back to legacy sequences
-        assertBytes(esc("[A"), TerminalKeyEvent.key(TerminalKey.UP), bits)
-        assertBytes(esc("OP"), TerminalKeyEvent.key(TerminalKey.F1), bits)
-        assertBytes(esc("[15~"), TerminalKeyEvent.key(TerminalKey.F5), bits)
+        // F1-F4 (F1, F2, F4 use CSI final letter; F3 uses tilde format 13~)
+        assertBytes(esc("[P"), TerminalKeyEvent.key(TerminalKey.F1), bits)
+        assertBytes(esc("[Q"), TerminalKeyEvent.key(TerminalKey.F2), bits)
+        assertBytes(esc("[13~"), TerminalKeyEvent.key(TerminalKey.F3), bits)
+        assertBytes(esc("[S"), TerminalKeyEvent.key(TerminalKey.F4), bits)
 
-        // Modified arrows/functions should fall back to legacy modified sequences
-        assertBytes(esc("[1;5A"), TerminalKeyEvent.key(TerminalKey.UP, TerminalModifiers.CTRL), bits)
         assertBytes(esc("[1;5P"), TerminalKeyEvent.key(TerminalKey.F1, TerminalModifiers.CTRL), bits)
+        assertBytes(esc("[1;5Q"), TerminalKeyEvent.key(TerminalKey.F2, TerminalModifiers.CTRL), bits)
+        assertBytes(esc("[13;5~"), TerminalKeyEvent.key(TerminalKey.F3, TerminalModifiers.CTRL), bits)
+        assertBytes(esc("[1;5S"), TerminalKeyEvent.key(TerminalKey.F4, TerminalModifiers.CTRL), bits)
+
+        // F5-F12
+        assertBytes(esc("[15~"), TerminalKeyEvent.key(TerminalKey.F5), bits)
+        assertBytes(esc("[24~"), TerminalKeyEvent.key(TerminalKey.F12), bits)
+        assertBytes(esc("[15;5~"), TerminalKeyEvent.key(TerminalKey.F5, TerminalModifiers.CTRL), bits)
+        assertBytes(esc("[24;5~"), TerminalKeyEvent.key(TerminalKey.F12, TerminalModifiers.CTRL), bits)
+
+        // PF1-PF4 (behave like F1-F4)
+        assertBytes(esc("[P"), TerminalKeyEvent.key(TerminalKey.PF1), bits)
+        assertBytes(esc("[Q"), TerminalKeyEvent.key(TerminalKey.PF2), bits)
+        assertBytes(esc("[13~"), TerminalKeyEvent.key(TerminalKey.PF3), bits)
+        assertBytes(esc("[S"), TerminalKeyEvent.key(TerminalKey.PF4), bits)
+    }
+
+    @Test
+    fun `Kitty keyboard encodes keypad keys under protocol`() {
+        val bits = kittyKeyboardBits(KittyKeyboardProgressiveFlag.DISAMBIGUATE_ESCAPE_CODES)
+        val appKeypadBits = bits or TerminalModeBits.APPLICATION_KEYPAD
+
+        // Keypad digits map to PUA codepoints under CSI-u (regardless of APPLICATION_KEYPAD mode)
+        assertBytes(esc("[57399u"), TerminalKeyEvent.key(TerminalKey.NUMPAD_0), bits)
+        assertBytes(esc("[57408u"), TerminalKeyEvent.key(TerminalKey.NUMPAD_9), bits)
+        assertBytes(esc("[57399u"), TerminalKeyEvent.key(TerminalKey.NUMPAD_0), appKeypadBits)
+        assertBytes(esc("[57408u"), TerminalKeyEvent.key(TerminalKey.NUMPAD_9), appKeypadBits)
+
+        assertBytes(esc("[57399;5u"), TerminalKeyEvent.key(TerminalKey.NUMPAD_0, TerminalModifiers.CTRL), bits)
+
+        // Keypad operators and functions
+        assertBytes(esc("[57409u"), TerminalKeyEvent.key(TerminalKey.NUMPAD_DECIMAL), bits)
+        assertBytes(esc("[57410u"), TerminalKeyEvent.key(TerminalKey.NUMPAD_DIVIDE), bits)
+        assertBytes(esc("[57411u"), TerminalKeyEvent.key(TerminalKey.NUMPAD_MULTIPLY), bits)
+        assertBytes(esc("[57412u"), TerminalKeyEvent.key(TerminalKey.NUMPAD_SUBTRACT), bits)
+        assertBytes(esc("[57413u"), TerminalKeyEvent.key(TerminalKey.NUMPAD_ADD), bits)
+        assertBytes(esc("[57414u"), TerminalKeyEvent.key(TerminalKey.NUMPAD_ENTER), bits)
+        assertBytes(esc("[57415u"), TerminalKeyEvent.key(TerminalKey.NUMPAD_EQUALS), bits)
+        assertBytes(esc("[57416u"), TerminalKeyEvent.key(TerminalKey.NUMPAD_COMMA), bits)
+        assertBytes(esc("[57416u"), TerminalKeyEvent.key(TerminalKey.NUMPAD_SEPARATOR), bits)
+        assertBytes(esc("[57427u"), TerminalKeyEvent.key(TerminalKey.NUMPAD_BEGIN), bits)
+
+        // Keypad space & tab
+        assertBytes(esc("[32u"), TerminalKeyEvent.key(TerminalKey.NUMPAD_SPACE), bits)
+        assertBytes(esc("[9u"), TerminalKeyEvent.key(TerminalKey.NUMPAD_TAB), bits)
+        assertBytes(esc("[32;5u"), TerminalKeyEvent.key(TerminalKey.NUMPAD_SPACE, TerminalModifiers.CTRL), bits)
     }
 
     @Test
