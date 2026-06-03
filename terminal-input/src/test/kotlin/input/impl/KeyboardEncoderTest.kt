@@ -19,6 +19,7 @@ import com.gagik.core.api.TerminalModeBits
 import com.gagik.terminal.input.event.TerminalKey
 import com.gagik.terminal.input.event.TerminalKeyEvent
 import com.gagik.terminal.input.event.TerminalModifiers
+import com.gagik.terminal.input.impl.keyboard.KeyboardEncoder
 import com.gagik.terminal.input.policy.BackspacePolicy
 import com.gagik.terminal.input.policy.MetaKeyPolicy
 import com.gagik.terminal.input.policy.TerminalInputPolicy
