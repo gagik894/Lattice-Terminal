@@ -471,8 +471,6 @@ internal class MutationEngine(
         val extendedAttr = state.pen.currentExtendedAttr
         val cCol = state.cursor.col
         val cRow = state.cursor.row
-        val oldCursorCol = cCol
-        val oldCursorRow = cRow
 
         if (!state.modes.isInsertMode &&
             charWidth != 2 &&
@@ -496,7 +494,7 @@ internal class MutationEngine(
                     state.cursor.col = cCol + 1
                     state.cursor.pendingWrap = false
                 }
-                markCursorIfMoved(oldCursorCol, oldCursorRow)
+                markCursorIfMoved(cCol, cRow)
                 return
             }
         }
