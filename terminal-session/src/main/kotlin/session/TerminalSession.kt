@@ -170,6 +170,7 @@ class TerminalSession(
      *
      * Input before [start] is ignored.
      */
+    @Suppress("UNUSED_PARAMETER")
     private inline fun withInputLock(block: TerminalInputEncoder.() -> Unit) {
         synchronized(outboundWriteLock) {
             if (isAcceptingInput()) {
