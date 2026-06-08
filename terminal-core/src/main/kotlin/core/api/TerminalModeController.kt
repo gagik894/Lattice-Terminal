@@ -111,6 +111,9 @@ interface TerminalModeController {
      */
     fun setTreatAmbiguousAsWide(enabled: Boolean)
 
+    /** Toggles synchronized output mode (DECSET/DECRST `?2026`). */
+    fun setSynchronizedOutput(enabled: Boolean)
+
     /**
      * Switches to the alternate screen buffer without saving the primary
      * cursor state.

@@ -128,6 +128,10 @@ internal class TerminalModeControllerImpl(
         mutateMode { state.modes.treatAmbiguousAsWide = enabled }
     }
 
+    override fun setSynchronizedOutput(enabled: Boolean) {
+        mutateMode { state.modes.isSynchronizedOutput = enabled }
+    }
+
     override fun enterAltBufferWithoutCursorSave(clearBeforeEnter: Boolean) {
         if (state.isAltScreenActive) return
 

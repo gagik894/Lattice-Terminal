@@ -409,14 +409,16 @@ class CoreTerminalCommandSinkTest {
         }
 
         @Test
-        fun `synchronized output mode is parsed and explicitly ignored until renderer batching exists`() {
+        fun `synchronized output mode is parsed and updates mode snapshot`() {
             val f = Fixture()
 
-            val before = f.terminal.getModeSnapshot()
-            f.acceptAscii("\u001B[?2026h")
-            f.acceptAscii("\u001B[?2026l")
+            assertFalse(f.terminal.getModeSnapshot().isSynchronizedOutput)
 
-            assertEquals(before, f.terminal.getModeSnapshot())
+            f.acceptAscii("\u001B[?2026h")
+            assertTrue(f.terminal.getModeSnapshot().isSynchronizedOutput)
+
+            f.acceptAscii("\u001B[?2026l")
+            assertFalse(f.terminal.getModeSnapshot().isSynchronizedOutput)
         }
 
         @Test

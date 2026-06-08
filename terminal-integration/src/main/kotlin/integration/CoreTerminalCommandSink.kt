@@ -387,9 +387,7 @@ class CoreTerminalCommandSink(
                 if (enable) terminal.enterAltBuffer() else terminal.exitAltBuffer()
             }
             DecPrivateMode.BRACKETED_PASTE -> terminal.setBracketedPasteEnabled(enable)
-            DecPrivateMode.SYNCHRONIZED_OUTPUT -> {
-                // TODO(core-gap): Store synchronized output state once renderer batching exists.
-            }
+            DecPrivateMode.SYNCHRONIZED_OUTPUT -> terminal.setSynchronizedOutput(enable)
         }
     }
 
