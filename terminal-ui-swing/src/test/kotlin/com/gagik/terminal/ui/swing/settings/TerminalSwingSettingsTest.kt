@@ -113,11 +113,19 @@ class TerminalSwingSettingsTest {
     }
 
     @Test
+    fun terminalThemesRemainPaletteFactoriesForHosts() {
+        val palette = TerminalTheme.ONE_DARK.createPalette()
+
+        assertEquals(0xFFABB2BF.toInt(), palette.defaultForeground)
+        assertEquals(0xFF1E2127.toInt(), palette.defaultBackground)
+    }
+
+    @Test
     fun componentReportsVisibleGridFromFrozenMetrics() {
         val component =
-            TerminalSwingTerminal {
+            TerminalSwingTerminal(settingsProvider = {
                 TerminalSwingSettings(columns = 10, rows = 4)
-            }
+            })
         val preferred = component.preferredSize
         var visibleColumns = 0
         var visibleRows = 0

@@ -119,9 +119,9 @@ Rather than repainting the entire terminal component, `TerminalSwingRepaintPlann
 * **Word & Punctuation Classification:** Falls back to grouping standard character classes (letters/digits/underscores vs. whitespace vs. contiguous punctuation).
 * **Rectangular Block Selections:** Holding `Alt` during drag enables block selection modes, clamping highlighted rectangular regions.
 
-### 2. Decoupled Clipboard Integration
+### 2. Decoupled Host Services
 * **`TerminalClipboardShortcuts`:** Maps standard operating system defaults (Command-C/V on macOS, Control-C/V on Windows, Control-Shift-C/V on Linux/Unix).
-* **`TerminalClipboardHandler`:** Abstract interface for read/write integrations. By default, it connects to standard Java AWT desktop toolkits, but allows host applications to override clipboard rules (e.g., to respect enterprise container security or IDE clipboard history stacks).
+* **`TerminalSwingHostServices`:** Supplies non-render host services such as UI dispatch, clipboard access, and explicit hyperlink activation. Rendering still consumes immutable settings and packed ARGB palettes, while IntelliJ or standalone hosts provide their own platform adapters outside the paint loop.
 
 ---
 
@@ -141,7 +141,7 @@ import javax.swing.JPanel
 fun createTerminalComponent(session: TerminalSession): JComponent {
     // 1. Define custom, immutable settings (optional theme preset)
     val settings = TerminalSwingSettings(
-        theme = TerminalTheme.ONE_DARK,
+        palette = TerminalTheme.ONE_DARK.createPalette(),
         columns = 100,
         rows = 30
     )

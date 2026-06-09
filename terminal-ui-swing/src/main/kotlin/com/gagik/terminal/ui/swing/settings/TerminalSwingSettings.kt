@@ -37,10 +37,7 @@ import java.util.*
  * @property cursorBlinkMillis cursor blink period in milliseconds.
  * @property textAntialiasing text antialiasing hint used during painting.
  * @property fractionalMetrics fractional font metrics hint used during painting.
- * @property clipboardHandler host clipboard adapter for copy and paste actions.
  * @property clipboardShortcuts platform clipboard key bindings.
- * @property hyperlinkHandler host policy for explicit Ctrl-click hyperlink
- * activation.
  * @property hyperlinkActivationForeground packed ARGB foreground used for the
  * linked span currently under Ctrl-hover.
  * @property selectionBackground packed ARGB overlay used for visible terminal
@@ -56,17 +53,14 @@ data class TerminalSwingSettings(
     val font: Font = defaultTerminalFont(),
     val fallbackFonts: List<Font> = defaultFallbackFonts(),
     val useSystemFallbackFonts: Boolean = false,
-    val theme: TerminalTheme = TerminalTheme.CAMPBELL,
-    val palette: TerminalColorPalette = theme.createPalette(),
+    val palette: TerminalColorPalette = defaultPalette(),
     val columns: Int = 80,
     val rows: Int = 24,
     val treatAmbiguousAsWide: Boolean = false,
     val cursorBlinkMillis: Int = 600,
     val textAntialiasing: Any = RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB,
     val fractionalMetrics: Any = RenderingHints.VALUE_FRACTIONALMETRICS_OFF,
-    val clipboardHandler: TerminalClipboardHandler = TerminalClipboardHandler.SYSTEM,
     val clipboardShortcuts: TerminalClipboardShortcuts = TerminalClipboardShortcuts.platformDefault(),
-    val hyperlinkHandler: TerminalHyperlinkHandler = TerminalHyperlinkHandler.SYSTEM,
     val hyperlinkActivationForeground: Int = DEFAULT_HYPERLINK_ACTIVATION_FOREGROUND,
     val selectionBackground: Int = DEFAULT_SELECTION_BACKGROUND,
 ) {

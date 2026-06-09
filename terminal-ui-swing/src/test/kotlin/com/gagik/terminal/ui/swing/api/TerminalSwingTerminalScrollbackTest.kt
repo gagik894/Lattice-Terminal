@@ -52,7 +52,14 @@ class TerminalSwingTerminalScrollbackTest {
                 parser = NoOpParser,
                 inputEncoder = NoOpInputEncoder,
             )
-        val component = TerminalSwingTerminal()
+        val dispatcher = CountingDispatcher()
+        val component =
+            TerminalSwingTerminal(
+                hostServices =
+                    TerminalSwingHostServices(
+                        uiDispatcher = dispatcher,
+                    ),
+            )
         val oldManager = RepaintManager.currentManager(component)
         val repaintManager = CountingRepaintManager(component)
 
@@ -75,6 +82,7 @@ class TerminalSwingTerminalScrollbackTest {
                 session.onDirty?.invoke()
             }
             assertEquals(0, repaintManager.count)
+            assertEquals(1, dispatcher.count)
 
             releaseEdt.countDown()
             SwingUtilities.invokeAndWait {
@@ -205,6 +213,18 @@ class TerminalSwingTerminalScrollbackTest {
                 repaintCount.incrementAndGet()
             }
             super.addDirtyRegion(component, x, y, w, h)
+        }
+    }
+
+    private class CountingDispatcher : TerminalUiDispatcher {
+        private val dispatchCount = AtomicInteger()
+
+        val count: Int
+            get() = dispatchCount.get()
+
+        override fun dispatch(runnable: Runnable) {
+            dispatchCount.incrementAndGet()
+            SwingUtilities.invokeLater(runnable)
         }
     }
 

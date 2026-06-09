@@ -45,10 +45,12 @@ import javax.swing.Timer
  * connector choice outside this component.
  *
  * @param settingsProvider provider for immutable settings snapshots.
+ * @param hostServices host-provided non-render services.
  */
 class TerminalSwingTerminal(
     private val settingsProvider: TerminalSwingSettingsProvider =
         TerminalSwingSettingsProvider { TerminalSwingSettings() },
+    private val hostServices: TerminalSwingHostServices = TerminalSwingHostServices(),
 ) : JComponent() {
     private var session: TerminalSession? = null
     private var settings: TerminalSwingSettings = settingsProvider.currentSettings()
@@ -73,6 +75,13 @@ class TerminalSwingTerminal(
         }
     private val renderPending = AtomicBoolean(false)
     private val visibleGridSizeSnapshot = AtomicLong(packVisibleGridSize(1, 1))
+    private val publishedFrameRunnable =
+        Runnable {
+            renderPending.set(false)
+            handlePublishedFrame()
+        }
+    private val unbindRunnable = Runnable { unbindOnEdt() }
+    private val reloadSettingsRunnable = Runnable { reloadSettingsOnEdt() }
 
     private val painter = TerminalGridPainter()
     private val repaintPlanner = TerminalSwingRepaintPlanner()
@@ -188,9 +197,11 @@ class TerminalSwingTerminal(
      * @param session terminal session to display.
      */
     fun bind(session: TerminalSession) {
-        runOnEdt {
-            bindOnEdt(session)
-        }
+        runOnEdt(
+            Runnable {
+                bindOnEdt(session)
+            },
+        )
     }
 
     /**
@@ -200,9 +211,7 @@ class TerminalSwingTerminal(
      * asynchronously on the EDT.
      */
     fun unbind() {
-        runOnEdt {
-            unbindOnEdt()
-        }
+        runOnEdt(unbindRunnable)
     }
 
     /**
@@ -212,9 +221,7 @@ class TerminalSwingTerminal(
      * asynchronously on the EDT.
      */
     fun reloadSettings() {
-        runOnEdt {
-            reloadSettingsOnEdt()
-        }
+        runOnEdt(reloadSettingsRunnable)
     }
 
     /**
@@ -546,12 +553,12 @@ class TerminalSwingTerminal(
                 selectionTextExtractor.selectedText(cache, currentSelection)
             } ?: return false
         if (selectedText.isEmpty()) return false
-        settings.clipboardHandler.copyText(selectedText)
+        hostServices.clipboardHandler.copyText(selectedText)
         return true
     }
 
     private fun pasteClipboardText(): Boolean {
-        val text = settings.clipboardHandler.readText() ?: return false
+        val text = hostServices.clipboardHandler.readText() ?: return false
         if (text.isEmpty()) return false
         session?.encodePaste(TerminalPasteEvent(text))
         return true
@@ -642,7 +649,7 @@ class TerminalSwingTerminal(
     private fun handleHyperlinkActivation(event: MouseEvent): Boolean {
         if (!SwingUtilities.isLeftMouseButton(event) || !event.isControlDown) return false
         val uri = hyperlinkUriAt(event) ?: return false
-        if (!settings.hyperlinkHandler.openHyperlink(uri)) return false
+        if (!hostServices.hyperlinkHandler.openHyperlink(uri)) return false
         event.consume()
         return true
     }
@@ -794,10 +801,7 @@ class TerminalSwingTerminal(
     private fun schedulePublishedFrame() {
         if (!renderPending.compareAndSet(false, true)) return
 
-        SwingUtilities.invokeLater {
-            renderPending.set(false)
-            handlePublishedFrame()
-        }
+        hostServices.uiDispatcher.dispatch(publishedFrameRunnable)
     }
 
     private fun handlePublishedFrame() {
@@ -914,11 +918,11 @@ class TerminalSwingTerminal(
         return TerminalSwingMetrics.from(metricsSource)
     }
 
-    private fun runOnEdt(action: () -> Unit) {
+    private fun runOnEdt(action: Runnable) {
         if (SwingUtilities.isEventDispatchThread()) {
-            action()
+            action.run()
         } else {
-            SwingUtilities.invokeLater(action)
+            hostServices.uiDispatcher.dispatch(action)
         }
     }
 

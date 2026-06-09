@@ -197,12 +197,17 @@ class TerminalSwingTerminalSelectionTest {
         val frame = TestRenderFrame.text("hello world")
         val session = testSession(frame = frame)
         val component =
-            TerminalSwingTerminal {
-                TerminalSwingSettings(
-                    clipboardHandler = clipboard,
-                    clipboardShortcuts = TerminalClipboardShortcuts.windows(),
-                )
-            }
+            TerminalSwingTerminal(
+                settingsProvider = {
+                    TerminalSwingSettings(
+                        clipboardShortcuts = TerminalClipboardShortcuts.windows(),
+                    )
+                },
+                hostServices =
+                    TerminalSwingHostServices(
+                        clipboardHandler = clipboard,
+                    ),
+            )
 
         SwingUtilities.invokeAndWait {
             component.setSize(300, 80)
@@ -222,12 +227,17 @@ class TerminalSwingTerminalSelectionTest {
         val frame = TestRenderFrame.text("hello world")
         val session = testSession(frame = frame)
         val component =
-            TerminalSwingTerminal {
-                TerminalSwingSettings(
-                    clipboardHandler = clipboard,
-                    clipboardShortcuts = TerminalClipboardShortcuts.linuxAndUnix(),
-                )
-            }
+            TerminalSwingTerminal(
+                settingsProvider = {
+                    TerminalSwingSettings(
+                        clipboardShortcuts = TerminalClipboardShortcuts.linuxAndUnix(),
+                    )
+                },
+                hostServices =
+                    TerminalSwingHostServices(
+                        clipboardHandler = clipboard,
+                    ),
+            )
 
         SwingUtilities.invokeAndWait {
             component.setSize(300, 80)
@@ -250,12 +260,17 @@ class TerminalSwingTerminalSelectionTest {
         val frame = TestRenderFrame.text("ready")
         val session = testSession(frame = frame, inputEncoder = input)
         val component =
-            TerminalSwingTerminal {
-                TerminalSwingSettings(
-                    clipboardHandler = clipboard,
-                    clipboardShortcuts = TerminalClipboardShortcuts.windows(),
-                )
-            }
+            TerminalSwingTerminal(
+                settingsProvider = {
+                    TerminalSwingSettings(
+                        clipboardShortcuts = TerminalClipboardShortcuts.windows(),
+                    )
+                },
+                hostServices =
+                    TerminalSwingHostServices(
+                        clipboardHandler = clipboard,
+                    ),
+            )
 
         session.start(columns = 5, rows = 1)
         SwingUtilities.invokeAndWait {
@@ -275,12 +290,17 @@ class TerminalSwingTerminalSelectionTest {
         val frame = TestRenderFrame.text("ready")
         val session = testSession(frame = frame, inputEncoder = input)
         val component =
-            TerminalSwingTerminal {
-                TerminalSwingSettings(
-                    clipboardHandler = clipboard,
-                    clipboardShortcuts = TerminalClipboardShortcuts.windows(),
-                )
-            }
+            TerminalSwingTerminal(
+                settingsProvider = {
+                    TerminalSwingSettings(
+                        clipboardShortcuts = TerminalClipboardShortcuts.windows(),
+                    )
+                },
+                hostServices =
+                    TerminalSwingHostServices(
+                        clipboardHandler = clipboard,
+                    ),
+            )
 
         session.start(columns = 5, rows = 1)
         SwingUtilities.invokeAndWait {
@@ -318,15 +338,16 @@ class TerminalSwingTerminalSelectionTest {
                     },
             )
         val component =
-            TerminalSwingTerminal {
-                TerminalSwingSettings(
-                    hyperlinkHandler =
-                        TerminalHyperlinkHandler { uri ->
-                            opened.set(uri)
-                            true
-                        },
-                )
-            }
+            TerminalSwingTerminal(
+                hostServices =
+                    TerminalSwingHostServices(
+                        hyperlinkHandler =
+                            TerminalHyperlinkHandler { uri ->
+                                opened.set(uri)
+                                true
+                            },
+                    ),
+            )
 
         SwingUtilities.invokeAndWait {
             component.setSize(80, 40)
@@ -363,15 +384,16 @@ class TerminalSwingTerminalSelectionTest {
                 hyperlinkResolver = TerminalHyperlinkResolver { "https://example.com" },
             )
         val component =
-            TerminalSwingTerminal {
-                TerminalSwingSettings(
-                    hyperlinkHandler =
-                        TerminalHyperlinkHandler {
-                            opened.incrementAndGet()
-                            true
-                        },
-                )
-            }
+            TerminalSwingTerminal(
+                hostServices =
+                    TerminalSwingHostServices(
+                        hyperlinkHandler =
+                            TerminalHyperlinkHandler {
+                                opened.incrementAndGet()
+                                true
+                            },
+                    ),
+            )
 
         SwingUtilities.invokeAndWait {
             component.setSize(80, 40)
