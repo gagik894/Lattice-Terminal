@@ -30,6 +30,7 @@ import java.awt.Font
 import java.awt.Graphics2D
 import java.awt.font.FontRenderContext
 import java.awt.font.TextLayout
+import java.text.Bidi
 
 /**
  * Paints terminal cell text runs and text-only cursor foreground.
@@ -45,6 +46,12 @@ internal class TerminalTextPainter(
     private val asciiDrawChars = TerminalAsciiDrawCharsCache()
     private val cellPrimitives = TerminalCellPrimitivePainter()
     private val textRun = TerminalTextRunBuffer(INITIAL_TEXT_RUN_CAPACITY)
+    private var bidiRowChars = CharArray(INITIAL_TEXT_RUN_CAPACITY)
+    private var bidiSegmentCodepoints = IntArray(INITIAL_TEXT_RUN_CAPACITY)
+    private var bidiRows = arrayOfNulls<Bidi>(0)
+    private var bidiRowGenerations = LongArray(0)
+    private var bidiRowHasStrongRtl = BooleanArray(0)
+    private var bidiCachedColumns = 0
 
     /**
      * Updates font-dependent caches for a settings snapshot.
@@ -77,6 +84,22 @@ internal class TerminalTextPainter(
         hyperlinkActivationHover: Boolean = false,
         hyperlinkActivationForeground: Int = DEFAULT_HYPERLINK_ACTIVATION_FOREGROUND,
     ) {
+        if (cachedRowContainsStrongRtl(cache, row)) {
+            paintBidiRow(
+                g = g,
+                cache = cache,
+                palette = palette,
+                metrics = metrics,
+                row = row,
+                fontRenderContext = fontRenderContext,
+                textBlinkVisible = textBlinkVisible,
+                hoveredHyperlinkId = hoveredHyperlinkId,
+                hyperlinkActivationHover = hyperlinkActivationHover,
+                hyperlinkActivationForeground = hyperlinkActivationForeground,
+            )
+            return
+        }
+
         val flagsPlane = cache.flags
         val attrWords = cache.attrWords
         val codeWords = cache.codeWords
@@ -315,6 +338,231 @@ internal class TerminalTextPainter(
             metrics = metrics,
         )
         return column
+    }
+
+    private fun paintBidiRow(
+        g: Graphics2D,
+        cache: TerminalRenderCache,
+        palette: TerminalColorPalette,
+        metrics: TerminalSwingMetrics,
+        row: Int,
+        fontRenderContext: FontRenderContext,
+        textBlinkVisible: Boolean,
+        hoveredHyperlinkId: Int,
+        hyperlinkActivationHover: Boolean,
+        hyperlinkActivationForeground: Int,
+    ) {
+        val bidi = bidiForRow(cache, row)
+        val baselineY = row * metrics.cellHeight + metrics.baseline
+        var visualStartColumn = 0
+        var runIndex = 0
+        while (runIndex < bidi.runCount) {
+            val runStart = bidi.getRunStart(runIndex)
+            val runLimit = bidi.getRunLimit(runIndex)
+            val rtlRun = bidi.getRunLevel(runIndex) and 1 != 0
+            var segmentStart = runStart
+            while (segmentStart < runLimit) {
+                val segmentLimit =
+                    bidiSegmentLimit(
+                        cache = cache,
+                        palette = palette,
+                        row = row,
+                        startColumn = segmentStart,
+                        runLimit = runLimit,
+                        textBlinkVisible = textBlinkVisible,
+                        hoveredHyperlinkId = hoveredHyperlinkId,
+                        hyperlinkActivationHover = hyperlinkActivationHover,
+                        hyperlinkActivationForeground = hyperlinkActivationForeground,
+                    )
+                val segmentVisualStart =
+                    if (rtlRun) {
+                        visualStartColumn + runLimit - segmentLimit
+                    } else {
+                        visualStartColumn + segmentStart - runStart
+                    }
+                paintBidiSegment(
+                    g = g,
+                    cache = cache,
+                    palette = palette,
+                    metrics = metrics,
+                    row = row,
+                    startColumn = segmentStart,
+                    endColumn = segmentLimit,
+                    visualStartColumn = segmentVisualStart,
+                    baselineY = baselineY,
+                    fontRenderContext = fontRenderContext,
+                    textBlinkVisible = textBlinkVisible,
+                    hoveredHyperlinkId = hoveredHyperlinkId,
+                    hyperlinkActivationHover = hyperlinkActivationHover,
+                    hyperlinkActivationForeground = hyperlinkActivationForeground,
+                )
+                segmentStart = segmentLimit
+            }
+            visualStartColumn += runLimit - runStart
+            runIndex++
+        }
+    }
+
+    private fun bidiForRow(
+        cache: TerminalRenderCache,
+        row: Int,
+    ): Bidi {
+        ensureBidiRowCache(cache)
+        val generation = cache.lineGenerations[row]
+        val cached = bidiRows[row]
+        if (cached != null && bidiRowGenerations[row] == generation) return cached
+
+        ensureBidiCapacity(cache.columns)
+        fillBidiRowChars(cache, row)
+        val bidi =
+            Bidi(
+                bidiRowChars,
+                0,
+                null,
+                0,
+                cache.columns,
+                Bidi.DIRECTION_DEFAULT_LEFT_TO_RIGHT,
+            )
+        bidiRows[row] = bidi
+        bidiRowGenerations[row] = generation
+        return bidi
+    }
+
+    private fun bidiSegmentLimit(
+        cache: TerminalRenderCache,
+        palette: TerminalColorPalette,
+        row: Int,
+        startColumn: Int,
+        runLimit: Int,
+        textBlinkVisible: Boolean,
+        hoveredHyperlinkId: Int,
+        hyperlinkActivationHover: Boolean,
+        hyperlinkActivationForeground: Int,
+    ): Int {
+        val rowOffset = cache.rowOffset(row)
+        val startIndex = rowOffset + startColumn
+        val attr = cache.attrWords[startIndex]
+        val extraAttr = cache.extraAttrWords[startIndex]
+        val hyperlinkId = cache.hyperlinkIds[startIndex]
+        val hovered = isHoveredHyperlink(hyperlinkId, hoveredHyperlinkId)
+        val foreground =
+            effectiveForeground(
+                palette = palette,
+                attr = attr,
+                hovered = hovered,
+                hyperlinkActivationHover = hyperlinkActivationHover,
+                hyperlinkActivationForeground = hyperlinkActivationForeground,
+            )
+        val fontStyle = terminalFontStyle(attr)
+        val decoration = decorationKey(attr, extraAttr)
+        val blinkHidden = isBlinkHidden(attr, textBlinkVisible)
+        var column = startColumn + 1
+        while (column < runLimit) {
+            val index = rowOffset + column
+            val currentAttr = cache.attrWords[index]
+            val currentExtraAttr = cache.extraAttrWords[index]
+            val currentHyperlinkId = cache.hyperlinkIds[index]
+            val currentHovered = isHoveredHyperlink(currentHyperlinkId, hoveredHyperlinkId)
+            val currentForeground =
+                effectiveForeground(
+                    palette = palette,
+                    attr = currentAttr,
+                    hovered = currentHovered,
+                    hyperlinkActivationHover = hyperlinkActivationHover,
+                    hyperlinkActivationForeground = hyperlinkActivationForeground,
+                )
+            if (
+                isBlinkHidden(currentAttr, textBlinkVisible) != blinkHidden ||
+                currentForeground != foreground ||
+                terminalFontStyle(currentAttr) != fontStyle ||
+                decorationKey(currentAttr, currentExtraAttr) != decoration ||
+                currentHyperlinkId != hyperlinkId
+            ) {
+                break
+            }
+            column++
+        }
+        return column
+    }
+
+    private fun paintBidiSegment(
+        g: Graphics2D,
+        cache: TerminalRenderCache,
+        palette: TerminalColorPalette,
+        metrics: TerminalSwingMetrics,
+        row: Int,
+        startColumn: Int,
+        endColumn: Int,
+        visualStartColumn: Int,
+        baselineY: Int,
+        fontRenderContext: FontRenderContext,
+        textBlinkVisible: Boolean,
+        hoveredHyperlinkId: Int,
+        hyperlinkActivationHover: Boolean,
+        hyperlinkActivationForeground: Int,
+    ) {
+        val rowOffset = cache.rowOffset(row)
+        val index = rowOffset + startColumn
+        val attr = cache.attrWords[index]
+        if (isBlinkHidden(attr, textBlinkVisible)) return
+
+        val extraAttr = cache.extraAttrWords[index]
+        val hyperlinkId = cache.hyperlinkIds[index]
+        val hovered = isHoveredHyperlink(hyperlinkId, hoveredHyperlinkId)
+        val foreground =
+            effectiveForeground(
+                palette = palette,
+                attr = attr,
+                hovered = hovered,
+                hyperlinkActivationHover = hyperlinkActivationHover,
+                hyperlinkActivationForeground = hyperlinkActivationForeground,
+            )
+        val fontStyle = terminalFontStyle(attr)
+        val cellPixelWidth = metrics.cellWidth * (endColumn - startColumn)
+        val x = visualStartColumn * metrics.cellWidth
+        val length = fillBidiSegmentCodepoints(cache, row, startColumn, endColumn)
+        if (length > 0) {
+            g.font = fontCache.font(fontStyle)
+            g.color = colorCache.color(foreground)
+            val oldClip = g.clip
+            try {
+                g.clipRect(x, row * metrics.cellHeight, cellPixelWidth, metrics.cellHeight)
+                val layout =
+                    complexTextLayouts.clusterLayout(
+                        bidiSegmentCodepoints,
+                        0,
+                        length,
+                        fontStyle,
+                        fontRenderContext,
+                        fontCache,
+                    )
+                drawFittedLayout(g, layout, x.toFloat(), baselineY.toFloat(), x + cellPixelWidth)
+            } finally {
+                g.clip = oldClip
+            }
+        }
+
+        decorationPainter.paint(
+            g = g,
+            palette = palette,
+            attr = attr,
+            extraAttr = extraAttr,
+            foreground = foreground,
+            startColumn = visualStartColumn,
+            endColumn = visualStartColumn + endColumn - startColumn,
+            row = row,
+            metrics = metrics,
+        )
+        paintHyperlinkDecoration(
+            g = g,
+            hyperlinkId = hyperlinkId,
+            hovered = hovered,
+            color = foreground,
+            startColumn = visualStartColumn,
+            endColumn = visualStartColumn + endColumn - startColumn,
+            row = row,
+            metrics = metrics,
+        )
     }
 
     private fun paintComplexCell(
@@ -591,6 +839,145 @@ internal class TerminalTextPainter(
         }
     }
 
+    private fun cachedRowContainsStrongRtl(
+        cache: TerminalRenderCache,
+        row: Int,
+    ): Boolean {
+        ensureBidiRowCache(cache)
+        val generation = cache.lineGenerations[row]
+        if (bidiRowGenerations[row] == generation) return bidiRowHasStrongRtl[row]
+
+        val hasStrongRtl = rowContainsStrongRtl(cache, row)
+        bidiRows[row] = null
+        bidiRowGenerations[row] = generation
+        bidiRowHasStrongRtl[row] = hasStrongRtl
+        return hasStrongRtl
+    }
+
+    private fun rowContainsStrongRtl(
+        cache: TerminalRenderCache,
+        row: Int,
+    ): Boolean {
+        val rowOffset = cache.rowOffset(row)
+        var column = 0
+        while (column < cache.columns) {
+            val index = rowOffset + column
+            val flags = cache.flags[index]
+            if (hasDrawableText(flags)) {
+                if (flags and TerminalRenderCellFlags.CLUSTER != 0) {
+                    val clusterRef = cache.clusterRefs[index]
+                    if (clusterRef != 0L) {
+                        val offset = cache.clusterOffset(clusterRef)
+                        val end = offset + cache.clusterLength(clusterRef)
+                        var clusterIndex = offset
+                        while (clusterIndex < end) {
+                            if (isStrongRtl(cache.clusterCodepoints[clusterIndex])) return true
+                            clusterIndex++
+                        }
+                    }
+                } else if (isStrongRtl(cache.codeWords[index])) {
+                    return true
+                }
+            }
+            column++
+        }
+        return false
+    }
+
+    private fun ensureBidiRowCache(cache: TerminalRenderCache) {
+        if (bidiRows.size == cache.rows && bidiCachedColumns == cache.columns) return
+
+        bidiRows = arrayOfNulls(cache.rows)
+        bidiRowGenerations = LongArray(cache.rows) { INVALID_BIDI_GENERATION }
+        bidiRowHasStrongRtl = BooleanArray(cache.rows)
+        bidiCachedColumns = cache.columns
+    }
+
+    private fun fillBidiRowChars(
+        cache: TerminalRenderCache,
+        row: Int,
+    ) {
+        val rowOffset = cache.rowOffset(row)
+        var column = 0
+        while (column < cache.columns) {
+            val index = rowOffset + column
+            bidiRowChars[column] = bidiClassChar(cache, index)
+            column++
+        }
+    }
+
+    private fun bidiClassChar(
+        cache: TerminalRenderCache,
+        index: Int,
+    ): Char {
+        val flags = cache.flags[index]
+        if (!hasDrawableText(flags) || flags and TerminalRenderCellFlags.WIDE_TRAILING != 0) return ' '
+        val codePoint =
+            if (flags and TerminalRenderCellFlags.CLUSTER != 0) {
+                val clusterRef = cache.clusterRefs[index]
+                if (clusterRef == 0L) {
+                    SPACE_CODE_POINT
+                } else {
+                    cache.clusterCodepoints[cache.clusterOffset(clusterRef)]
+                }
+            } else {
+                cache.codeWords[index]
+            }
+        return if (codePoint in 0..0xffff) codePoint.toChar() else REPLACEMENT_CHAR
+    }
+
+    private fun fillBidiSegmentCodepoints(
+        cache: TerminalRenderCache,
+        row: Int,
+        startColumn: Int,
+        endColumn: Int,
+    ): Int {
+        ensureBidiSegmentCodepointCapacity((endColumn - startColumn) * MAX_CODEPOINTS_PER_BIDI_CELL)
+        val rowOffset = cache.rowOffset(row)
+        var length = 0
+        var column = startColumn
+        while (column < endColumn) {
+            val index = rowOffset + column
+            val flags = cache.flags[index]
+            if (!hasDrawableText(flags) || flags and TerminalRenderCellFlags.WIDE_TRAILING != 0) {
+                bidiSegmentCodepoints[length++] = SPACE_CODE_POINT
+            } else if (flags and TerminalRenderCellFlags.CLUSTER != 0) {
+                val clusterRef = cache.clusterRefs[index]
+                if (clusterRef == 0L) {
+                    bidiSegmentCodepoints[length++] = SPACE_CODE_POINT
+                } else {
+                    val offset = cache.clusterOffset(clusterRef)
+                    val clusterLength = cache.clusterLength(clusterRef)
+                    ensureBidiSegmentCodepointCapacity(length + clusterLength)
+                    System.arraycopy(cache.clusterCodepoints, offset, bidiSegmentCodepoints, length, clusterLength)
+                    length += clusterLength
+                }
+            } else {
+                bidiSegmentCodepoints[length++] = cache.codeWords[index]
+            }
+            column++
+        }
+        return length
+    }
+
+    private fun ensureBidiCapacity(columns: Int) {
+        if (bidiRowChars.size >= columns) return
+        var capacity = bidiRowChars.size
+        while (capacity < columns) {
+            capacity *= 2
+        }
+        bidiRowChars = bidiRowChars.copyOf(capacity)
+    }
+
+    private fun ensureBidiSegmentCodepointCapacity(required: Int) {
+        if (bidiSegmentCodepoints.size >= required) return
+        var capacity = bidiSegmentCodepoints.size
+        while (capacity < required) {
+            capacity *= 2
+        }
+        bidiSegmentCodepoints = bidiSegmentCodepoints.copyOf(capacity)
+    }
+
     private fun decorationKey(
         attr: Long,
         extraAttr: Long,
@@ -605,5 +992,17 @@ internal class TerminalTextPainter(
         private const val EXTRA_ATTR_KEY_SHIFT = 9
         private const val NO_HYPERLINK_ID = 0
         private const val DEFAULT_HYPERLINK_ACTIVATION_FOREGROUND = 0xFF4DA3FF.toInt()
+        private const val SPACE_CODE_POINT = 0x20
+        private const val MAX_CODEPOINTS_PER_BIDI_CELL = 4
+        private const val REPLACEMENT_CHAR = '\uFFFD'
+        private const val INVALID_BIDI_GENERATION = Long.MIN_VALUE
+
+        @JvmStatic
+        private fun isStrongRtl(codePoint: Int): Boolean =
+            when (Character.getDirectionality(codePoint)) {
+                Character.DIRECTIONALITY_RIGHT_TO_LEFT,
+                Character.DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC -> true
+                else -> false
+            }
     }
 }
