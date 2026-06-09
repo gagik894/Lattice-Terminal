@@ -602,6 +602,31 @@ class TerminalTextPainterTest {
         }
 
         @Test
+        fun `complex Indic script run shapes as one clipped span and restores graphics state`() {
+            // Arrange
+            val text = "\u0928\u092E\u0938\u094D\u0924\u0947 \u0926\u0941\u0928\u093F\u092F\u093E"
+            val fixture = fixture(width = text.codePointCount(0, text.length) * 16 + 32)
+            val initialTransform = AffineTransform.getTranslateInstance(2.0, 3.0)
+            fixture.g.transform = initialTransform
+            val cache = renderCache(TestRenderFrame.text(text))
+
+            // Act
+            fixture.paintRow(cache)
+
+            // Assert
+            assertEquals(initialTransform, fixture.g.transform, "Complex-script run shaping leaked a Graphics2D transform")
+            val textEnd = cache.columns * fixture.metrics.cellWidth
+            assertTrue(
+                fixture.image.containsPaintedPixelInRange(0, textEnd, 0, fixture.metrics.cellHeight),
+                "Complex-script run did not paint any visible glyph pixels",
+            )
+            assertTrue(
+                !fixture.image.containsPaintedPixelInRange(textEnd, fixture.image.width, 0, fixture.metrics.cellHeight),
+                "Complex-script run painted beyond the core-owned terminal columns",
+            )
+        }
+
+        @Test
         fun `strong rtl row paints in visual order without changing logical cache order`() {
             // Arrange
             val fixture = fixture(foreground = TEST_WHITE, width = 120)
