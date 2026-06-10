@@ -54,7 +54,7 @@ internal class Line(
         require(width > 0) { "Line width must be positive, got $width" }
     }
 
-    /** Raw storage array. May contain codepoints, EMPTY, WIDE_CHAR_SPACER, or cluster handles. */
+    /** Raw storage array. May contain codepoints, sentinels, or cluster handles. */
     private val codepoints = IntArray(width) { TerminalConstants.EMPTY }
 
     /** Primary packed cell attributes, parallel to [codepoints]. */
@@ -83,7 +83,8 @@ internal class Line(
     /**
      * Returns the raw value stored at [col] without any decoding.
      * May return a plain codepoint, [TerminalConstants.EMPTY],
-     * [TerminalConstants.WIDE_CHAR_SPACER], or a cluster handle (<= -2).
+     * [TerminalConstants.WIDE_CHAR_SPACER], [TerminalConstants.WIDE_CHAR_PADDING],
+     * or a cluster handle.
      *
      * @param col Column index.
      */
@@ -122,7 +123,11 @@ internal class Line(
      */
     override fun getCodepoint(col: Int): Int {
         val raw = codepoints[col]
-        return if (raw <= TerminalConstants.CLUSTER_HANDLE_MAX) store.baseCodepoint(raw) else raw
+        return when {
+            raw == TerminalConstants.WIDE_CHAR_PADDING -> TerminalConstants.EMPTY
+            raw <= TerminalConstants.CLUSTER_HANDLE_MAX -> store.baseCodepoint(raw)
+            else -> raw
+        }
     }
 
     /**
@@ -407,7 +412,7 @@ internal class Line(
      */
     fun toTextTrimmed(): String {
         var last = width - 1
-        while (last >= 0 && codepoints[last] == TerminalConstants.EMPTY) last--
+        while (last >= 0 && isTrimmedBlank(codepoints[last])) last--
         if (last < 0) return ""
         return buildString(last + 1) {
             for (col in 0..last) appendCell(col)
@@ -426,6 +431,7 @@ internal class Line(
         val raw = codepoints[col]
         when {
             raw == TerminalConstants.EMPTY -> append(' ')
+            raw == TerminalConstants.WIDE_CHAR_PADDING -> append(' ')
             raw == TerminalConstants.WIDE_CHAR_SPACER -> Unit // skip; leader already appended
             raw <= TerminalConstants.CLUSTER_HANDLE_MAX -> {
                 val len = store.length(raw)
@@ -440,6 +446,8 @@ internal class Line(
         val raw = codepoints[col]
         if (raw <= TerminalConstants.CLUSTER_HANDLE_MAX) store.free(raw)
     }
+
+    private fun isTrimmedBlank(raw: Int): Boolean = raw == TerminalConstants.EMPTY || raw == TerminalConstants.WIDE_CHAR_PADDING
 
     @Suppress("NOTHING_TO_INLINE")
     private inline fun isInvalidRange(

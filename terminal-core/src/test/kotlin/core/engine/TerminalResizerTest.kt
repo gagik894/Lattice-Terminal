@@ -64,6 +64,14 @@ private fun TerminalState.screenLines(): List<String> {
     return (0 until dimensions.height).map { r -> ring[top + r].toTextTrimmed() }
 }
 
+private fun findLineStartingWith(
+    state: TerminalState,
+    codepoint: Int,
+) = (0 until state.ring.size)
+    .asSequence()
+    .map { state.ring[it] }
+    .firstOrNull { it.getCodepoint(0) == codepoint }
+
 // ---------------------------------------------------------------------------
 // Test suite
 // ---------------------------------------------------------------------------
@@ -282,6 +290,70 @@ class TerminalResizerTest {
                 { assertEquals(0x4F60, second.getCodepoint(0)) },
                 { assertEquals(TerminalConstants.WIDE_CHAR_SPACER, second.getCodepoint(1)) },
                 { assertEquals(TerminalConstants.EMPTY, second.getCodepoint(2)) },
+            )
+        }
+
+        @Test
+        fun `wide boundary padding is not preserved across repeated resize`() {
+            val state = buildState(cols = 6, rows = 4, history = 5)
+            val top = (state.ring.size - state.dimensions.height).coerceAtLeast(0)
+            state.ring[top + 3].apply {
+                setCell(0, 'A'.code, 0)
+                setCell(1, 'B'.code, 0)
+                setCell(2, 'C'.code, 0)
+                setCell(3, 0x4F60, 0)
+                setCell(4, TerminalConstants.WIDE_CHAR_SPACER, 0)
+                setCell(5, 'D'.code, 0)
+            }
+
+            resizeState(state, 4, 4)
+            resizeState(state, 3, 4)
+            resizeState(state, 6, 4)
+
+            val line =
+                requireNotNull(findLineStartingWith(state, 'A'.code)) {
+                    "Expected the wide-boundary line to survive repeated resize"
+                }
+
+            assertAll(
+                { assertEquals('A'.code, line.getCodepoint(0)) },
+                { assertEquals('B'.code, line.getCodepoint(1)) },
+                { assertEquals('C'.code, line.getCodepoint(2)) },
+                { assertEquals(0x4F60, line.getCodepoint(3)) },
+                { assertEquals(TerminalConstants.WIDE_CHAR_SPACER, line.rawCodepoint(4)) },
+                { assertEquals('D'.code, line.getCodepoint(5)) },
+            )
+        }
+
+        @Test
+        fun `explicit spaces before wide character survive repeated resize`() {
+            val state = buildState(cols = 6, rows = 4, history = 5)
+            val top = (state.ring.size - state.dimensions.height).coerceAtLeast(0)
+            state.ring[top + 3].apply {
+                setCell(0, 'A'.code, 0)
+                setCell(1, 'B'.code, 0)
+                setCell(2, ' '.code, 0)
+                setCell(3, 0x4F60, 0)
+                setCell(4, TerminalConstants.WIDE_CHAR_SPACER, 0)
+                setCell(5, 'D'.code, 0)
+            }
+
+            resizeState(state, 4, 4)
+            resizeState(state, 3, 4)
+            resizeState(state, 6, 4)
+
+            val line =
+                requireNotNull(findLineStartingWith(state, 'A'.code)) {
+                    "Expected the explicit space prefix to survive repeated resize"
+                }
+
+            assertAll(
+                { assertEquals('A'.code, line.getCodepoint(0)) },
+                { assertEquals('B'.code, line.getCodepoint(1)) },
+                { assertEquals(' '.code, line.getCodepoint(2)) },
+                { assertEquals(0x4F60, line.getCodepoint(3)) },
+                { assertEquals(TerminalConstants.WIDE_CHAR_SPACER, line.rawCodepoint(4)) },
+                { assertEquals('D'.code, line.getCodepoint(5)) },
             )
         }
 
@@ -656,6 +728,25 @@ class TerminalResizerTest {
                 { assertEquals("", state.screenLines()[2]) },
                 { assertEquals(1, state.cursor.row) },
             )
+        }
+
+        @Test
+        fun `widening terminates when reflowed history exceeds history capacity`() {
+            val state = buildState(cols = 2, rows = 2, history = 1)
+            state.ring.clear()
+            repeat(6) { index ->
+                state.ring.push().apply {
+                    clear(0, 0)
+                    setCell(0, ('a'.code + index), 0)
+                    setCell(1, ('A'.code + index), 0)
+                    wrapped = index < 4
+                }
+            }
+            state.cursor.row = 1
+
+            resizeState(state, 8, 2)
+
+            assertTrue(state.ring.size <= state.primaryBuffer.maxHistory + state.dimensions.height)
         }
 
         @Test

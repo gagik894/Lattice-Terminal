@@ -110,6 +110,9 @@ internal object TerminalResizer {
                         cursorPlaced = true
                     }
                 }
+                if (chunkLength < newWidth && offset + chunkLength < builder.size) {
+                    newLine.setRawCell(chunkLength, TerminalConstants.WIDE_CHAR_PADDING, 0, 0)
+                }
                 offset += chunkLength
             }
         }
@@ -136,6 +139,7 @@ internal object TerminalResizer {
                 }
 
             for (col in 0 until readLength) {
+                if (oldLine.rawCodepoint(col) == TerminalConstants.WIDE_CHAR_PADDING) continue
                 val isCursor = hasCursor && col == buffer.cursor.col
                 builder.append(
                     oldLine.rawCodepoint(col),
@@ -159,7 +163,7 @@ internal object TerminalResizer {
             flushBuilder()
         }
 
-        val minimumRingSize = newLiveScreenTop + newHeight
+        val minimumRingSize = minOf(newLiveScreenTop, buffer.maxHistory) + newHeight
         while (newRing.size < minimumRingSize) {
             newRing.push().clear(0, 0)
         }
@@ -183,14 +187,17 @@ internal object TerminalResizer {
     // Private helpers.
 
     /**
-     * Returns the index one past the last non-blank cell, using the raw value so
-     * that cluster handles (<= -2) are correctly treated as content.
+     * Returns the index one past the last durable cell, using the raw value so
+     * that cluster handles are correctly treated as content and resize-only
+     * wide padding is trimmed like ordinary empty storage.
      */
     private fun getLogicalLength(line: Line): Int {
         var len = line.width
-        while (len > 0 && line.rawCodepoint(len - 1) == TerminalConstants.EMPTY) len--
+        while (len > 0 && isTrimmedResizeBlank(line.rawCodepoint(len - 1))) len--
         return len
     }
+
+    private fun isTrimmedResizeBlank(raw: Int): Boolean = raw == TerminalConstants.EMPTY || raw == TerminalConstants.WIDE_CHAR_PADDING
 }
 
 /**
