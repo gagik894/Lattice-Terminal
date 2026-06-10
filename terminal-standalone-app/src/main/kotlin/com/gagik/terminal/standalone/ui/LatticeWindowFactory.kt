@@ -62,6 +62,7 @@ internal class LatticeWindowFactory(
                 onTabClose = { id -> tabManager.closeTab(id) },
                 onNewTab = { tabManager.openTab(profiles.first()) },
                 onMenuClick = { x, y -> showDropdownMenu(tabBar, x, y, profiles, tabManager) },
+                onTabColorChanged = { id, color -> tabManager.onTabColorChanged(id, color) },
             )
 
         tabManager = LatticeTabManager(frame, tabBar, tabContentPanel, settings)

@@ -78,6 +78,7 @@ class TerminalWorkspace(
                 profile = profile,
                 title = profile.displayName,
                 session = session,
+                onColorChanged = { t, color -> listener.colorChanged(t, color) },
             )
         tabs += tab
         selectTab(id)
@@ -209,12 +210,24 @@ class TerminalWorkspaceTab internal constructor(
     val profile: TerminalProfile,
     title: String,
     val session: TerminalSession,
+    private val onColorChanged: (TerminalWorkspaceTab, String?) -> Unit,
 ) {
     /**
      * Current host-visible title for this tab.
      */
     var title: String = title
         internal set
+
+    /**
+     * Optional custom color representation for this tab (e.g. hex string "#3b82f6").
+     */
+    var color: String? = null
+        set(value) {
+            if (field != value) {
+                field = value
+                onColorChanged(this, value)
+            }
+        }
 }
 
 /**
@@ -227,6 +240,17 @@ interface TerminalWorkspaceListener {
      * @param tab opened tab.
      */
     fun tabOpened(tab: TerminalWorkspaceTab) = Unit
+
+    /**
+     * Called when a tab color changes.
+     *
+     * @param tab tab whose color changed.
+     * @param color new color representation (e.g. hex string) or null if reset.
+     */
+    fun colorChanged(
+        tab: TerminalWorkspaceTab,
+        color: String?,
+    ) = Unit
 
     /**
      * Called after workspace selection changes.

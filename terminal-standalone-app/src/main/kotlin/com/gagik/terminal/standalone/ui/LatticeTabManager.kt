@@ -16,12 +16,9 @@
 package com.gagik.terminal.standalone.ui
 
 import com.gagik.terminal.standalone.config.StandaloneTerminalSettings
-import com.gagik.terminal.workspace.TerminalProfile
-import com.gagik.terminal.workspace.TerminalWorkspace
-import com.gagik.terminal.workspace.TerminalWorkspaceListener
-import com.gagik.terminal.workspace.TerminalWorkspaceOpenOptions
-import com.gagik.terminal.workspace.TerminalWorkspaceTab
+import com.gagik.terminal.workspace.*
 import java.awt.CardLayout
+import java.awt.Color
 import javax.swing.JFrame
 import javax.swing.JOptionPane
 import javax.swing.JPanel
@@ -126,6 +123,18 @@ internal class LatticeTabManager(
         pane.requestFocus()
     }
 
+    /**
+     * Updates the custom color of the corresponding workspace tab.
+     * Called by [LatticeTabBar] when a user picks a custom color.
+     */
+    fun onTabColorChanged(
+        id: String,
+        colorHex: String?,
+    ) {
+        val tab = panes.find { it.tab.id == id }?.tab ?: return
+        tab.color = colorHex
+    }
+
     // -------------------------------------------------------------------------
     // Private helpers
     // -------------------------------------------------------------------------
@@ -153,6 +162,14 @@ internal class LatticeTabManager(
         if (tabBar.selectedId() == tabId) {
             frame.title = title
         }
+    }
+
+    private fun updateTabColor(
+        tabId: String,
+        colorHex: String?,
+    ) {
+        val color = colorHex?.let { Color.decode(it) }
+        tabBar.updateColor(tabId, color)
     }
 
     private fun updateFrameTitle() {
@@ -184,6 +201,15 @@ internal class LatticeTabManager(
         ) {
             SwingUtilities.invokeLater {
                 updateTabTitle(tab.id, title)
+            }
+        }
+
+        override fun colorChanged(
+            tab: TerminalWorkspaceTab,
+            color: String?,
+        ) {
+            SwingUtilities.invokeLater {
+                updateTabColor(tab.id, color)
             }
         }
     }

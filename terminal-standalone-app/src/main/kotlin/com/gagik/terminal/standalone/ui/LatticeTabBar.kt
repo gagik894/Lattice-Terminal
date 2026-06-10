@@ -46,6 +46,7 @@ internal class LatticeTabBar(
     private val onTabClose: (id: String) -> Unit,
     private val onNewTab: () -> Unit,
     private val onMenuClick: (x: Int, y: Int) -> Unit,
+    private val onTabColorChanged: (id: String, colorHex: String?) -> Unit,
 ) : JPanel() {
     private val entries = mutableListOf<TabEntry>()
     private var selectedId: String? = null
@@ -171,6 +172,14 @@ internal class LatticeTabBar(
         title: String,
     ) {
         entries.find { it.id == id }?.title = title
+        repaint()
+    }
+
+    fun updateColor(
+        id: String,
+        color: Color?,
+    ) {
+        entries.find { it.id == id }?.color = color
         repaint()
     }
 
@@ -761,6 +770,10 @@ internal class LatticeTabBar(
         val adapter =
             object : MouseAdapter() {
                 override fun mousePressed(e: MouseEvent) {
+                    if (e.isPopupTrigger) {
+                        showContextMenuIfTabHit(e)
+                        return
+                    }
                     val fm = getFontMetrics(font.deriveFont(13f))
                     val hit = hitTest(e.x, e.y, fm)
 
@@ -771,6 +784,10 @@ internal class LatticeTabBar(
                 }
 
                 override fun mouseReleased(e: MouseEvent) {
+                    if (e.isPopupTrigger) {
+                        showContextMenuIfTabHit(e)
+                        return
+                    }
                     val fm = getFontMetrics(font.deriveFont(13f))
                     val hit = hitTest(e.x, e.y, fm)
                     val pressed = activePressedResult
@@ -884,6 +901,87 @@ internal class LatticeTabBar(
         addMouseListener(adapter)
         addMouseMotionListener(adapter)
         addMouseWheelListener(adapter)
+    }
+
+    private fun showContextMenuIfTabHit(e: MouseEvent) {
+        val fm = getFontMetrics(font.deriveFont(13f))
+        val hit = hitTest(e.x, e.y, fm)
+        if (hit is HitResult.Tab) {
+            showTabContextMenu(hit.index, e.x, e.y)
+        }
+    }
+
+    private fun showTabContextMenu(
+        index: Int,
+        x: Int,
+        y: Int,
+    ) {
+        val tabId = entries[index].id
+        val menu = javax.swing.JPopupMenu()
+
+        val colorMenu = javax.swing.JMenu("Tab Color")
+
+        val colors =
+            listOf(
+                "Blue" to "#3b82f6",
+                "Red" to "#ef4444",
+                "Green" to "#10b981",
+                "Orange" to "#f97316",
+                "Purple" to "#a855f7",
+                "Yellow" to "#eab308",
+                "Gray" to "#6b7280",
+            )
+
+        colors.forEach { (name, hex) ->
+            val item = javax.swing.JMenuItem(name)
+            item.icon = ColorIcon(Color.decode(hex))
+            item.addActionListener {
+                onTabColorChanged(tabId, hex)
+            }
+            colorMenu.add(item)
+        }
+
+        colorMenu.addSeparator()
+        val resetItem = javax.swing.JMenuItem("Reset Color")
+        resetItem.addActionListener {
+            onTabColorChanged(tabId, null)
+        }
+        colorMenu.add(resetItem)
+
+        menu.add(colorMenu)
+        menu.addSeparator()
+
+        val closeItem = javax.swing.JMenuItem("Close Tab")
+        closeItem.addActionListener {
+            onTabClose(tabId)
+        }
+        menu.add(closeItem)
+
+        menu.show(this, x, y)
+    }
+
+    private class ColorIcon(
+        private val color: Color,
+    ) : javax.swing.Icon {
+        override fun paintIcon(
+            c: Component?,
+            g: Graphics?,
+            x: Int,
+            y: Int,
+        ) {
+            val g2 = g?.create() as? Graphics2D ?: return
+            try {
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+                g2.color = color
+                g2.fillRoundRect(x + 2, y + 2, iconWidth - 4, iconHeight - 4, 3, 3)
+            } finally {
+                g2.dispose()
+            }
+        }
+
+        override fun getIconWidth(): Int = 16
+
+        override fun getIconHeight(): Int = 16
     }
 
     override fun getToolTipText(event: MouseEvent): String? {
