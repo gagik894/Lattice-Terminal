@@ -37,6 +37,8 @@ internal object LatticeTabMetrics {
     const val TRAILING_SPACE = 8
     const val CORNER_RADIUS = 10f
     const val BOTTOM_OUTSIDE_RADIUS = 7
+    const val FADE_DURATION_MS = 100
+    const val FADE_DELAY_MS = 16
     const val MIN_LABEL_TEXT_WIDTH = 50
     const val MAX_LABEL_TEXT_WIDTH = 160
     const val MIN_TAB_WIDTH = 100

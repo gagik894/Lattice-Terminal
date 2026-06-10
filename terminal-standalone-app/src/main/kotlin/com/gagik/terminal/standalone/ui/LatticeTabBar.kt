@@ -21,6 +21,7 @@ import java.awt.event.*
 import java.awt.geom.Path2D
 import javax.swing.JPanel
 import javax.swing.SwingUtilities
+import javax.swing.Timer
 
 /**
  * A tab entry displayed in [LatticeTabBar].
@@ -68,6 +69,12 @@ internal class LatticeTabBar(
     // Pressed state
     private var activePressedResult: HitResult = HitResult.None
 
+    // Selection fade state
+    private var fadingOutId: String? = null
+    private var fadingInId: String? = null
+    private var fadeProgress = 1.0f
+    private var fadeTimer: Timer? = null
+
     init {
         isOpaque = false
         alignmentY = BOTTOM_ALIGNMENT
@@ -88,8 +95,12 @@ internal class LatticeTabBar(
     // -------------------------------------------------------------------------
 
     fun addTab(entry: TabEntry) {
+        val oldId = selectedId
         entries += entry
         selectedId = entry.id
+        if (oldId != null) {
+            startSelectionFade(oldId, entry.id)
+        }
         SwingUtilities.invokeLater {
             val index = entries.indexOfFirst { it.id == entry.id }
             if (index != -1) {
@@ -105,8 +116,53 @@ internal class LatticeTabBar(
         if (selectedId == id) {
             selectedId = entries.lastOrNull()?.id
         }
+        if (fadingOutId == id || fadingInId == id) {
+            fadeTimer?.stop()
+            fadeTimer = null
+            fadingOutId = null
+            fadingInId = null
+            fadeProgress = 1.0f
+        }
         revalidate()
         repaint()
+    }
+
+    private fun startSelectionFade(
+        oldId: String?,
+        newId: String?,
+    ) {
+        fadeTimer?.stop()
+        fadingOutId = oldId
+        fadingInId = newId
+        fadeProgress = 0.0f
+
+        val step = FADE_DELAY_MS.toFloat() / FADE_DURATION_MS.toFloat()
+
+        fadeTimer =
+            Timer(FADE_DELAY_MS) {
+                fadeProgress = (fadeProgress + step).coerceAtMost(1.0f)
+                repaint()
+                if (fadeProgress >= 1.0f) {
+                    fadeTimer?.stop()
+                    fadeTimer = null
+                    fadingOutId = null
+                    fadingInId = null
+                }
+            }.apply {
+                start()
+            }
+    }
+
+    private fun blendColors(
+        c1: Color,
+        c2: Color,
+        ratio: Float,
+    ): Color {
+        val r = (c1.red + (c2.red - c1.red) * ratio).toInt().coerceIn(0, 255)
+        val g = (c1.green + (c2.green - c1.green) * ratio).toInt().coerceIn(0, 255)
+        val b = (c1.blue + (c2.blue - c1.blue) * ratio).toInt().coerceIn(0, 255)
+        val a = (c1.alpha + (c2.alpha - c1.alpha) * ratio).toInt().coerceIn(0, 255)
+        return Color(r, g, b, a)
     }
 
     fun updateTitle(
@@ -247,7 +303,28 @@ internal class LatticeTabBar(
         val isTabPressed = activePressedResult == HitResult.Tab(index)
         val bg =
             when {
-                selected -> LatticeChrome.tabSelectedBackground
+                entry.id == selectedId -> {
+                    if (entry.id == fadingInId && fadeProgress < 1.0f) {
+                        val startColor =
+                            if (index == tabHoverIndex) {
+                                if (isTabPressed) LatticeChrome.controlPressed else LatticeChrome.tabHoverBackground
+                            } else {
+                                TRANSPARENT_COLOR
+                            }
+                        blendColors(startColor, LatticeChrome.tabSelectedBackground, fadeProgress)
+                    } else {
+                        LatticeChrome.tabSelectedBackground
+                    }
+                }
+                entry.id == fadingOutId -> {
+                    val endColor =
+                        if (index == tabHoverIndex) {
+                            if (isTabPressed) LatticeChrome.controlPressed else LatticeChrome.tabHoverBackground
+                        } else {
+                            TRANSPARENT_COLOR
+                        }
+                    blendColors(LatticeChrome.tabSelectedBackground, endColor, fadeProgress)
+                }
                 index == tabHoverIndex -> {
                     if (isTabPressed) {
                         LatticeChrome.controlPressed
@@ -257,26 +334,56 @@ internal class LatticeTabBar(
                 }
                 else -> TRANSPARENT_COLOR
             }
+
+        val useSelectedShape = selected || entry.id == fadingOutId
         if (bg.alpha > 0) {
             g2.color = bg
-            resetTabShape(tabFillShape, x, y, w, h, selected, closePath = true)
+            resetTabShape(tabFillShape, x, y, w, h, useSelectedShape, closePath = true)
             g2.fill(tabFillShape)
-            if (selected) {
+            if (useSelectedShape) {
                 g2.fillRect(x, height - SELECTED_TAB_JOIN_OVERLAP, w, SELECTED_TAB_JOIN_OVERLAP)
             }
         }
 
-        if (selected || index == tabHoverIndex) {
-            g2.color = LatticeChrome.border
-            g2.stroke = HAIRLINE_STROKE
-            resetTabShape(tabBorderShape, x, y, w, h, selected, closePath = false)
-            g2.draw(tabBorderShape)
+        val drawBorder = selected || index == tabHoverIndex || entry.id == fadingOutId
+        if (drawBorder) {
+            val borderAlpha =
+                when (entry.id) {
+                    selectedId -> {
+                        if (entry.id == fadingInId && fadeProgress < 1.0f) {
+                            val startAlpha = if (index == tabHoverIndex) 1.0f else 0.0f
+                            startAlpha + (1.0f - startAlpha) * fadeProgress
+                        } else {
+                            1.0f
+                        }
+                    }
+                    fadingOutId -> {
+                        val endAlpha = if (index == tabHoverIndex) 1.0f else 0.0f
+                        1.0f - (1.0f - endAlpha) * fadeProgress
+                    }
+                    else -> 1.0f
+                }
+            if (borderAlpha > 0f) {
+                val baseBorderColor = LatticeChrome.border
+                g2.color =
+                    Color(
+                        baseBorderColor.red,
+                        baseBorderColor.green,
+                        baseBorderColor.blue,
+                        (baseBorderColor.alpha * borderAlpha).toInt().coerceIn(0, 255),
+                    )
+                g2.stroke = HAIRLINE_STROKE
+                resetTabShape(tabBorderShape, x, y, w, h, useSelectedShape, closePath = false)
+                g2.draw(tabBorderShape)
+            }
         }
 
         // Draw vertical divider between inactive tabs
-        val nextSelected = entries.getOrNull(index + 1)?.id == selectedId
+        val nextId = entries.getOrNull(index + 1)?.id
+        val isSelfSelectedOrFading = selected || entry.id == fadingOutId
+        val isNextSelectedOrFading = nextId == selectedId || nextId == fadingOutId
         val nextHovered = index + 1 == tabHoverIndex
-        if (!selected && !nextSelected && !nextHovered && index < entries.size - 1 && index != tabHoverIndex) {
+        if (!isSelfSelectedOrFading && !isNextSelectedOrFading && !nextHovered && index < entries.size - 1 && index != tabHoverIndex) {
             g2.color = LatticeChrome.border
             g2.stroke = HAIRLINE_STROKE
             val divX = x + w + TAB_GAP / 2
@@ -294,13 +401,24 @@ internal class LatticeTabBar(
             profileKind = entry.profileKind,
             x = iconX,
             y = iconDrawY,
-            selected = selected,
+            selected = useSelectedShape,
             highlighted = index == tabHoverIndex,
         )
 
         val titleFg =
             when {
-                selected -> LatticeChrome.textPrimary
+                entry.id == selectedId -> {
+                    if (entry.id == fadingInId && fadeProgress < 1.0f) {
+                        val startColor = if (index == tabHoverIndex) LatticeChrome.textHover else LatticeChrome.textSecondary
+                        blendColors(startColor, LatticeChrome.textPrimary, fadeProgress)
+                    } else {
+                        LatticeChrome.textPrimary
+                    }
+                }
+                entry.id == fadingOutId -> {
+                    val endColor = if (index == tabHoverIndex) LatticeChrome.textHover else LatticeChrome.textSecondary
+                    blendColors(LatticeChrome.textPrimary, endColor, fadeProgress)
+                }
                 index == tabHoverIndex -> LatticeChrome.textHover
                 else -> LatticeChrome.textSecondary
             }
@@ -314,7 +432,16 @@ internal class LatticeTabBar(
 
         val closeBtnX = x + w - CLOSE_BUTTON_SIZE - CLOSE_BUTTON_MARGIN_RIGHT
         val closeBtnY = y + (h - CLOSE_BUTTON_SIZE) / 2
-        paintCloseButton(g2, index, closeBtnX, closeBtnY, selected)
+        paintCloseButton(
+            g2 = g2,
+            index = index,
+            x = closeBtnX,
+            y = closeBtnY,
+            tabSelected = selected,
+            fadingOut = entry.id == fadingOutId,
+            fadingIn = entry.id == selectedId && entry.id == fadingInId && fadeProgress < 1.0f,
+            fadeProgress = fadeProgress,
+        )
     }
 
     private fun paintCloseButton(
@@ -323,21 +450,47 @@ internal class LatticeTabBar(
         x: Int,
         y: Int,
         tabSelected: Boolean,
+        fadingOut: Boolean,
+        fadingIn: Boolean,
+        fadeProgress: Float,
     ) {
         val hovered = index == closeHoverIndex
-        val visible = tabSelected || index == tabHoverIndex || hovered
+        val visible = tabSelected || index == tabHoverIndex || hovered || fadingOut
 
         if (visible) {
-            if (hovered) {
-                val isPressed = activePressedResult == HitResult.TabClose(index)
-                g2.color = if (isPressed) LatticeChrome.controlPressed else LatticeChrome.controlHover
-                g2.fillRoundRect(x, y, CLOSE_BUTTON_SIZE, CLOSE_BUTTON_SIZE, 3, 3)
+            val closeAlpha =
+                when {
+                    fadingIn -> {
+                        val startAlpha = if (index == tabHoverIndex || hovered) 1.0f else 0.0f
+                        startAlpha + (1.0f - startAlpha) * fadeProgress
+                    }
+                    fadingOut -> {
+                        val endAlpha = if (index == tabHoverIndex || hovered) 1.0f else 0.0f
+                        1.0f - (1.0f - endAlpha) * fadeProgress
+                    }
+                    else -> 1.0f
+                }
+
+            if (closeAlpha > 0f) {
+                val baseBg =
+                    if (hovered) {
+                        val isPressed = activePressedResult == HitResult.TabClose(index)
+                        if (isPressed) LatticeChrome.controlPressed else LatticeChrome.controlHover
+                    } else {
+                        null
+                    }
+                if (baseBg != null) {
+                    g2.color = Color(baseBg.red, baseBg.green, baseBg.blue, (baseBg.alpha * closeAlpha).toInt().coerceIn(0, 255))
+                    g2.fillRoundRect(x, y, CLOSE_BUTTON_SIZE, CLOSE_BUTTON_SIZE, 3, 3)
+                }
+
+                val baseFg = if (hovered) LatticeChrome.textPrimary else LatticeChrome.textSecondary
+                g2.color = Color(baseFg.red, baseFg.green, baseFg.blue, (baseFg.alpha * closeAlpha).toInt().coerceIn(0, 255))
+                g2.stroke = ICON_STROKE
+                val pad = CLOSE_BUTTON_SIZE / 4
+                g2.drawLine(x + pad, y + pad, x + CLOSE_BUTTON_SIZE - pad, y + CLOSE_BUTTON_SIZE - pad)
+                g2.drawLine(x + CLOSE_BUTTON_SIZE - pad, y + pad, x + pad, y + CLOSE_BUTTON_SIZE - pad)
             }
-            g2.color = if (hovered) LatticeChrome.textPrimary else LatticeChrome.textSecondary
-            g2.stroke = ICON_STROKE
-            val pad = CLOSE_BUTTON_SIZE / 4
-            g2.drawLine(x + pad, y + pad, x + CLOSE_BUTTON_SIZE - pad, y + CLOSE_BUTTON_SIZE - pad)
-            g2.drawLine(x + CLOSE_BUTTON_SIZE - pad, y + pad, x + pad, y + CLOSE_BUTTON_SIZE - pad)
         }
     }
 
@@ -608,7 +761,9 @@ internal class LatticeTabBar(
                                 is HitResult.Tab -> {
                                     val id = entries[hit.index].id
                                     if (id != selectedId) {
+                                        val oldId = selectedId
                                         selectedId = id
+                                        startSelectionFade(oldId, id)
                                         repaint()
                                         onTabSelected(id)
                                     }
@@ -739,6 +894,8 @@ internal class LatticeTabBar(
     }
 
     private companion object {
+        private const val FADE_DURATION_MS = LatticeTabMetrics.FADE_DURATION_MS
+        private const val FADE_DELAY_MS = LatticeTabMetrics.FADE_DELAY_MS
         private const val TAB_BAR_HEIGHT = LatticeTabMetrics.TAB_BAR_HEIGHT
         private const val TAB_TOP_PADDING = LatticeTabMetrics.TAB_TOP_PADDING
         private const val TAB_BOTTOM_PADDING = LatticeTabMetrics.TAB_BOTTOM_PADDING
