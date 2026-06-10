@@ -21,8 +21,10 @@ import com.gagik.terminal.workspace.TerminalWorkspace
 import com.gagik.terminal.workspace.TerminalWorkspaceListener
 import com.gagik.terminal.workspace.TerminalWorkspaceOpenOptions
 import com.gagik.terminal.workspace.TerminalWorkspaceTab
+import java.awt.CardLayout
 import javax.swing.JFrame
 import javax.swing.JOptionPane
+import javax.swing.JPanel
 import javax.swing.JTabbedPane
 import javax.swing.SwingUtilities
 
@@ -36,6 +38,7 @@ import javax.swing.SwingUtilities
 internal class LatticeTabManager(
     private val frame: JFrame,
     private val tabPane: JTabbedPane,
+    private val tabContentPanel: JPanel,
     private val settings: StandaloneTerminalSettings,
 ) {
     private val tabs = ArrayList<LatticeTerminalPane>(INITIAL_TAB_CAPACITY)
@@ -47,6 +50,7 @@ internal class LatticeTabManager(
                 if (workspace.selectedTab()?.id != pane.tab.id) {
                     workspace.selectTab(pane.tab.id)
                 }
+                (tabContentPanel.layout as CardLayout).show(tabContentPanel, pane.tab.id)
             }
             updateFrameTitleFromSelection()
             selectedPane?.requestFocus()
@@ -80,7 +84,8 @@ internal class LatticeTabManager(
 
         val pane = LatticeTerminalPane.create(workspaceTab, settings)
         tabs += pane
-        tabPane.addTab(profile.displayName, pane.component)
+        tabPane.addTab(profile.displayName, null)
+        tabContentPanel.add(pane.component, pane.tab.id)
         tabPane.setTabComponentAt(
             tabs.lastIndex,
             LatticeTabComponent(profile.displayName) {
@@ -88,6 +93,8 @@ internal class LatticeTabManager(
             },
         )
         tabPane.selectedIndex = tabs.lastIndex
+        frame.rootPane.revalidate()
+        frame.rootPane.repaint()
         updateFrameTitleFromSelection()
         pane.requestFocus()
         return true
@@ -122,8 +129,11 @@ internal class LatticeTabManager(
     private fun closeTabAt(index: Int) {
         val pane = tabs.removeAt(index)
         tabPane.removeTabAt(index)
+        tabContentPanel.remove(pane.component)
         pane.close()
         workspace.closeTab(pane.tab.id)
+        frame.rootPane.revalidate()
+        frame.rootPane.repaint()
         updateFrameTitleFromSelection()
         selectedPane?.requestFocus()
     }
@@ -142,6 +152,8 @@ internal class LatticeTabManager(
             if (tabs[index].tab.id == tabId) {
                 tabPane.setTitleAt(index, title)
                 (tabPane.getTabComponentAt(index) as? LatticeTabComponent)?.title = title
+                frame.rootPane.revalidate()
+                frame.rootPane.repaint()
                 if (index == tabPane.selectedIndex) {
                     frame.title = title
                 }

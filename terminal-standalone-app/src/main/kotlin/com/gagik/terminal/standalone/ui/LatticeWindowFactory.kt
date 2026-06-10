@@ -17,12 +17,17 @@ package com.gagik.terminal.standalone.ui
 
 import com.gagik.terminal.standalone.config.StandaloneTerminalSettings
 import com.gagik.terminal.workspace.TerminalProfile
-import java.awt.BorderLayout
+import java.awt.CardLayout
 import java.awt.Dimension
 import java.awt.Insets
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
-import javax.swing.*
+import javax.swing.Box
+import javax.swing.JFrame
+import javax.swing.JMenuBar
+import javax.swing.JPanel
+import javax.swing.JTabbedPane
+import javax.swing.WindowConstants
 import javax.swing.border.EmptyBorder
 
 /**
@@ -35,23 +40,46 @@ internal class LatticeWindowFactory(
     private val tabPane = JTabbedPane()
 
     fun createWindow(): LatticeWindow {
+        val tabContentPanel =
+            JPanel(CardLayout()).apply {
+                background = LatticeChrome.TERMINAL_BACKGROUND
+            }
+
         val frame =
             JFrame(LatticeChrome.APP_TITLE).apply {
                 defaultCloseOperation = WindowConstants.DISPOSE_ON_CLOSE
                 background = LatticeChrome.SURFACE
                 minimumSize = Dimension(720, 420)
-                rootPane.putClientProperty("JRootPane.titleBarBackground", LatticeChrome.TOP_BAR_BACKGROUND)
-                rootPane.putClientProperty("JRootPane.titleBarForeground", LatticeChrome.TITLE_FOREGROUND)
             }
-        val tabManager = LatticeTabManager(frame, tabPane, settings)
-        frame.contentPane =
-            windowPanel(
-                LatticeCommandBarFactory(
-                    settings = settings,
-                    tabManager = tabManager,
-                    profiles = profiles,
-                ).create(),
-            )
+
+        val tabManager = LatticeTabManager(frame, tabPane, tabContentPanel, settings)
+
+        // Build JMenuBar containing the tabs and actions
+        val actionsFactory = LatticeTitleBarActionsFactory(settings, tabManager, profiles)
+        val menuBar =
+            JMenuBar().apply {
+                isOpaque = false
+                border = EmptyBorder(0, 8, 0, 8)
+                add(tabPane)
+                add(actionsFactory.newTabButton)
+                add(actionsFactory.profilesButton)
+                add(Box.createHorizontalGlue())
+                add(actionsFactory.settingsButton)
+            }
+
+        // Configure frame for custom window decorations with embedded menu bar
+        frame.rootPane.apply {
+            putClientProperty("JRootPane.titleBarBackground", LatticeChrome.TOP_BAR_BACKGROUND)
+            putClientProperty("JRootPane.titleBarForeground", LatticeChrome.TITLE_FOREGROUND)
+            putClientProperty("JRootPane.titleBarShowIcon", false)
+            putClientProperty("JRootPane.titleBarShowTitle", false)
+            putClientProperty("JRootPane.titleBarHeight", 40)
+        }
+
+        frame.jMenuBar = menuBar
+        configureTabPane()
+        frame.contentPane = tabContentPanel
+
         frame.addWindowListener(
             object : WindowAdapter() {
                 override fun windowClosed(event: WindowEvent) {
@@ -62,15 +90,6 @@ internal class LatticeWindowFactory(
         return LatticeWindow(frame, tabManager)
     }
 
-    private fun windowPanel(commandBar: JComponent): JPanel =
-        JPanel(BorderLayout()).apply {
-            background = LatticeChrome.SURFACE
-            border = EmptyBorder(0, 0, 0, 0)
-            configureTabPane()
-            add(commandBar, BorderLayout.NORTH)
-            add(tabPane, BorderLayout.CENTER)
-        }
-
     private fun configureTabPane() {
         tabPane.background = LatticeChrome.TAB_BAR_BACKGROUND
         tabPane.foreground = LatticeChrome.TEXT_MUTED
@@ -79,8 +98,8 @@ internal class LatticeWindowFactory(
         tabPane.putClientProperty("JTabbedPane.tabType", "card")
         tabPane.putClientProperty("JTabbedPane.hasFullBorder", false)
         tabPane.putClientProperty("JTabbedPane.showTabSeparators", false)
-        tabPane.putClientProperty("JTabbedPane.tabAreaInsets", Insets(5, 8, 0, 8))
-        tabPane.putClientProperty("JTabbedPane.tabInsets", Insets(7, 12, 7, 10))
+        tabPane.putClientProperty("JTabbedPane.tabAreaInsets", Insets(5, 0, 0, 0))
+        tabPane.putClientProperty("JTabbedPane.tabInsets", Insets(4, 12, 4, 10))
         tabPane.putClientProperty("JTabbedPane.minimumTabWidth", 132)
         tabPane.putClientProperty("JTabbedPane.maximumTabWidth", 220)
         tabPane.putClientProperty("JTabbedPane.scrollButtonsPolicy", "asNeeded")
