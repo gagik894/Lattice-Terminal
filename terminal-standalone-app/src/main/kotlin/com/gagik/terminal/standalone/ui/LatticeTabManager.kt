@@ -25,44 +25,34 @@ import java.awt.CardLayout
 import javax.swing.JFrame
 import javax.swing.JOptionPane
 import javax.swing.JPanel
-import javax.swing.JTabbedPane
 import javax.swing.SwingUtilities
 
 /**
  * Owns standalone terminal tabs and tab-scoped session lifecycle.
  *
- * The manager is intentionally host-side. It creates and closes PTY-backed
- * panes, updates Swing tab metadata, and coordinates settings reloads across
- * live panes without leaking this policy into reusable UI components.
+ * The manager coordinates between [LatticeTabBar] (visual header), the
+ * [tabContentPanel] (holds one [LatticeTerminalPane] per tab via [CardLayout]),
+ * and the backing [TerminalWorkspace]. All session lifecycle decisions live
+ * here; reusable UI components remain policy-free.
  */
 internal class LatticeTabManager(
     private val frame: JFrame,
-    private val tabPane: JTabbedPane,
+    val tabBar: LatticeTabBar,
     private val tabContentPanel: JPanel,
     private val settings: StandaloneTerminalSettings,
 ) {
-    private val tabs = ArrayList<LatticeTerminalPane>(INITIAL_TAB_CAPACITY)
+    private val panes = ArrayList<LatticeTerminalPane>(INITIAL_TAB_CAPACITY)
     private val workspace = TerminalWorkspace(StandaloneWorkspaceListener())
 
-    init {
-        tabPane.addChangeListener {
-            selectedPane?.let { pane ->
-                if (workspace.selectedTab()?.id != pane.tab.id) {
-                    workspace.selectTab(pane.tab.id)
-                }
-                (tabContentPanel.layout as CardLayout).show(tabContentPanel, pane.tab.id)
-            }
-            updateFrameTitleFromSelection()
-            selectedPane?.requestFocus()
-        }
-    }
-
     val selectedPane: LatticeTerminalPane?
-        get() {
-            val selectedIndex = tabPane.selectedIndex
-            return if (selectedIndex in tabs.indices) tabs[selectedIndex] else null
-        }
+        get() = panes.find { it.tab.id == tabBar.selectedId() }
 
+    /**
+     * Opens a new terminal tab backed by [profile].
+     *
+     * Returns `true` on success, `false` if the PTY failed to start
+     * (an error dialog is shown to the user in that case).
+     */
     fun openTab(profile: TerminalProfile): Boolean {
         val workspaceTab =
             try {
@@ -83,94 +73,84 @@ internal class LatticeTabManager(
             }
 
         val pane = LatticeTerminalPane.create(workspaceTab, settings)
-        tabs += pane
-        tabPane.addTab(profile.displayName, null)
+        panes += pane
         tabContentPanel.add(pane.component, pane.tab.id)
-        tabPane.setTabComponentAt(
-            tabs.lastIndex,
-            LatticeTabComponent(profile.displayName) {
-                closePane(pane)
-            },
-        )
-        tabPane.selectedIndex = tabs.lastIndex
-        frame.rootPane.revalidate()
-        frame.rootPane.repaint()
-        updateFrameTitleFromSelection()
+        tabBar.addTab(TabEntry(id = pane.tab.id, title = profile.displayName))
+        showPane(pane)
+        updateFrameTitle()
         pane.requestFocus()
         return true
     }
 
-    fun closeSelectedTab() {
-        val selectedIndex = tabPane.selectedIndex
-        if (selectedIndex !in tabs.indices) return
-        closeTabAt(selectedIndex)
+    /** Closes the tab identified by [id]. No-op if the id is unknown. */
+    fun closeTab(id: String) {
+        val index = panes.indexOfFirst { it.tab.id == id }
+        if (index >= 0) closePaneAt(index)
     }
 
+    /** Closes every open tab and shuts down the workspace. */
     fun closeAllTabs() {
-        while (tabs.isNotEmpty()) {
-            closeTabAt(tabs.lastIndex)
+        while (panes.isNotEmpty()) {
+            closePaneAt(panes.lastIndex)
         }
         workspace.close()
     }
 
+    /** Propagates a settings reload to all live panes and the workspace. */
     fun reloadAllPanes() {
         val snapshot = settings.current()
-        var index = 0
-        while (index < tabs.size) {
-            tabs[index].reloadSettings()
-            index++
-        }
+        panes.forEach { it.reloadSettings() }
         workspace.applySettings(
             palette = snapshot.palette,
             treatAmbiguousAsWide = snapshot.treatAmbiguousAsWide,
         )
     }
 
-    private fun closeTabAt(index: Int) {
-        val pane = tabs.removeAt(index)
-        tabPane.removeTabAt(index)
+    /**
+     * Switches the active content pane and workspace selection to [id].
+     * Called by [LatticeTabBar] when the user clicks a different tab.
+     */
+    fun onTabSelected(id: String) {
+        val pane = panes.find { it.tab.id == id } ?: return
+        if (workspace.selectedTab()?.id != id) {
+            workspace.selectTab(id)
+        }
+        showPane(pane)
+        updateFrameTitle()
+        pane.requestFocus()
+    }
+
+    // -------------------------------------------------------------------------
+    // Private helpers
+    // -------------------------------------------------------------------------
+
+    private fun closePaneAt(index: Int) {
+        val pane = panes.removeAt(index)
+        tabBar.removeTab(pane.tab.id)
         tabContentPanel.remove(pane.component)
         pane.close()
         workspace.closeTab(pane.tab.id)
-        frame.rootPane.revalidate()
-        frame.rootPane.repaint()
-        updateFrameTitleFromSelection()
+        updateFrameTitle()
+        selectedPane?.let { showPane(it) }
         selectedPane?.requestFocus()
     }
 
-    private fun closePane(pane: LatticeTerminalPane) {
-        val index = tabs.indexOf(pane)
-        if (index >= 0) closeTabAt(index)
+    private fun showPane(pane: LatticeTerminalPane) {
+        (tabContentPanel.layout as CardLayout).show(tabContentPanel, pane.tab.id)
     }
 
     private fun updateTabTitle(
         tabId: String,
         title: String,
     ) {
-        var index = 0
-        while (index < tabs.size) {
-            if (tabs[index].tab.id == tabId) {
-                tabPane.setTitleAt(index, title)
-                (tabPane.getTabComponentAt(index) as? LatticeTabComponent)?.title = title
-                frame.rootPane.revalidate()
-                frame.rootPane.repaint()
-                if (index == tabPane.selectedIndex) {
-                    frame.title = title
-                }
-                return
-            }
-            index++
+        tabBar.updateTitle(tabId, title)
+        if (tabBar.selectedId() == tabId) {
+            frame.title = title
         }
     }
 
-    private fun updateFrameTitleFromSelection() {
-        val index = tabPane.selectedIndex
-        frame.title =
-            if (index in 0 until tabPane.tabCount) {
-                tabPane.getTitleAt(index)
-            } else {
-                LatticeChrome.APP_TITLE
-            }
+    private fun updateFrameTitle() {
+        frame.title = tabBar.selectedTitle() ?: LatticeChrome.APP_TITLE
     }
 
     private fun showStartError(

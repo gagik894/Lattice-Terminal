@@ -19,11 +19,13 @@ import com.gagik.terminal.standalone.config.StandaloneTerminalSettings
 import com.gagik.terminal.ui.swing.settings.TerminalTheme
 import com.gagik.terminal.workspace.TerminalProfile
 import java.awt.Dimension
+import java.awt.FlowLayout
 import java.awt.Insets
 import javax.swing.ButtonGroup
 import javax.swing.JButton
 import javax.swing.JCheckBoxMenuItem
 import javax.swing.JMenu
+import javax.swing.JPanel
 import javax.swing.JPopupMenu
 import javax.swing.JRadioButtonMenuItem
 import javax.swing.JSeparator
@@ -31,7 +33,11 @@ import javax.swing.SwingConstants
 import javax.swing.border.EmptyBorder
 
 /**
- * Builds the actions (new tab, profiles, and settings) placed directly in the window title bar.
+ * Builds the trailing action panel placed in the window title bar.
+ *
+ * The panel contains a profiles/commands button and a settings button.
+ * It is intended to be passed to FlatLaf's
+ * `JRootPane.titleBarTrailingComponent` client property.
  */
 internal class LatticeTitleBarActionsFactory(
     private val settings: StandaloneTerminalSettings,
@@ -39,38 +45,41 @@ internal class LatticeTitleBarActionsFactory(
     private val profiles: List<TerminalProfile>,
 ) {
     /**
-     * Button to open a new tab with the default profile.
+     * Pre-built trailing panel ready to be wired into the title bar.
+     * Contains the profiles/commands dropdown button and the settings button.
      */
-    val newTabButton: JButton =
-        commandButton("+", "New tab").apply {
-            addActionListener {
-                tabManager.openTab(profiles.first())
-            }
+    val trailingPanel: JPanel =
+        JPanel(FlowLayout(FlowLayout.LEFT, 4, 6)).apply {
+            isOpaque = false
+            add(buildProfilesButton())
+            add(buildSettingsButton())
         }
 
-    /**
-     * Button to open the profiles and commands dropdown menu.
-     */
-    val profilesButton: JButton =
+    // -------------------------------------------------------------------------
+    // Button constructors
+    // -------------------------------------------------------------------------
+
+    private fun buildProfilesButton(): JButton =
         commandButton(PROFILE_MENU_GLYPH, "Profiles and commands").apply {
             preferredSize = Dimension(34, 28)
             addActionListener {
-                createProfilesPopup().show(this, 0, height)
+                buildProfilesPopup().show(this, 0, height)
             }
         }
 
-    /**
-     * Button to open the settings dropdown menu.
-     */
-    val settingsButton: JButton =
+    private fun buildSettingsButton(): JButton =
         commandButton(SETTINGS_MENU_GLYPH, "Settings").apply {
             preferredSize = Dimension(42, 28)
             addActionListener {
-                createSettingsPopup().show(this, -width / 2, height)
+                buildSettingsPopup().show(this, -width / 2, height)
             }
         }
 
-    private fun createProfilesPopup(): JPopupMenu =
+    // -------------------------------------------------------------------------
+    // Popup menus
+    // -------------------------------------------------------------------------
+
+    private fun buildProfilesPopup(): JPopupMenu =
         JPopupMenu().apply {
             profiles.forEachIndexed { index, profile ->
                 add(profile.displayName).addActionListener {
@@ -80,17 +89,19 @@ internal class LatticeTitleBarActionsFactory(
             }
             add(JSeparator(SwingConstants.HORIZONTAL))
             add("Close tab").addActionListener {
-                tabManager.closeSelectedTab()
+                tabManager.selectedPane?.let { pane ->
+                    tabManager.closeTab(pane.tab.id)
+                }
             }
         }
 
-    private fun createSettingsPopup(): JPopupMenu =
+    private fun buildSettingsPopup(): JPopupMenu =
         JPopupMenu().apply {
-            add(createThemeMenu())
-            add(createWidthItem())
+            add(buildThemeMenu())
+            add(buildWidthItem())
         }
 
-    private fun createThemeMenu(): JMenu {
+    private fun buildThemeMenu(): JMenu {
         val themeMenu = JMenu("Theme")
         val themeGroup = ButtonGroup()
         TerminalTheme.entries.forEach { theme ->
@@ -105,13 +116,17 @@ internal class LatticeTitleBarActionsFactory(
         return themeMenu
     }
 
-    private fun createWidthItem(): JCheckBoxMenuItem =
+    private fun buildWidthItem(): JCheckBoxMenuItem =
         JCheckBoxMenuItem("Ambiguous as wide", settings.treatAmbiguousAsWide).apply {
             addActionListener {
                 settings.treatAmbiguousAsWide = isSelected
                 tabManager.reloadAllPanes()
             }
         }
+
+    // -------------------------------------------------------------------------
+    // Shared helpers
+    // -------------------------------------------------------------------------
 
     private fun commandButton(
         text: String,
@@ -122,8 +137,7 @@ internal class LatticeTitleBarActionsFactory(
             preferredSize = Dimension(34, 28)
             margin = Insets(0, 0, 0, 0)
             isFocusable = false
-            background = LatticeChrome.CONTROL_BACKGROUND
-            foreground = LatticeChrome.TITLE_FOREGROUND
+            isOpaque = false
             border = EmptyBorder(0, 0, 1, 0)
             putClientProperty("JButton.buttonType", "toolBarButton")
         }

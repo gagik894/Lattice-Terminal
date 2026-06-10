@@ -23,7 +23,6 @@ import java.awt.Adjustable
 import java.awt.BorderLayout
 import javax.swing.JPanel
 import javax.swing.JScrollBar
-import javax.swing.border.EmptyBorder
 
 /**
  * Owns one terminal pane in the standalone host.
@@ -83,7 +82,7 @@ internal class LatticeTerminalPane private constructor(
         ): JPanel =
             JPanel(BorderLayout()).apply {
                 background = LatticeChrome.TERMINAL_BACKGROUND
-                border = EmptyBorder(6, 10, 10, 10)
+                border = null
                 terminal.border = null
                 add(terminal, BorderLayout.CENTER)
                 add(scrollbar, BorderLayout.EAST)

@@ -19,32 +19,38 @@ import com.gagik.terminal.standalone.config.StandaloneTerminalSettings
 import com.gagik.terminal.workspace.TerminalProfile
 import java.awt.CardLayout
 import java.awt.Dimension
-import java.awt.Insets
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import javax.swing.Box
 import javax.swing.JFrame
 import javax.swing.JMenuBar
 import javax.swing.JPanel
-import javax.swing.JTabbedPane
 import javax.swing.WindowConstants
 import javax.swing.border.EmptyBorder
 
 /**
- * Creates and wires the standalone terminal window chrome.
+ * Creates and wires the standalone terminal window.
+ *
+ * FlatLaf merges [JMenuBar] into the custom title bar when
+ * `useWindowDecorations=true` and `JFrame.setDefaultLookAndFeelDecorated(true)`
+ * are active. We place [LatticeTabBar] at the left of the menu bar and the
+ * action buttons at the right, with a horizontal glue in between.
+ *
+ * ```
+ * ┌──────────────────────────────────────────────┐
+ * │  [tab1] [tab2] [+]        [≡] [⋯]  [ − □ × ]│  ← JMenuBar (title bar)
+ * ├──────────────────────────────────────────────┤
+ * │                                              │
+ * │            terminal content                  │  ← content pane
+ * │                                              │
+ * └──────────────────────────────────────────────┘
+ * ```
  */
 internal class LatticeWindowFactory(
     private val settings: StandaloneTerminalSettings,
     private val profiles: List<TerminalProfile>,
 ) {
-    private val tabPane = JTabbedPane()
-
     fun createWindow(): LatticeWindow {
-        val tabContentPanel =
-            JPanel(CardLayout()).apply {
-                background = LatticeChrome.TERMINAL_BACKGROUND
-            }
-
         val frame =
             JFrame(LatticeChrome.APP_TITLE).apply {
                 defaultCloseOperation = WindowConstants.DISPOSE_ON_CLOSE
@@ -52,32 +58,27 @@ internal class LatticeWindowFactory(
                 minimumSize = Dimension(720, 420)
             }
 
-        val tabManager = LatticeTabManager(frame, tabPane, tabContentPanel, settings)
-
-        // Build JMenuBar containing the tabs and actions
-        val actionsFactory = LatticeTitleBarActionsFactory(settings, tabManager, profiles)
-        val menuBar =
-            JMenuBar().apply {
-                isOpaque = false
-                border = EmptyBorder(0, 8, 0, 8)
-                add(tabPane)
-                add(actionsFactory.newTabButton)
-                add(actionsFactory.profilesButton)
-                add(Box.createHorizontalGlue())
-                add(actionsFactory.settingsButton)
+        val tabContentPanel =
+            JPanel(CardLayout()).apply {
+                background = LatticeChrome.TERMINAL_BACKGROUND
+                isOpaque = true
             }
 
-        // Configure frame for custom window decorations with embedded menu bar
-        frame.rootPane.apply {
-            putClientProperty("JRootPane.titleBarBackground", LatticeChrome.TOP_BAR_BACKGROUND)
-            putClientProperty("JRootPane.titleBarForeground", LatticeChrome.TITLE_FOREGROUND)
-            putClientProperty("JRootPane.titleBarShowIcon", false)
-            putClientProperty("JRootPane.titleBarShowTitle", false)
-            putClientProperty("JRootPane.titleBarHeight", 40)
-        }
+        // Tab bar callbacks reference tabManager; forward via lambda so the
+        // lateinit is resolved at call time, not at construction time.
+        lateinit var tabManager: LatticeTabManager
+        val tabBar =
+            LatticeTabBar(
+                onTabSelected = { id -> tabManager.onTabSelected(id) },
+                onTabClose = { id -> tabManager.closeTab(id) },
+                onNewTab = { tabManager.openTab(profiles.first()) },
+            )
 
-        frame.jMenuBar = menuBar
-        configureTabPane()
+        tabManager = LatticeTabManager(frame, tabBar, tabContentPanel, settings)
+        val actionsFactory = LatticeTitleBarActionsFactory(settings, tabManager, profiles)
+
+        installMenuBar(frame, tabBar, actionsFactory)
+        styleTitleBar(frame)
         frame.contentPane = tabContentPanel
 
         frame.addWindowListener(
@@ -87,22 +88,40 @@ internal class LatticeWindowFactory(
                 }
             },
         )
+
         return LatticeWindow(frame, tabManager)
     }
 
-    private fun configureTabPane() {
-        tabPane.background = LatticeChrome.TAB_BAR_BACKGROUND
-        tabPane.foreground = LatticeChrome.TEXT_MUTED
-        tabPane.isFocusable = false
-        tabPane.tabLayoutPolicy = JTabbedPane.SCROLL_TAB_LAYOUT
-        tabPane.putClientProperty("JTabbedPane.tabType", "card")
-        tabPane.putClientProperty("JTabbedPane.hasFullBorder", false)
-        tabPane.putClientProperty("JTabbedPane.showTabSeparators", false)
-        tabPane.putClientProperty("JTabbedPane.tabAreaInsets", Insets(5, 0, 0, 0))
-        tabPane.putClientProperty("JTabbedPane.tabInsets", Insets(4, 12, 4, 10))
-        tabPane.putClientProperty("JTabbedPane.minimumTabWidth", 132)
-        tabPane.putClientProperty("JTabbedPane.maximumTabWidth", 220)
-        tabPane.putClientProperty("JTabbedPane.scrollButtonsPolicy", "asNeeded")
+    /**
+     * Places [tabBar] and the action panel inside a [JMenuBar] that FlatLaf
+     * renders in the title bar area.
+     */
+    private fun installMenuBar(
+        frame: JFrame,
+        tabBar: LatticeTabBar,
+        actionsFactory: LatticeTitleBarActionsFactory,
+    ) {
+        frame.jMenuBar =
+            JMenuBar().apply {
+                isOpaque = false
+                border = EmptyBorder(0, 0, 0, 0)
+                add(tabBar)
+                add(Box.createHorizontalGlue())
+                add(actionsFactory.trailingPanel)
+            }
+    }
+
+    /**
+     * Applies FlatLaf title bar styling: background colour, no icon, no title
+     * text (the tab bar provides context instead).
+     */
+    private fun styleTitleBar(frame: JFrame) {
+        frame.rootPane.apply {
+            putClientProperty("JRootPane.titleBarBackground", LatticeChrome.TOP_BAR_BACKGROUND)
+            putClientProperty("JRootPane.titleBarForeground", LatticeChrome.TEXT_PRIMARY)
+            putClientProperty("JRootPane.titleBarShowIcon", false)
+            putClientProperty("JRootPane.titleBarShowTitle", false)
+        }
     }
 }
 

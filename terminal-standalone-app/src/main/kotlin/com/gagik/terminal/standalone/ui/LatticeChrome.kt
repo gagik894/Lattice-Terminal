@@ -20,26 +20,63 @@ import java.awt.Dimension
 
 /**
  * Visual constants for the standalone Swing host.
+ *
+ * All colours follow an 80% dark / 20% accent palette, matching the feel
+ * of modern terminal applications such as Windows Terminal and VS Code.
  */
 internal object LatticeChrome {
     const val APP_TITLE = "Lattice"
-    val SURFACE: Color = Color(0x0F1011)
-    val TOP_BAR_BACKGROUND: Color = Color(0x202020)
-    val TAB_BAR_BACKGROUND: Color = Color(0x202020)
-    val TAB_SELECTED: Color = Color(0x0C0C0C)
-    val TAB_HOVER: Color = Color(0x323232)
-    val TERMINAL_BACKGROUND: Color = Color(0x0C0C0C)
+
+    // ── Surfaces ──────────────────────────────────────────────────────────────
+
+    /** Root window background and deep surface. */
+    val SURFACE: Color = Color(0x0D0D0D)
+
+    /** Title bar and tab strip background. */
+    val TOP_BAR_BACKGROUND: Color = Color(0x252526)
+
+    /** Active terminal content background. Intentionally darker than the bar
+     *  so that the selected tab creates a seamless visual connection. */
+    val TERMINAL_BACKGROUND: Color = Color(0x0D0D0D)
+
+    // ── Tab states ────────────────────────────────────────────────────────────
+
+    /** Background of the selected tab — matches [TERMINAL_BACKGROUND] so the
+     *  tab blends into the content pane below it. */
+    val TAB_SELECTED_BG: Color = Color(0x0D0D0D)
+
+    /** Background shown when hovering over an unselected tab. */
+    val TAB_HOVER_BG: Color = Color(0x2F2F2F)
+
+    // ── Controls ──────────────────────────────────────────────────────────────
+
     val POPUP_BACKGROUND: Color = Color(0x2B2B2B)
-    val CONTROL_BACKGROUND: Color = Color(0x343434)
-    val CONTROL_HOVER: Color = Color(0x424242)
-    val CONTROL_PRESSED: Color = Color(0x4D4D4D)
-    val TITLE_FOREGROUND: Color = Color(0xF2F2F2)
-    val TEXT_MUTED: Color = Color(0xA7A7A7)
+    val CONTROL_BACKGROUND: Color = Color(0x3C3C3C)
+    val CONTROL_HOVER: Color = Color(0x4A4A4A)
+    val CONTROL_PRESSED: Color = Color(0x555555)
+
+    // ── Text ──────────────────────────────────────────────────────────────────
+
+    /** Primary text — used for selected tab labels and active UI elements. */
+    val TEXT_PRIMARY: Color = Color(0xE8E8E8)
+
+    /** Secondary text — used for unselected tab labels. */
+    val TEXT_SECONDARY: Color = Color(0x8A8A8A)
+
+    // ── Accent ────────────────────────────────────────────────────────────────
+
+    /** Brand accent — used as the selected-tab indicator line. */
     val ACCENT: Color = Color(0x4DA3FF)
-    val BORDER: Color = Color(0x303030)
-    val SCROLLBAR_TRACK: Color = Color(0x0C0C0C)
-    val SCROLLBAR_THUMB: Color = Color(0x5F5F5F)
-    val SCROLLBAR_THUMB_HOVER: Color = Color(0x777777)
-    val SCROLLBAR_THUMB_PRESSED: Color = Color(0x949494)
-    val SCROLLBAR_SIZE: Dimension = Dimension(12, 1)
+
+    // ── Borders ───────────────────────────────────────────────────────────────
+
+    val BORDER: Color = Color(0x3A3A3A)
+
+    // ── Scrollbar ─────────────────────────────────────────────────────────────
+
+    val SCROLLBAR_TRACK: Color = Color(0x0D0D0D)
+    val SCROLLBAR_THUMB: Color = Color(0x555555)
+    val SCROLLBAR_THUMB_HOVER: Color = Color(0x707070)
+    val SCROLLBAR_THUMB_PRESSED: Color = Color(0x909090)
+    val SCROLLBAR_SIZE: Dimension = Dimension(10, 1)
 }
