@@ -47,7 +47,8 @@ internal class LatticeTabBar(
 ) : JPanel() {
     private val entries = mutableListOf<TabEntry>()
     private var selectedId: String? = null
-    private val tabShape = Path2D.Float()
+    private val tabFillShape = Path2D.Double()
+    private val tabBorderShape = Path2D.Double()
     private val profileIcons = LatticeProfileIcons()
 
     // Layout state
@@ -69,6 +70,7 @@ internal class LatticeTabBar(
 
     init {
         isOpaque = false
+        alignmentY = BOTTOM_ALIGNMENT
         cursor = Cursor.getDefaultCursor()
         toolTipText = "" // register with ToolTipManager for dynamic getToolTipText(MouseEvent)
         installMouseListeners()
@@ -118,15 +120,6 @@ internal class LatticeTabBar(
     fun selectedId(): String? = selectedId
 
     fun selectedTitle(): String? = entries.find { it.id == selectedId }?.title
-
-    fun getSelectedTabXRange(): Pair<Int, Int>? {
-        val id = selectedId ?: return null
-        val index = entries.indexOfFirst { it.id == id }
-        if (index == -1 || index >= tabWidths.size) return null
-
-        val (visibleStart, visibleEnd) = layout.visibleTabRange(index) ?: return null
-        return Pair(x + visibleStart, x + visibleEnd)
-    }
 
     private fun scrollToVisible(index: Int) {
         if (index !in entries.indices || maxScrollOffset <= 0) return
@@ -219,7 +212,12 @@ internal class LatticeTabBar(
             }
 
         val oldClip = g2.clip
-        g2.clipRect(TAB_START_X, 0, clipWidth, height)
+        g2.clipRect(
+            (TAB_START_X - TAB_CLIP_OVERPAINT).coerceAtLeast(0),
+            0,
+            clipWidth + TAB_CLIP_OVERPAINT * 2,
+            height,
+        )
         g2.translate(-scrollOffset, 0)
 
         var x = TAB_START_X
@@ -261,15 +259,18 @@ internal class LatticeTabBar(
             }
         if (bg.alpha > 0) {
             g2.color = bg
-            resetTabShape(x, y, w, h)
-            g2.fill(tabShape)
+            resetTabShape(tabFillShape, x, y, w, h, selected, closePath = true)
+            g2.fill(tabFillShape)
+            if (selected) {
+                g2.fillRect(x, height - SELECTED_TAB_JOIN_OVERLAP, w, SELECTED_TAB_JOIN_OVERLAP)
+            }
         }
 
         if (selected || index == tabHoverIndex) {
             g2.color = LatticeChrome.border
             g2.stroke = HAIRLINE_STROKE
-            resetTabShape(x, y, w, h)
-            g2.draw(tabShape)
+            resetTabShape(tabBorderShape, x, y, w, h, selected, closePath = false)
+            g2.draw(tabBorderShape)
         }
 
         // Draw vertical divider between inactive tabs
@@ -341,19 +342,56 @@ internal class LatticeTabBar(
     }
 
     private fun resetTabShape(
+        shape: Path2D.Double,
         x: Int,
         y: Int,
         w: Int,
         h: Int,
+        selected: Boolean,
+        closePath: Boolean,
     ) {
-        tabShape.reset()
-        tabShape.moveTo(x.toFloat(), (y + h).toFloat())
-        tabShape.lineTo(x.toFloat(), y + CORNER_RADIUS)
-        tabShape.quadTo(x.toFloat(), y.toFloat(), x + CORNER_RADIUS, y.toFloat())
-        tabShape.lineTo(x + w - CORNER_RADIUS, y.toFloat())
-        tabShape.quadTo((x + w).toFloat(), y.toFloat(), (x + w).toFloat(), y + CORNER_RADIUS)
-        tabShape.lineTo((x + w).toFloat(), (y + h).toFloat())
-        tabShape.closePath()
+        val bounds = TabShapeBounds(x, y, w, h)
+        shape.reset()
+        appendTabStart(shape, bounds, selected)
+        appendTabTop(shape, bounds)
+        appendTabEnd(shape, bounds, selected)
+        if (closePath) shape.closePath()
+    }
+
+    private fun appendTabStart(
+        shape: Path2D.Double,
+        bounds: TabShapeBounds,
+        selected: Boolean,
+    ) {
+        if (selected) {
+            shape.moveTo(bounds.left - bounds.bottomCorner, bounds.bottom)
+            shape.quadTo(bounds.left, bounds.bottom, bounds.left, bounds.bottom - bounds.bottomCorner)
+        } else {
+            shape.moveTo(bounds.left, bounds.bottom)
+        }
+    }
+
+    private fun appendTabTop(
+        shape: Path2D.Double,
+        bounds: TabShapeBounds,
+    ) {
+        shape.lineTo(bounds.left, bounds.top + bounds.corner)
+        shape.quadTo(bounds.left, bounds.top, bounds.left + bounds.corner, bounds.top)
+        shape.lineTo(bounds.right - bounds.corner, bounds.top)
+        shape.quadTo(bounds.right, bounds.top, bounds.right, bounds.top + bounds.corner)
+    }
+
+    private fun appendTabEnd(
+        shape: Path2D.Double,
+        bounds: TabShapeBounds,
+        selected: Boolean,
+    ) {
+        if (selected) {
+            shape.lineTo(bounds.right, bounds.bottom - bounds.bottomCorner)
+            shape.quadTo(bounds.right, bounds.bottom, bounds.right + bounds.bottomCorner, bounds.bottom)
+        } else {
+            shape.lineTo(bounds.right, bounds.bottom)
+        }
     }
 
     private fun paintActionButtons(g2: Graphics2D) {
@@ -715,6 +753,9 @@ internal class LatticeTabBar(
         private const val MENU_BUTTON_WIDTH = LatticeTabMetrics.MENU_BUTTON_WIDTH
         private const val TRAILING_SPACE = LatticeTabMetrics.TRAILING_SPACE
         private const val CORNER_RADIUS = LatticeTabMetrics.CORNER_RADIUS
+        private const val BOTTOM_OUTSIDE_RADIUS = LatticeTabMetrics.BOTTOM_OUTSIDE_RADIUS
+        private const val TAB_CLIP_OVERPAINT = BOTTOM_OUTSIDE_RADIUS + 1
+        private const val SELECTED_TAB_JOIN_OVERLAP = 2
         private const val ACTION_BUTTON_HOVER_SIZE = 24
         private const val ACTION_BUTTON_CORNER_RADIUS = 3
         private val TRANSPARENT_COLOR = Color(0, 0, 0, 0)
@@ -722,5 +763,28 @@ internal class LatticeTabBar(
         private val DIVIDER_STROKE = LatticeTabMetrics.DIVIDER_STROKE
         private val ICON_STROKE = LatticeTabMetrics.ICON_STROKE
         private val ACTION_ICON_STROKE = LatticeTabMetrics.ACTION_ICON_STROKE
+    }
+
+    private data class TabShapeBounds(
+        val left: Double,
+        val top: Double,
+        val right: Double,
+        val bottom: Double,
+        val corner: Double,
+        val bottomCorner: Double,
+    ) {
+        constructor(
+            x: Int,
+            y: Int,
+            w: Int,
+            h: Int,
+        ) : this(
+            left = x.toDouble(),
+            top = y.toDouble(),
+            right = (x + w).toDouble(),
+            bottom = (y + h).toDouble(),
+            corner = CORNER_RADIUS.toDouble(),
+            bottomCorner = BOTTOM_OUTSIDE_RADIUS.toDouble(),
+        )
     }
 }

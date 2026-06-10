@@ -22,6 +22,11 @@ import kotlin.test.assertTrue
 
 class LatticeTabLayoutTest {
     @Test
+    fun firstTabLeftPaddingMatchesTopPadding() {
+        assertEquals(LatticeTabMetrics.TAB_TOP_PADDING, LatticeTabMetrics.TAB_START_X)
+    }
+
+    @Test
     fun preferredTabWidthClampsTextWidthToSupportedRange() {
         assertEquals(110, LatticeTabLayoutCalculator.preferredTabWidth(0))
         assertEquals(220, LatticeTabLayoutCalculator.preferredTabWidth(300))

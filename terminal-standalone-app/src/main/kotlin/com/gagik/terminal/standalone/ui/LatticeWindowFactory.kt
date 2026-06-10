@@ -89,31 +89,7 @@ internal class LatticeWindowFactory(
         tabBar: LatticeTabBar,
     ) {
         frame.jMenuBar =
-            object : JMenuBar() {
-                override fun paintComponent(g: java.awt.Graphics) {
-                    super.paintComponent(g)
-                    val g2 = g.create() as java.awt.Graphics2D
-                    try {
-                        g2.color = LatticeChrome.border
-                        g2.stroke = java.awt.BasicStroke(1f)
-                        val yLine = height - 1
-                        val range = tabBar.getSelectedTabXRange()
-                        if (range != null) {
-                            val (tabStart, tabEnd) = range
-                            if (tabStart > 0) {
-                                g2.drawLine(0, yLine, tabStart, yLine)
-                            }
-                            if (tabEnd < width) {
-                                g2.drawLine(tabEnd, yLine, width, yLine)
-                            }
-                        } else {
-                            g2.drawLine(0, yLine, width, yLine)
-                        }
-                    } finally {
-                        g2.dispose()
-                    }
-                }
-            }.apply {
+            JMenuBar().apply {
                 isOpaque = false
                 border = null
                 add(tabBar)
