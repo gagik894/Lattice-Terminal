@@ -15,6 +15,7 @@
  */
 package com.gagik.terminal.standalone.ui
 
+import com.gagik.terminal.workspace.TerminalProfileKind
 import java.awt.BasicStroke
 import java.awt.Color
 import java.awt.Cursor
@@ -28,6 +29,7 @@ import java.awt.event.ComponentEvent
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.awt.event.MouseWheelEvent
+import java.awt.geom.Path2D
 import javax.swing.JPanel
 import javax.swing.SwingUtilities
 
@@ -37,6 +39,7 @@ import javax.swing.SwingUtilities
 internal data class TabEntry(
     val id: String,
     var title: String,
+    val profileKind: TerminalProfileKind,
 )
 
 /**
@@ -55,7 +58,8 @@ internal class LatticeTabBar(
 ) : JPanel() {
     private val entries = mutableListOf<TabEntry>()
     private var selectedId: String? = null
-    var activeTabBackground: Color? = null
+    private val tabShape = Path2D.Float()
+    private val iconShape = Path2D.Float()
 
     // Layout state
     private var tabWidths: List<Int> = emptyList()
@@ -262,9 +266,8 @@ internal class LatticeTabBar(
         entry: TabEntry,
         fm: FontMetrics,
     ): Int {
-        val iconWidth = 20
         val textWidth = fm.stringWidth(entry.title).coerceIn(MIN_LABEL_TEXT_WIDTH, MAX_LABEL_TEXT_WIDTH)
-        return TAB_LABEL_PADDING_LEFT + iconWidth + textWidth + CLOSE_BUTTON_SIZE + CLOSE_BUTTON_MARGIN_RIGHT + TAB_PADDING_RIGHT
+        return TAB_LABEL_PADDING_LEFT + ICON_TEXT_GAP + textWidth + CLOSE_BUTTON_SIZE + CLOSE_BUTTON_MARGIN_RIGHT + TAB_PADDING_RIGHT
     }
 
     // -------------------------------------------------------------------------
@@ -330,157 +333,123 @@ internal class LatticeTabBar(
         val isTabPressed = activePressedResult == HitResult.Tab(index)
         val bg =
             when {
-                selected -> activeTabBackground ?: LatticeChrome.TAB_SELECTED_BG
+                selected -> LatticeChrome.tabSelectedBackground
                 index == tabHoverIndex -> {
                     if (isTabPressed) {
-                        LatticeChrome.CONTROL_PRESSED
+                        LatticeChrome.controlPressed
                     } else {
-                        LatticeChrome.TAB_HOVER_BG
+                        LatticeChrome.tabHoverBackground
                     }
                 }
                 else -> Color(0, 0, 0, 0)
             }
         if (bg.alpha > 0) {
             g2.color = bg
-            // Draw top rounded corners only (radius CORNER_RADIUS) using a Path2D
-            val path =
-                java.awt.geom.Path2D
-                    .Float()
-            path.moveTo(x.toFloat(), (y + h).toFloat())
-            path.lineTo(x.toFloat(), y + CORNER_RADIUS)
-            path.quadTo(x.toFloat(), y.toFloat(), x + CORNER_RADIUS, y.toFloat())
-            path.lineTo(x + w - CORNER_RADIUS, y.toFloat())
-            path.quadTo((x + w).toFloat(), y.toFloat(), (x + w).toFloat(), y + CORNER_RADIUS)
-            path.lineTo((x + w).toFloat(), (y + h).toFloat())
-            path.closePath()
-            g2.fill(path)
+            resetTabShape(x, y, w, h)
+            g2.fill(tabShape)
         }
 
         if (selected || index == tabHoverIndex) {
-            // Draw active/hovered tab outline border (top-rounded only)
-            g2.color = LatticeChrome.BORDER
-            g2.stroke = BasicStroke(1f)
-            val borderPath =
-                java.awt.geom.Path2D
-                    .Float()
-            borderPath.moveTo(x.toFloat(), (y + h).toFloat())
-            borderPath.lineTo(x.toFloat(), y + CORNER_RADIUS)
-            borderPath.quadTo(x.toFloat(), y.toFloat(), x + CORNER_RADIUS, y.toFloat())
-            borderPath.lineTo(x + w - CORNER_RADIUS, y.toFloat())
-            borderPath.quadTo((x + w).toFloat(), y.toFloat(), (x + w).toFloat(), y + CORNER_RADIUS)
-            borderPath.lineTo((x + w).toFloat(), (y + h).toFloat())
-            g2.draw(borderPath)
+            g2.color = LatticeChrome.border
+            g2.stroke = HAIRLINE_STROKE
+            resetTabShape(x, y, w, h)
+            g2.draw(tabShape)
         }
 
         // Draw vertical divider between inactive tabs
         val nextSelected = entries.getOrNull(index + 1)?.id == selectedId
         val nextHovered = index + 1 == tabHoverIndex
         if (!selected && !nextSelected && !nextHovered && index < entries.size - 1 && index != tabHoverIndex) {
-            g2.color = LatticeChrome.BORDER
-            g2.stroke = BasicStroke(1f)
+            g2.color = LatticeChrome.border
+            g2.stroke = HAIRLINE_STROKE
             val divX = x + w + TAB_GAP / 2
             g2.drawLine(divX, y + 6, divX, y + h - 6)
         }
 
         g2.font = font.deriveFont(13f)
-        val iconWidth = 20
         val iconY = y + (h + fm.ascent - fm.descent) / 2
 
-        // Draw stylized icon based on shell type
+        // Draw a stable profile icon. The kind is computed outside the paint path.
         val iconX = x + TAB_LABEL_PADDING_LEFT
         val iconH = 12
         val iconW = 14
         val iconDrawY = y + (h - iconH) / 2
-        val shellType = detectShellType(entry.title)
         val opacity = if (selected || index == tabHoverIndex) 255 else 160
 
-        when (shellType) {
-            ShellType.POWERSHELL -> {
+        when (entry.profileKind) {
+            TerminalProfileKind.POWERSHELL -> {
                 g2.color = Color(0x1F, 0x8A, 0xDD, opacity)
                 g2.fillRoundRect(iconX, iconDrawY, iconW, iconH, 3, 3)
 
                 g2.color = Color(255, 255, 255, opacity)
-                g2.stroke = BasicStroke(1.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
-                // Chevron '>'
+                g2.stroke = ICON_STROKE
                 g2.drawLine(iconX + 4, iconDrawY + 3, iconX + 7, iconDrawY + 6)
                 g2.drawLine(iconX + 7, iconDrawY + 6, iconX + 4, iconDrawY + 9)
-                // Backslash '\'
                 g2.drawLine(iconX + 10, iconDrawY + 3, iconX + 8, iconDrawY + 9)
             }
-            ShellType.CMD -> {
+            TerminalProfileKind.COMMAND_PROMPT -> {
                 g2.color = Color(0x1E, 0x1E, 0x1E, opacity)
                 g2.fillRoundRect(iconX, iconDrawY, iconW, iconH, 2, 2)
 
                 g2.color = Color(0x8C, 0x90, 0x99, opacity)
-                g2.stroke = BasicStroke(1f)
+                g2.stroke = HAIRLINE_STROKE
                 g2.drawRoundRect(iconX, iconDrawY, iconW, iconH, 2, 2)
 
                 g2.color = Color(0xDF, 0xE1, 0xE5, opacity)
-                g2.stroke = BasicStroke(1f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
-                // 'C'
+                g2.stroke = ICON_DETAIL_STROKE
                 g2.drawLine(iconX + 5, iconDrawY + 4, iconX + 3, iconDrawY + 4)
                 g2.drawLine(iconX + 3, iconDrawY + 4, iconX + 3, iconDrawY + 8)
                 g2.drawLine(iconX + 3, iconDrawY + 8, iconX + 5, iconDrawY + 8)
-                // '>'
                 g2.drawLine(iconX + 7, iconDrawY + 4, iconX + 9, iconDrawY + 6)
                 g2.drawLine(iconX + 9, iconDrawY + 6, iconX + 7, iconDrawY + 8)
-                // '_'
                 g2.drawLine(iconX + 10, iconDrawY + 8, iconX + 11, iconDrawY + 8)
             }
-            ShellType.GIT_BASH -> {
+            TerminalProfileKind.GIT_BASH -> {
                 g2.color = Color(0xF1, 0x50, 0x2F, opacity)
-                val diamond = java.awt.Polygon()
-                diamond.addPoint(iconX + 7, iconDrawY)
-                diamond.addPoint(iconX + 14, iconDrawY + 6)
-                diamond.addPoint(iconX + 7, iconDrawY + 12)
-                diamond.addPoint(iconX, iconDrawY + 6)
-                g2.fill(diamond)
+                resetDiamondShape(iconX, iconDrawY)
+                g2.fill(iconShape)
 
                 g2.color = Color(255, 255, 255, opacity)
-                g2.stroke = BasicStroke(1.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
-                // Stem
+                g2.stroke = ICON_STROKE
                 g2.drawLine(iconX + 7, iconDrawY + 3, iconX + 7, iconDrawY + 9)
-                // Branch
                 g2.drawLine(iconX + 7, iconDrawY + 6, iconX + 10, iconDrawY + 4)
-                // Nodes
                 g2.fillOval(iconX + 6, iconDrawY + 2, 2, 2)
                 g2.fillOval(iconX + 6, iconDrawY + 8, 2, 2)
                 g2.fillOval(iconX + 9, iconDrawY + 3, 2, 2)
             }
-            ShellType.UBUNTU -> {
+            TerminalProfileKind.UBUNTU -> {
                 g2.color = Color(0xE9, 0x54, 0x20, opacity)
                 g2.fillOval(iconX + 1, iconDrawY, 12, 12)
 
                 g2.color = Color(255, 255, 255, opacity)
-                g2.stroke = BasicStroke(1f)
+                g2.stroke = HAIRLINE_STROKE
                 g2.drawOval(iconX + 4, iconDrawY + 3, 6, 6)
                 g2.fillOval(iconX + 2, iconDrawY + 5, 2, 2)
                 g2.fillOval(iconX + 7, iconDrawY + 2, 2, 2)
                 g2.fillOval(iconX + 7, iconDrawY + 8, 2, 2)
             }
-            ShellType.DEFAULT -> {
-                g2.color = if (selected) LatticeChrome.ACCENT else Color(0x9E, 0xA2, 0xA8, opacity)
-                g2.stroke = BasicStroke(1.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
+            TerminalProfileKind.UNIX_SHELL,
+            TerminalProfileKind.DEFAULT,
+            -> {
+                g2.color = if (selected) LatticeChrome.accent else Color(0x9E, 0xA2, 0xA8, opacity)
+                g2.stroke = ICON_STROKE
                 g2.drawRoundRect(iconX, iconDrawY, iconW, iconH, 2, 2)
-                // '>' prompt inside icon
                 g2.drawLine(iconX + 4, iconDrawY + 3, iconX + 7, iconDrawY + 6)
                 g2.drawLine(iconX + 7, iconDrawY + 6, iconX + 4, iconDrawY + 9)
-                // '_' cursor inside icon
                 g2.drawLine(iconX + 9, iconDrawY + 9, iconX + 11, iconDrawY + 9)
             }
         }
 
-        // Draw text
         val titleFg =
             when {
-                selected -> LatticeChrome.TEXT_PRIMARY
-                index == tabHoverIndex -> Color(0xDF, 0xE1, 0xE5)
-                else -> LatticeChrome.TEXT_SECONDARY
+                selected -> LatticeChrome.textPrimary
+                index == tabHoverIndex -> LatticeChrome.textHover
+                else -> LatticeChrome.textSecondary
             }
         g2.color = titleFg
-        val labelMaxWidth = w - TAB_LABEL_PADDING_LEFT - iconWidth - CLOSE_BUTTON_SIZE - CLOSE_BUTTON_MARGIN_RIGHT - 4
+        val labelMaxWidth = w - TAB_LABEL_PADDING_LEFT - ICON_TEXT_GAP - CLOSE_BUTTON_SIZE - CLOSE_BUTTON_MARGIN_RIGHT - 4
         if (labelMaxWidth > 10) {
-            val labelX = x + TAB_LABEL_PADDING_LEFT + iconWidth
+            val labelX = x + TAB_LABEL_PADDING_LEFT + ICON_TEXT_GAP
             val clipped = clipText(entry.title, labelMaxWidth, fm)
             g2.drawString(clipped, labelX, iconY)
         }
@@ -503,15 +472,43 @@ internal class LatticeTabBar(
         if (visible) {
             if (hovered) {
                 val isPressed = activePressedResult == HitResult.TabClose(index)
-                g2.color = if (isPressed) LatticeChrome.CONTROL_PRESSED else LatticeChrome.CONTROL_HOVER
+                g2.color = if (isPressed) LatticeChrome.controlPressed else LatticeChrome.controlHover
                 g2.fillRoundRect(x, y, CLOSE_BUTTON_SIZE, CLOSE_BUTTON_SIZE, 3, 3)
             }
-            g2.color = if (hovered) LatticeChrome.TEXT_PRIMARY else LatticeChrome.TEXT_SECONDARY
-            g2.stroke = BasicStroke(1.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
+            g2.color = if (hovered) LatticeChrome.textPrimary else LatticeChrome.textSecondary
+            g2.stroke = ICON_STROKE
             val pad = CLOSE_BUTTON_SIZE / 4
             g2.drawLine(x + pad, y + pad, x + CLOSE_BUTTON_SIZE - pad, y + CLOSE_BUTTON_SIZE - pad)
             g2.drawLine(x + CLOSE_BUTTON_SIZE - pad, y + pad, x + pad, y + CLOSE_BUTTON_SIZE - pad)
         }
+    }
+
+    private fun resetTabShape(
+        x: Int,
+        y: Int,
+        w: Int,
+        h: Int,
+    ) {
+        tabShape.reset()
+        tabShape.moveTo(x.toFloat(), (y + h).toFloat())
+        tabShape.lineTo(x.toFloat(), y + CORNER_RADIUS)
+        tabShape.quadTo(x.toFloat(), y.toFloat(), x + CORNER_RADIUS, y.toFloat())
+        tabShape.lineTo(x + w - CORNER_RADIUS, y.toFloat())
+        tabShape.quadTo((x + w).toFloat(), y.toFloat(), (x + w).toFloat(), y + CORNER_RADIUS)
+        tabShape.lineTo((x + w).toFloat(), (y + h).toFloat())
+        tabShape.closePath()
+    }
+
+    private fun resetDiamondShape(
+        x: Int,
+        y: Int,
+    ) {
+        iconShape.reset()
+        iconShape.moveTo((x + 7).toFloat(), y.toFloat())
+        iconShape.lineTo((x + 14).toFloat(), (y + 6).toFloat())
+        iconShape.lineTo((x + 7).toFloat(), (y + 12).toFloat())
+        iconShape.lineTo(x.toFloat(), (y + 6).toFloat())
+        iconShape.closePath()
     }
 
     private fun paintActionButtons(g2: Graphics2D) {
@@ -530,7 +527,7 @@ internal class LatticeTabBar(
             // < button
             val isPressedL = activePressedResult == HitResult.ScrollLeft
             if (scrollLeftHovered || isPressedL) {
-                g2.color = if (isPressedL) LatticeChrome.CONTROL_PRESSED else LatticeChrome.TAB_HOVER_BG
+                g2.color = if (isPressedL) LatticeChrome.controlPressed else LatticeChrome.tabHoverBackground
                 val size = 24
                 val cx = currentX + SCROLL_BUTTON_WIDTH / 2
                 val cy = y + h / 2
@@ -538,11 +535,11 @@ internal class LatticeTabBar(
             }
             g2.color =
                 if (scrollOffset > 0) {
-                    if (scrollLeftHovered || isPressedL) LatticeChrome.TEXT_PRIMARY else Color(0xCF, 0xD2, 0xD6)
+                    if (scrollLeftHovered || isPressedL) LatticeChrome.textPrimary else LatticeChrome.controlText
                 } else {
-                    LatticeChrome.BORDER
+                    LatticeChrome.controlTextDisabled
                 }
-            g2.stroke = BasicStroke(1.6f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
+            g2.stroke = ACTION_ICON_STROKE
             val cx = currentX + SCROLL_BUTTON_WIDTH / 2
             val cy = y + h / 2
             g2.drawLine(cx + 2, cy - 4, cx - 2, cy)
@@ -552,7 +549,7 @@ internal class LatticeTabBar(
             // > button
             val isPressedR = activePressedResult == HitResult.ScrollRight
             if (scrollRightHovered || isPressedR) {
-                g2.color = if (isPressedR) LatticeChrome.CONTROL_PRESSED else LatticeChrome.TAB_HOVER_BG
+                g2.color = if (isPressedR) LatticeChrome.controlPressed else LatticeChrome.tabHoverBackground
                 val size = 24
                 val cx2 = currentX + SCROLL_BUTTON_WIDTH / 2
                 val cy2 = y + h / 2
@@ -560,11 +557,11 @@ internal class LatticeTabBar(
             }
             g2.color =
                 if (scrollOffset < maxScrollOffset) {
-                    if (scrollRightHovered || isPressedR) LatticeChrome.TEXT_PRIMARY else Color(0xCF, 0xD2, 0xD6)
+                    if (scrollRightHovered || isPressedR) LatticeChrome.textPrimary else LatticeChrome.controlText
                 } else {
-                    LatticeChrome.BORDER
+                    LatticeChrome.controlTextDisabled
                 }
-            g2.stroke = BasicStroke(1.6f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
+            g2.stroke = ACTION_ICON_STROKE
             val cx2 = currentX + SCROLL_BUTTON_WIDTH / 2
             g2.drawLine(cx2 - 2, cy - 4, cx2 + 2, cy)
             g2.drawLine(cx2 + 2, cy, cx2 - 2, cy + 4)
@@ -574,14 +571,14 @@ internal class LatticeTabBar(
         // + button
         val isPressedNew = activePressedResult == HitResult.NewTab
         if (newTabHovered || isPressedNew) {
-            g2.color = if (isPressedNew) LatticeChrome.CONTROL_PRESSED else LatticeChrome.TAB_HOVER_BG
+            g2.color = if (isPressedNew) LatticeChrome.controlPressed else LatticeChrome.tabHoverBackground
             val size = 24
             val plusCx = currentX + NEW_TAB_BUTTON_WIDTH / 2
             val plusCy = y + h / 2
             g2.fillRoundRect(plusCx - size / 2, plusCy - size / 2, size, size, 3, 3)
         }
-        g2.color = if (newTabHovered || isPressedNew) LatticeChrome.TEXT_PRIMARY else Color(0xCF, 0xD2, 0xD6)
-        g2.stroke = BasicStroke(1.6f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
+        g2.color = if (newTabHovered || isPressedNew) LatticeChrome.textPrimary else LatticeChrome.controlText
+        g2.stroke = ACTION_ICON_STROKE
         val plusCx = currentX + NEW_TAB_BUTTON_WIDTH / 2
         val plusCy = y + h / 2
         val plusR = 4
@@ -590,23 +587,22 @@ internal class LatticeTabBar(
 
         currentX += NEW_TAB_BUTTON_WIDTH
 
-        // Draw vertical divider between + and v buttons
-        g2.color = Color(0xFF, 0xFF, 0xFF, 60)
-        g2.stroke = BasicStroke(1.2f)
+        g2.color = LatticeChrome.divider
+        g2.stroke = DIVIDER_STROKE
         val divX = currentX - 2
         g2.drawLine(divX, y + 6, divX, y + h - 6)
 
         // v button
         val isPressedMenu = activePressedResult is HitResult.Menu
         if (menuHovered || isPressedMenu) {
-            g2.color = if (isPressedMenu) LatticeChrome.CONTROL_PRESSED else LatticeChrome.TAB_HOVER_BG
+            g2.color = if (isPressedMenu) LatticeChrome.controlPressed else LatticeChrome.tabHoverBackground
             val size = 24
             val vCx = currentX + MENU_BUTTON_WIDTH / 2
             val vCy = y + h / 2
             g2.fillRoundRect(vCx - size / 2, vCy - size / 2, size, size, 3, 3)
         }
-        g2.color = if (menuHovered || isPressedMenu) LatticeChrome.TEXT_PRIMARY else Color(0xCF, 0xD2, 0xD6)
-        g2.stroke = BasicStroke(1.6f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
+        g2.color = if (menuHovered || isPressedMenu) LatticeChrome.textPrimary else LatticeChrome.controlText
+        g2.stroke = ACTION_ICON_STROKE
         val vCx = currentX + MENU_BUTTON_WIDTH / 2
         val vCy = y + h / 2
         val vR = 3
@@ -828,7 +824,8 @@ internal class LatticeTabBar(
         if (hit is HitResult.Tab) {
             val entry = entries.getOrNull(hit.index) ?: return null
             val w = tabWidths.getOrNull(hit.index) ?: return null
-            val labelMaxWidth = w - TAB_LABEL_PADDING_LEFT - CLOSE_BUTTON_SIZE - CLOSE_BUTTON_MARGIN_RIGHT - 4
+            val labelMaxWidth =
+                w - TAB_LABEL_PADDING_LEFT - ICON_TEXT_GAP - CLOSE_BUTTON_SIZE - CLOSE_BUTTON_MARGIN_RIGHT - 4
             if (fm.stringWidth(entry.title) > labelMaxWidth) {
                 return entry.title
             }
@@ -855,10 +852,11 @@ internal class LatticeTabBar(
         private const val TAB_BAR_HEIGHT = 40
         private const val TAB_TOP_PADDING = 8
         private const val TAB_BOTTOM_PADDING = 0
-        private const val TAB_START_X = 2
+        private const val TAB_START_X = 8
         private const val TAB_GAP = 4
         private const val TAB_LABEL_PADDING_LEFT = 12
         private const val TAB_PADDING_RIGHT = 6
+        private const val ICON_TEXT_GAP = 20
         private const val CLOSE_BUTTON_SIZE = 16
         private const val CLOSE_BUTTON_MARGIN_RIGHT = 6
         private const val SCROLL_BUTTON_WIDTH = 24
@@ -869,24 +867,10 @@ internal class LatticeTabBar(
         private const val MIN_LABEL_TEXT_WIDTH = 50
         private const val MAX_LABEL_TEXT_WIDTH = 160
         private const val MIN_TAB_WIDTH = 100
-    }
-
-    private enum class ShellType {
-        POWERSHELL,
-        CMD,
-        GIT_BASH,
-        UBUNTU,
-        DEFAULT
-    }
-
-    private fun detectShellType(title: String): ShellType {
-        val t = title.lowercase()
-        return when {
-            t.contains("powershell") || t.contains("pwsh") -> ShellType.POWERSHELL
-            t.contains("cmd") || t.contains("command prompt") -> ShellType.CMD
-            t.contains("git bash") || t.contains("bash") || t.contains("git") || t.contains("mingw") || t.contains("msys") -> ShellType.GIT_BASH
-            t.contains("ubuntu") || t.contains("wsl") || t.contains("debian") || t.contains("linux") -> ShellType.UBUNTU
-            else -> ShellType.DEFAULT
-        }
+        private val HAIRLINE_STROKE = BasicStroke(1f)
+        private val DIVIDER_STROKE = BasicStroke(1.2f)
+        private val ICON_DETAIL_STROKE = BasicStroke(1f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
+        private val ICON_STROKE = BasicStroke(1.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
+        private val ACTION_ICON_STROKE = BasicStroke(1.9f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND)
     }
 }

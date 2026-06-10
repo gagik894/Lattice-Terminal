@@ -21,113 +21,139 @@ import java.awt.Dimension
 import javax.swing.UIManager
 
 /**
- * Visual constants for the standalone Swing host.
+ * Palette-derived visual constants for the standalone Swing host.
  *
- * All colours follow a sleek, modern dark palette.
+ * The reusable terminal component owns terminal rendering. This host object
+ * owns only standalone chrome colors such as tab states, menus, and scrollbars.
  */
 internal object LatticeChrome {
     const val APP_TITLE = "Lattice"
 
-    // ── Surfaces ──────────────────────────────────────────────────────────────
-
     /** Root window background and deep surface. */
-    var SURFACE: Color = Color(0x181818)
+    var surface: Color = Color(0x18, 0x18, 0x18)
 
     /** Title bar and tab strip background. */
-    var TOP_BAR_BACKGROUND: Color = Color(0x20, 0x20, 0x24)
+    var topBarBackground: Color = surface
 
     /** Active terminal content background. */
-    var TERMINAL_BACKGROUND: Color = Color(0x181818)
+    var terminalBackground: Color = Color(0x18, 0x18, 0x18)
 
-    // ── Tab states ────────────────────────────────────────────────────────────
-
-    /** Background of the selected tab — a solid dark charcoal grey. */
-    var TAB_SELECTED_BG: Color = Color(0x18, 0x18, 0x18)
+    /** Background of the selected tab. */
+    var tabSelectedBackground: Color = terminalBackground
 
     /** Background shown when hovering over an unselected tab. */
-    var TAB_HOVER_BG: Color = Color(0x2B, 0x2D, 0x30)
+    var tabHoverBackground: Color = Color(0x2B, 0x2D, 0x30)
 
-    // ── Controls ──────────────────────────────────────────────────────────────
+    /** Popup menu and menu item background. */
+    var popupBackground: Color = Color(0x2B, 0x2B, 0x2B)
 
-    var POPUP_BACKGROUND: Color = Color(0x2B2B2B)
-    var CONTROL_BACKGROUND: Color = Color(0x3C3C3C)
-    var CONTROL_HOVER: Color = Color(0x4A4A4A)
-    var CONTROL_PRESSED: Color = Color(0x555555)
+    /** Resting background for compact chrome controls. */
+    var controlBackground: Color = Color(0x3C, 0x3C, 0x3C)
 
-    // ── Text ──────────────────────────────────────────────────────────────────
+    /** Hover background for compact chrome controls. */
+    var controlHover: Color = Color(0x4A, 0x4A, 0x4A)
 
-    /** Primary text — used for selected tab labels and active UI elements. */
-    var TEXT_PRIMARY: Color = Color(0xFFFFFF)
+    /** Pressed background for compact chrome controls. */
+    var controlPressed: Color = Color(0x55, 0x55, 0x55)
 
-    /** Secondary text — used for unselected tab labels. */
-    var TEXT_SECONDARY: Color = Color(0xAAAAAA)
+    /** Primary text used for selected tab labels and active UI elements. */
+    var textPrimary: Color = Color.WHITE
 
-    // ── Accent ────────────────────────────────────────────────────────────────
+    /** Hover text used for inactive tabs and controls under the pointer. */
+    var textHover: Color = Color(0xDF, 0xE1, 0xE5)
+
+    /** Secondary text used for unselected tab labels. */
+    var textSecondary: Color = Color(0xAA, 0xAA, 0xAA)
+
+    /** Text used for enabled compact action icons. */
+    var controlText: Color = Color(0xCF, 0xD2, 0xD6)
+
+    /** Text used for disabled compact action icons. */
+    var controlTextDisabled: Color = Color(0x5E, 0x63, 0x6B)
 
     /** Brand accent. */
-    var ACCENT: Color = Color(0x4DA3FF)
+    var accent: Color = Color(0x4D, 0xA3, 0xFF)
 
-    // ── Borders ───────────────────────────────────────────────────────────────
+    /** Outline and separator color. */
+    var border: Color = Color(0x2B, 0x2D, 0x30)
 
-    var BORDER: Color = Color(0x2B, 0x2D, 0x30)
+    /** Subtle divider color for adjacent inactive controls. */
+    var divider: Color = Color(0xFF, 0xFF, 0xFF, 60)
 
-    // ── Scrollbar ─────────────────────────────────────────────────────────────
+    /** Scrollbar track color. */
+    var scrollbarTrack: Color = Color(0x18, 0x18, 0x18)
 
-    var SCROLLBAR_TRACK: Color = Color(0x181818)
-    var SCROLLBAR_THUMB: Color = Color(0x555555)
-    var SCROLLBAR_THUMB_HOVER: Color = Color(0x707070)
-    var SCROLLBAR_THUMB_PRESSED: Color = Color(0x909090)
-    val SCROLLBAR_SIZE: Dimension = Dimension(10, 1)
+    /** Scrollbar thumb color. */
+    var scrollbarThumb: Color = Color(0x55, 0x55, 0x55)
+
+    /** Scrollbar thumb hover color. */
+    var scrollbarThumbHover: Color = Color(0x70, 0x70, 0x70)
+
+    /** Scrollbar thumb pressed color. */
+    var scrollbarThumbPressed: Color = Color(0x90, 0x90, 0x90)
+
+    /** Preferred scrollbar width. */
+    val scrollbarSize: Dimension = Dimension(10, 1)
 
     /**
-     * Programmatically derives all visual theme elements and updates UIManager defaults.
+     * Derives standalone chrome colors from [palette] and updates Swing defaults.
      */
     fun applyPalette(palette: TerminalColorPalette) {
         val bg = Color(palette.defaultBackground, true)
         val fg = Color(palette.defaultForeground, true)
         val isDark = isDarkColor(bg)
+        val surfaceTarget = if (isDark) fg else Color.WHITE
 
-        SURFACE = if (isDark) adjustBrightness(bg, 0.75f) else adjustBrightness(bg, 0.92f)
-        TOP_BAR_BACKGROUND = SURFACE
-        TERMINAL_BACKGROUND = bg
-        TAB_SELECTED_BG = bg
+        surface = blendColors(bg, surfaceTarget, if (isDark) 0.09f else 0.10f)
+        topBarBackground = surface
+        terminalBackground = bg
+        tabSelectedBackground = bg
+        tabHoverBackground = blendColors(surface, fg, if (isDark) 0.11f else 0.08f)
+        border = blendColors(surface, fg, if (isDark) 0.22f else 0.26f)
+        divider = withAlpha(border, if (isDark) 150 else 190)
 
-        val hoverRatio = 0.08f
-        val borderRatio = 0.15f
-        val textSecondaryRatio = 0.55f
+        textPrimary = ensureContrast(fg, tabSelectedBackground, MINIMUM_TEXT_CONTRAST)
+        textHover = ensureContrast(blendColors(surface, textPrimary, 0.86f), tabHoverBackground, MINIMUM_TEXT_CONTRAST)
+        textSecondary = ensureContrast(blendColors(surface, textPrimary, 0.62f), surface, MINIMUM_TEXT_CONTRAST)
+        controlText = ensureContrast(blendColors(surface, textPrimary, 0.78f), surface, MINIMUM_TEXT_CONTRAST)
+        controlTextDisabled = blendColors(surface, textPrimary, 0.32f)
+        accent = Color(palette.selectionBackground, true)
 
-        TAB_HOVER_BG = blendColors(bg, fg, hoverRatio)
-        BORDER = blendColors(bg, fg, borderRatio)
+        popupBackground = blendColors(surface, fg, 0.10f)
+        controlBackground = blendColors(surface, fg, 0.14f)
+        controlHover = blendColors(surface, fg, 0.22f)
+        controlPressed = blendColors(surface, fg, 0.30f)
 
-        TEXT_PRIMARY = fg
-        TEXT_SECONDARY = blendColors(bg, fg, textSecondaryRatio)
+        scrollbarTrack = bg
+        scrollbarThumb = blendColors(bg, fg, 0.25f)
+        scrollbarThumbHover = blendColors(bg, fg, 0.35f)
+        scrollbarThumbPressed = blendColors(bg, fg, 0.45f)
 
-        ACCENT = Color(palette.selectionBackground, true)
+        UIManager.put("TitlePane.background", topBarBackground)
+        UIManager.put("TitlePane.foreground", textPrimary)
+        UIManager.put("TitlePane.inactiveBackground", topBarBackground)
+        UIManager.put("TitlePane.inactiveForeground", textSecondary)
+        UIManager.put("Panel.background", surface)
+        UIManager.put("Separator.foreground", border)
+        UIManager.put("Button.background", controlBackground)
+        UIManager.put("Button.hoverBackground", controlHover)
+        UIManager.put("Button.pressedBackground", controlPressed)
+        UIManager.put("Button.foreground", textPrimary)
+        UIManager.put("PopupMenu.background", popupBackground)
+        UIManager.put("MenuItem.selectionBackground", controlHover)
+        UIManager.put("MenuItem.selectionForeground", textPrimary)
+    }
 
-        POPUP_BACKGROUND = blendColors(bg, fg, 0.12f)
-        CONTROL_BACKGROUND = blendColors(bg, fg, 0.18f)
-        CONTROL_HOVER = blendColors(bg, fg, 0.26f)
-        CONTROL_PRESSED = blendColors(bg, fg, 0.32f)
-
-        SCROLLBAR_TRACK = bg
-        SCROLLBAR_THUMB = blendColors(bg, fg, 0.25f)
-        SCROLLBAR_THUMB_HOVER = blendColors(bg, fg, 0.35f)
-        SCROLLBAR_THUMB_PRESSED = blendColors(bg, fg, 0.45f)
-
-        // Update FlatLaf UIManager parameters
-        UIManager.put("TitlePane.background", TOP_BAR_BACKGROUND)
-        UIManager.put("TitlePane.foreground", TEXT_PRIMARY)
-        UIManager.put("TitlePane.inactiveBackground", TOP_BAR_BACKGROUND)
-        UIManager.put("TitlePane.inactiveForeground", TEXT_SECONDARY)
-        UIManager.put("Panel.background", SURFACE)
-        UIManager.put("Separator.foreground", BORDER)
-        UIManager.put("Button.background", CONTROL_BACKGROUND)
-        UIManager.put("Button.hoverBackground", CONTROL_HOVER)
-        UIManager.put("Button.pressedBackground", CONTROL_PRESSED)
-        UIManager.put("Button.foreground", TEXT_PRIMARY)
-        UIManager.put("PopupMenu.background", POPUP_BACKGROUND)
-        UIManager.put("MenuItem.selectionBackground", CONTROL_HOVER)
-        UIManager.put("MenuItem.selectionForeground", TEXT_PRIMARY)
+    /**
+     * Returns the WCAG contrast ratio between [foreground] and [background].
+     */
+    fun contrastRatio(
+        foreground: Color,
+        background: Color,
+    ): Double {
+        val lighter = maxOf(relativeLuminance(foreground), relativeLuminance(background))
+        val darker = minOf(relativeLuminance(foreground), relativeLuminance(background))
+        return (lighter + 0.05) / (darker + 0.05)
     }
 
     private fun isDarkColor(color: Color): Boolean {
@@ -135,18 +161,52 @@ internal object LatticeChrome {
         return luminance < 128
     }
 
-    private fun adjustBrightness(color: Color, factor: Float): Color {
-        val r = (color.red * factor).toInt().coerceIn(0, 255)
-        val g = (color.green * factor).toInt().coerceIn(0, 255)
-        val b = (color.blue * factor).toInt().coerceIn(0, 255)
-        return Color(r, g, b, color.alpha)
-    }
-
-    private fun blendColors(c1: Color, c2: Color, ratio: Float): Color {
+    private fun blendColors(
+        c1: Color,
+        c2: Color,
+        ratio: Float,
+    ): Color {
         val r = (c1.red * (1 - ratio) + c2.red * ratio).toInt().coerceIn(0, 255)
         val g = (c1.green * (1 - ratio) + c2.green * ratio).toInt().coerceIn(0, 255)
         val b = (c1.blue * (1 - ratio) + c2.blue * ratio).toInt().coerceIn(0, 255)
         val a = (c1.alpha * (1 - ratio) + c2.alpha * ratio).toInt().coerceIn(0, 255)
         return Color(r, g, b, a)
     }
+
+    private fun withAlpha(
+        color: Color,
+        alpha: Int,
+    ): Color = Color(color.red, color.green, color.blue, alpha.coerceIn(0, 255))
+
+    private fun ensureContrast(
+        foreground: Color,
+        background: Color,
+        minimumRatio: Double,
+    ): Color {
+        if (contrastRatio(foreground, background) >= minimumRatio) return foreground
+        val target = if (isDarkColor(background)) Color.WHITE else Color.BLACK
+        var ratio = 0.20f
+        while (ratio <= 1.0f) {
+            val candidate = blendColors(foreground, target, ratio)
+            if (contrastRatio(candidate, background) >= minimumRatio) return candidate
+            ratio += 0.10f
+        }
+        return target
+    }
+
+    private fun relativeLuminance(color: Color): Double =
+        0.2126 * linearized(color.red) +
+            0.7152 * linearized(color.green) +
+            0.0722 * linearized(color.blue)
+
+    private fun linearized(component: Int): Double {
+        val channel = component / 255.0
+        return if (channel <= 0.03928) {
+            channel / 12.92
+        } else {
+            Math.pow((channel + 0.055) / 1.055, 2.4)
+        }
+    }
+
+    private const val MINIMUM_TEXT_CONTRAST = 4.5
 }

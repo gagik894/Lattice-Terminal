@@ -45,6 +45,14 @@ class TerminalProfileRegistryTest {
         assertEquals(listOf("C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe", "-NoLogo"), profiles[0].command)
         assertEquals(listOf("C:\\Program Files\\PowerShell\\7\\pwsh.exe", "-NoLogo"), profiles[1].command)
         assertEquals(listOf("C:\\Windows\\System32\\cmd.exe"), profiles[2].command)
+        assertEquals(
+            listOf(
+                TerminalProfileKind.POWERSHELL,
+                TerminalProfileKind.POWERSHELL,
+                TerminalProfileKind.COMMAND_PROMPT,
+            ),
+            profiles.map { it.kind },
+        )
     }
 
     @Test
@@ -60,6 +68,7 @@ class TerminalProfileRegistryTest {
         assertEquals("command-line", profile.id)
         assertEquals("/bin/zsh", profile.displayName)
         assertEquals(listOf("/bin/zsh", "-l"), profile.command)
+        assertEquals(TerminalProfileKind.UNIX_SHELL, profile.kind)
     }
 
     @Test
@@ -75,5 +84,51 @@ class TerminalProfileRegistryTest {
         assertEquals(1, profiles.size)
         assertEquals("default-shell", profiles.first().id)
         assertTrue(profiles.first().command.isNotEmpty())
+    }
+
+    @Test
+    fun windowsProfilesIncludeGitBashAndUbuntuWhenLaunchersExist() {
+        val registry =
+            TerminalProfileRegistry(
+                osName = "Windows 11",
+                environment =
+                    mapOf(
+                        "SystemRoot" to "C:\\Windows",
+                        "PATH" to "C:\\Program Files\\PowerShell\\7;C:\\Users\\me\\AppData\\Local\\Microsoft\\WindowsApps",
+                        "COMSPEC" to "C:\\Windows\\System32\\cmd.exe",
+                        "ProgramFiles" to "C:\\Program Files",
+                    ),
+                pathSeparator = ";",
+                executableExists = { path ->
+                    path == Path.of("C:\\Windows", "System32", "WindowsPowerShell", "v1.0", "powershell.exe") ||
+                        path == Path.of("C:\\Program Files\\PowerShell\\7", "pwsh.exe") ||
+                        path == Path.of("C:\\Program Files", "Git", "git-bash.exe") ||
+                        path == Path.of("C:\\Users\\me\\AppData\\Local\\Microsoft\\WindowsApps", "ubuntu.exe")
+                },
+            )
+
+        val profiles = registry.availableProfiles()
+
+        assertEquals(listOf("windows-powershell", "powershell", "git-bash", "ubuntu", "cmd"), profiles.map { it.id })
+        assertEquals(TerminalProfileKind.GIT_BASH, profiles[2].kind)
+        assertEquals(listOf("C:\\Program Files\\Git\\git-bash.exe"), profiles[2].command)
+        assertEquals(TerminalProfileKind.UBUNTU, profiles[3].kind)
+        assertEquals(listOf("C:\\Users\\me\\AppData\\Local\\Microsoft\\WindowsApps\\ubuntu.exe"), profiles[3].command)
+    }
+
+    @Test
+    fun profileKindClassifiesCommonShellCommands() {
+        assertEquals(
+            TerminalProfileKind.GIT_BASH,
+            TerminalProfileKind.classify("custom", "Custom", listOf("C:\\Program Files\\Git\\bin\\bash.exe")),
+        )
+        assertEquals(
+            TerminalProfileKind.UBUNTU,
+            TerminalProfileKind.classify("custom", "Custom", listOf("wsl.exe", "-d", "Ubuntu")),
+        )
+        assertEquals(
+            TerminalProfileKind.DEFAULT,
+            TerminalProfileKind.classify("custom", "Custom", listOf("custom-shell.exe")),
+        )
     }
 }

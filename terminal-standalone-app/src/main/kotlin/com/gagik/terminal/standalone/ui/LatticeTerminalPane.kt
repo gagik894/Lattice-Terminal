@@ -92,7 +92,7 @@ internal class LatticeTerminalPane private constructor(
         private fun configureScrollbar(scrollbar: JScrollBar) {
             scrollbar.unitIncrement = 1
             scrollbar.blockIncrement = 8
-            scrollbar.preferredSize = LatticeChrome.SCROLLBAR_SIZE
+            scrollbar.preferredSize = LatticeChrome.scrollbarSize
             scrollbar.ui = LatticeScrollBarUi()
             scrollbar.isVisible = false
             scrollbar.isFocusable = false

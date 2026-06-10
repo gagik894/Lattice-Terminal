@@ -92,6 +92,26 @@ class TerminalProfileRegistry(
                 )
         }
 
+        val gitBash = gitBashExecutable()
+        if (gitBash != null) {
+            profiles +=
+                TerminalProfile(
+                    id = "git-bash",
+                    displayName = "Git Bash",
+                    command = listOf(gitBash.toString()),
+                )
+        }
+
+        val ubuntu = executableOnPath("ubuntu.exe")
+        if (ubuntu != null) {
+            profiles +=
+                TerminalProfile(
+                    id = "ubuntu",
+                    displayName = "Ubuntu",
+                    command = listOf(ubuntu.toString()),
+                )
+        }
+
         profiles +=
             TerminalProfile(
                 id = "cmd",
@@ -124,6 +144,36 @@ class TerminalProfileRegistry(
         return if (comspec.isNullOrBlank()) "cmd.exe" else comspec
     }
 
+    private fun gitBashExecutable(): Path? =
+        executableOnPath("git-bash.exe")
+            ?: firstExistingPath(
+                programFilesPath("Git", "git-bash.exe"),
+                programFilesX86Path("Git", "git-bash.exe"),
+                localAppDataPath("Programs", "Git", "git-bash.exe"),
+            )
+
+    private fun firstExistingPath(vararg candidates: Path?): Path? {
+        for (candidate in candidates) {
+            if (candidate != null && executableExists(candidate)) return candidate
+        }
+        return null
+    }
+
+    private fun programFilesPath(vararg segments: String): Path? = environmentPath("ProgramFiles", *segments)
+
+    private fun programFilesX86Path(vararg segments: String): Path? = environmentPath("ProgramFiles(x86)", *segments)
+
+    private fun localAppDataPath(vararg segments: String): Path? = environmentPath("LocalAppData", *segments)
+
+    private fun environmentPath(
+        key: String,
+        vararg segments: String,
+    ): Path? {
+        val root = environment[key]
+        if (root.isNullOrBlank()) return null
+        return Path.of(root, *segments)
+    }
+
     private fun executableOnPath(executableName: String): Path? {
         val path = environment["PATH"] ?: return null
         val segments = path.split(pathSeparator)
@@ -138,6 +188,6 @@ class TerminalProfileRegistry(
     private fun isWindows(): Boolean = osName.lowercase(Locale.ROOT).contains("windows")
 
     private companion object {
-        private const val WINDOWS_PROFILE_CAPACITY = 3
+        private const val WINDOWS_PROFILE_CAPACITY = 5
     }
 }

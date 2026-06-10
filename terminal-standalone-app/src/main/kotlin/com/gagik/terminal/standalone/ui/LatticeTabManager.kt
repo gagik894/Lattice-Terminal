@@ -75,9 +75,8 @@ internal class LatticeTabManager(
         val pane = LatticeTerminalPane.create(workspaceTab, settings)
         panes += pane
         tabContentPanel.add(pane.component, pane.tab.id)
-        tabBar.addTab(TabEntry(id = pane.tab.id, title = profile.displayName))
+        tabBar.addTab(TabEntry(id = pane.tab.id, title = profile.displayName, profileKind = profile.kind))
         showPane(pane)
-        tabBar.activeTabBackground = pane.terminal.background
         updateFrameTitle()
         pane.requestFocus()
         return true
@@ -101,17 +100,15 @@ internal class LatticeTabManager(
     fun reloadAllPanes() {
         val snapshot = settings.current()
         LatticeChrome.applyPalette(snapshot.palette)
-        frame.rootPane.putClientProperty("JRootPane.titleBarBackground", LatticeChrome.TOP_BAR_BACKGROUND)
-        frame.rootPane.putClientProperty("JRootPane.titleBarForeground", LatticeChrome.TEXT_PRIMARY)
+        frame.rootPane.putClientProperty("JRootPane.titleBarBackground", LatticeChrome.topBarBackground)
+        frame.rootPane.putClientProperty("JRootPane.titleBarForeground", LatticeChrome.textPrimary)
         SwingUtilities.updateComponentTreeUI(frame)
         panes.forEach { it.reloadSettings() }
+        tabContentPanel.background = LatticeChrome.terminalBackground
         workspace.applySettings(
             palette = snapshot.palette,
             treatAmbiguousAsWide = snapshot.treatAmbiguousAsWide,
         )
-        selectedPane?.let {
-            tabBar.activeTabBackground = it.terminal.background
-        }
         tabBar.repaint()
     }
 
@@ -125,7 +122,6 @@ internal class LatticeTabManager(
             workspace.selectTab(id)
         }
         showPane(pane)
-        tabBar.activeTabBackground = pane.terminal.background
         updateFrameTitle()
         pane.requestFocus()
     }

@@ -58,13 +58,12 @@ internal class LatticeWindowFactory(
         val frame =
             JFrame(LatticeChrome.APP_TITLE).apply {
                 defaultCloseOperation = WindowConstants.DISPOSE_ON_CLOSE
-                background = LatticeChrome.SURFACE
                 minimumSize = Dimension(720, 420)
             }
 
         val tabContentPanel =
             JPanel(CardLayout()).apply {
-                background = LatticeChrome.TERMINAL_BACKGROUND
+                background = LatticeChrome.terminalBackground
                 isOpaque = true
             }
 
@@ -112,7 +111,7 @@ internal class LatticeWindowFactory(
                     super.paintComponent(g)
                     val g2 = g.create() as java.awt.Graphics2D
                     try {
-                        g2.color = LatticeChrome.BORDER
+                        g2.color = LatticeChrome.border
                         g2.stroke = java.awt.BasicStroke(1f)
                         val yLine = height - 1
                         val range = tabBar.getSelectedTabXRange()
@@ -151,15 +150,15 @@ internal class LatticeWindowFactory(
     ) {
         val popup =
             javax.swing.JPopupMenu().apply {
-                background = LatticeChrome.POPUP_BACKGROUND
-                border = javax.swing.BorderFactory.createLineBorder(LatticeChrome.BORDER)
+                background = LatticeChrome.popupBackground
+                border = javax.swing.BorderFactory.createLineBorder(LatticeChrome.border)
             }
 
         profiles.forEach { profile ->
             val item =
                 javax.swing.JMenuItem(profile.displayName).apply {
-                    background = LatticeChrome.POPUP_BACKGROUND
-                    foreground = LatticeChrome.TEXT_PRIMARY
+                    background = LatticeChrome.popupBackground
+                    foreground = LatticeChrome.textPrimary
                     addActionListener { tabManager.openTab(profile) }
                 }
             popup.add(item)
@@ -169,8 +168,8 @@ internal class LatticeWindowFactory(
 
         val settingsMenu =
             JMenu("Settings").apply {
-                background = LatticeChrome.POPUP_BACKGROUND
-                foreground = LatticeChrome.TEXT_PRIMARY
+                background = LatticeChrome.popupBackground
+                foreground = LatticeChrome.textPrimary
                 add(buildThemeMenu(tabManager))
                 add(buildWidthItem(tabManager))
             }
@@ -178,15 +177,15 @@ internal class LatticeWindowFactory(
 
         val commandPaletteItem =
             javax.swing.JMenuItem("Command palette").apply {
-                background = LatticeChrome.POPUP_BACKGROUND
-                foreground = LatticeChrome.TEXT_PRIMARY
+                background = LatticeChrome.popupBackground
+                foreground = LatticeChrome.textPrimary
             }
         popup.add(commandPaletteItem)
 
         val aboutItem =
             javax.swing.JMenuItem("About").apply {
-                background = LatticeChrome.POPUP_BACKGROUND
-                foreground = LatticeChrome.TEXT_PRIMARY
+                background = LatticeChrome.popupBackground
+                foreground = LatticeChrome.textPrimary
             }
         popup.add(aboutItem)
 
@@ -199,8 +198,9 @@ internal class LatticeWindowFactory(
      */
     private fun styleTitleBar(frame: JFrame) {
         frame.rootPane.apply {
-            putClientProperty("JRootPane.titleBarBackground", LatticeChrome.TOP_BAR_BACKGROUND)
-            putClientProperty("JRootPane.titleBarForeground", LatticeChrome.TEXT_PRIMARY)
+            background = LatticeChrome.surface
+            putClientProperty("JRootPane.titleBarBackground", LatticeChrome.topBarBackground)
+            putClientProperty("JRootPane.titleBarForeground", LatticeChrome.textPrimary)
             putClientProperty("JRootPane.titleBarShowIcon", false)
             putClientProperty("JRootPane.titleBarShowTitle", false)
         }
@@ -209,15 +209,15 @@ internal class LatticeWindowFactory(
     private fun buildThemeMenu(tabManager: LatticeTabManager): JMenu {
         val themeMenu =
             JMenu("Theme").apply {
-                background = LatticeChrome.POPUP_BACKGROUND
-                foreground = LatticeChrome.TEXT_PRIMARY
+                background = LatticeChrome.popupBackground
+                foreground = LatticeChrome.textPrimary
             }
         val themeGroup = ButtonGroup()
         TerminalTheme.entries.forEach { theme ->
             val item =
                 JRadioButtonMenuItem(theme.displayName(), theme == settings.theme).apply {
-                    background = LatticeChrome.POPUP_BACKGROUND
-                    foreground = LatticeChrome.TEXT_PRIMARY
+                    background = LatticeChrome.popupBackground
+                    foreground = LatticeChrome.textPrimary
                 }
             themeGroup.add(item)
             item.addActionListener {
@@ -231,8 +231,8 @@ internal class LatticeWindowFactory(
 
     private fun buildWidthItem(tabManager: LatticeTabManager): JCheckBoxMenuItem =
         JCheckBoxMenuItem("Ambiguous as wide", settings.treatAmbiguousAsWide).apply {
-            background = LatticeChrome.POPUP_BACKGROUND
-            foreground = LatticeChrome.TEXT_PRIMARY
+            background = LatticeChrome.popupBackground
+            foreground = LatticeChrome.textPrimary
             addActionListener {
                 settings.treatAmbiguousAsWide = isSelected
                 tabManager.reloadAllPanes()

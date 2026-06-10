@@ -29,8 +29,8 @@ import javax.swing.plaf.basic.BasicScrollBarUI
  */
 internal class LatticeScrollBarUi : BasicScrollBarUI() {
     override fun configureScrollBarColors() {
-        trackColor = LatticeChrome.SCROLLBAR_TRACK
-        thumbColor = LatticeChrome.SCROLLBAR_THUMB
+        trackColor = LatticeChrome.scrollbarTrack
+        thumbColor = LatticeChrome.scrollbarThumb
     }
 
     override fun paintTrack(
@@ -52,8 +52,8 @@ internal class LatticeScrollBarUi : BasicScrollBarUI() {
         graphics2D.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
         graphics2D.color =
             when {
-                isDragging -> LatticeChrome.SCROLLBAR_THUMB_PRESSED
-                isThumbRollover -> LatticeChrome.SCROLLBAR_THUMB_HOVER
+                isDragging -> LatticeChrome.scrollbarThumbPressed
+                isThumbRollover -> LatticeChrome.scrollbarThumbHover
                 else -> thumbColor
             }
         graphics2D.fillRoundRect(
