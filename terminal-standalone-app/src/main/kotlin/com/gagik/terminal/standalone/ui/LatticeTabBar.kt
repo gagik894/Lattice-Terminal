@@ -345,21 +345,19 @@ internal class LatticeTabBar(
             }
         }
 
-        val drawBorder = selected || index == tabHoverIndex || entry.id == fadingOutId
+        val drawBorder = index == tabHoverIndex
         if (drawBorder) {
             val borderAlpha =
                 when (entry.id) {
                     selectedId -> {
                         if (entry.id == fadingInId && fadeProgress < 1.0f) {
-                            val startAlpha = if (index == tabHoverIndex) 1.0f else 0.0f
-                            startAlpha + (1.0f - startAlpha) * fadeProgress
+                            1.0f - fadeProgress
                         } else {
-                            1.0f
+                            0.0f
                         }
                     }
                     fadingOutId -> {
-                        val endAlpha = if (index == tabHoverIndex) 1.0f else 0.0f
-                        1.0f - (1.0f - endAlpha) * fadeProgress
+                        fadeProgress
                     }
                     else -> 1.0f
                 }
