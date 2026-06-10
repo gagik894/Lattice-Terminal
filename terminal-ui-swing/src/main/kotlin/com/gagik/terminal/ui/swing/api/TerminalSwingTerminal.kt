@@ -1277,31 +1277,130 @@ class TerminalSwingTerminal(
 
     private inner class SearchOverlay : JPanel(GridBagLayout()) {
         private var suppressDocumentEvents = false
-        private val queryField = JTextField(24)
+        private val queryField = SearchTextField(22)
         private val counterLabel = JLabel("0/0")
-        private val previousButton = JButton("Prev")
-        private val nextButton = JButton("Next")
-        private val caseToggle = JCheckBox("Aa")
-        private val closeButton = JButton("x")
+        private val previousButton = FlatButton("\u25B2", horizontalMargin = 4) // ▲
+        private val nextButton = FlatButton("\u25BC", horizontalMargin = 4) // ▼
+        private val caseToggle = FlatToggleButton("Aa")
+        private val closeButton = FlatButton("\u2715", horizontalMargin = 6) // ✕
+
+        private inner class SearchTextField(
+            columns: Int,
+        ) : JTextField(columns) {
+            init {
+                isOpaque = false
+                caretColor = Color(0xFFE8EAED.toInt(), true)
+                foreground = Color(0xFFE8EAED.toInt(), true)
+                border = BorderFactory.createEmptyBorder(4, 8, 4, 8)
+                addFocusListener(
+                    object : FocusListener {
+                        override fun focusGained(e: FocusEvent) = repaint()
+
+                        override fun focusLost(e: FocusEvent) = repaint()
+                    },
+                )
+            }
+
+            override fun paintComponent(graphics: Graphics) {
+                val g = graphics.create() as Graphics2D
+                g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+                g.color = Color(0x26FFFFFF, true)
+                g.fillRoundRect(1, 1, width - 2, height - 2, 8, 8)
+                if (isFocusOwner) {
+                    g.color = Color(0x664285F4.toInt(), true)
+                    g.drawRoundRect(1, 1, width - 2, height - 2, 8, 8)
+                } else {
+                    g.color = Color(0x13FFFFFF, true)
+                    g.drawRoundRect(1, 1, width - 2, height - 2, 8, 8)
+                }
+                g.dispose()
+                super.paintComponent(graphics)
+            }
+        }
+
+        private open inner class FlatButton(
+            text: String,
+            horizontalMargin: Int = 8,
+        ) : JButton(text) {
+            init {
+                isContentAreaFilled = false
+                isBorderPainted = false
+                isFocusPainted = false
+                isOpaque = false
+                cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+                margin = Insets(4, horizontalMargin, 4, horizontalMargin)
+                foreground = Color(0xFFE8EAED.toInt(), true)
+                addMouseListener(
+                    object : MouseAdapter() {
+                        override fun mouseEntered(e: MouseEvent) = repaint()
+
+                        override fun mouseExited(e: MouseEvent) = repaint()
+                    },
+                )
+            }
+
+            override fun paintComponent(graphics: Graphics) {
+                val g = graphics.create() as Graphics2D
+                g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+                val model = getModel()
+                if (model.isPressed) {
+                    g.color = Color(0x33FFFFFF, true)
+                    g.fillRoundRect(0, 0, width, height, 6, 6)
+                } else if (model.isRollover) {
+                    g.color = Color(0x1AFFFFFF, true)
+                    g.fillRoundRect(0, 0, width, height, 6, 6)
+                }
+                g.dispose()
+                super.paintComponent(graphics)
+            }
+        }
+
+        private inner class FlatToggleButton(
+            text: String,
+        ) : JToggleButton(text) {
+            init {
+                isContentAreaFilled = false
+                isBorderPainted = false
+                isFocusPainted = false
+                isOpaque = false
+                cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+                margin = Insets(4, 6, 4, 6)
+                foreground = Color(0xFFE8EAED.toInt(), true)
+                addMouseListener(
+                    object : MouseAdapter() {
+                        override fun mouseEntered(e: MouseEvent) = repaint()
+
+                        override fun mouseExited(e: MouseEvent) = repaint()
+                    },
+                )
+            }
+
+            override fun paintComponent(graphics: Graphics) {
+                val g = graphics.create() as Graphics2D
+                g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+                val model = getModel()
+                if (isSelected) {
+                    g.color = Color(0x404285F4.toInt(), true)
+                    g.fillRoundRect(0, 0, width, height, 6, 6)
+                } else if (model.isPressed) {
+                    g.color = Color(0x33FFFFFF, true)
+                    g.fillRoundRect(0, 0, width, height, 6, 6)
+                } else if (model.isRollover) {
+                    g.color = Color(0x1AFFFFFF, true)
+                    g.fillRoundRect(0, 0, width, height, 6, 6)
+                }
+                g.dispose()
+                super.paintComponent(graphics)
+            }
+        }
 
         init {
-            isOpaque = true
+            isOpaque = false
             background = Color(0xEE202124.toInt(), true)
             foreground = Color(0xFFE8EAED.toInt(), true)
-            border =
-                BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(Color(0x663C4043, true)),
-                    BorderFactory.createEmptyBorder(6, 8, 6, 8),
-                )
+            border = BorderFactory.createEmptyBorder(6, 12, 6, 12)
 
-            queryField.columns = 22
-            queryField.border = BorderFactory.createEmptyBorder(4, 6, 4, 6)
-            counterLabel.foreground = foreground
-            previousButton.margin = Insets(2, 8, 2, 8)
-            nextButton.margin = Insets(2, 8, 2, 8)
-            closeButton.margin = Insets(2, 8, 2, 8)
-            caseToggle.isOpaque = false
-            caseToggle.foreground = foreground
+            counterLabel.foreground = Color(0xFF9AA0A6.toInt(), true)
 
             queryField.document.addDocumentListener(
                 object : DocumentListener {
@@ -1341,9 +1440,20 @@ class TerminalSwingTerminal(
             add(queryField, constraints(gridX++, weightX = 1.0, fill = GridBagConstraints.HORIZONTAL))
             add(counterLabel, constraints(gridX++))
             add(previousButton, constraints(gridX++))
-            add(nextButton, constraints(gridX++))
+            add(nextButton, constraints(gridX++, leftInset = 1))
             add(caseToggle, constraints(gridX++))
             add(closeButton, constraints(gridX))
+        }
+
+        override fun paintComponent(graphics: Graphics) {
+            val g = graphics.create() as Graphics2D
+            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+            g.color = background
+            g.fillRoundRect(1, 1, width - 2, height - 2, 12, 12)
+            g.color = Color(0x663C4043, true)
+            g.drawRoundRect(1, 1, width - 2, height - 2, 12, 12)
+            g.dispose()
+            super.paintComponent(graphics)
         }
 
         fun setQueryText(query: String) {
@@ -1382,13 +1492,14 @@ class TerminalSwingTerminal(
             gridX: Int,
             weightX: Double = 0.0,
             fill: Int = GridBagConstraints.NONE,
+            leftInset: Int = 6,
         ): GridBagConstraints =
             GridBagConstraints().apply {
                 this.gridx = gridX
                 this.gridy = 0
                 this.weightx = weightX
                 this.fill = fill
-                this.insets = Insets(0, if (gridX == 0) 0 else 6, 0, 0)
+                this.insets = Insets(0, if (gridX == 0) 0 else leftInset, 0, 0)
                 this.anchor = GridBagConstraints.CENTER
             }
     }
