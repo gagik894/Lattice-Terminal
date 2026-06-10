@@ -94,15 +94,12 @@ class TerminalSwingTerminalSelectionTest {
             component.setSize(60, 20)
             component.bind(session)
         }
-        session.requestRender(scrollbackOffset = 0)
-        assertTrue(awaitOffset(session, 0), "initial render was not published")
-
         SwingUtilities.invokeAndWait {
             component.mouseListeners.forEach { it.mousePressed(mousePressed(component, x = 8, y = 8, clickCount = 1)) }
             component.mouseMotionListeners.forEach { it.mouseDragged(mouseDragged(component, x = 8, y = -10)) }
         }
 
-        assertTrue(awaitOffset(session, 1), "selection drag did not request a scrolled render")
+        assertTrue(awaitRequestedOffset(renderReader, 1), "selection drag did not request a scrolled render")
         SwingUtilities.invokeAndWait {
             component.mouseListeners.forEach { it.mouseReleased(mouseReleased(component, x = 8, y = -10)) }
         }
@@ -541,13 +538,13 @@ class TerminalSwingTerminalSelectionTest {
             MouseEvent.BUTTON1,
         )
 
-    private fun awaitOffset(
-        session: TerminalSession,
+    private fun awaitRequestedOffset(
+        renderReader: ScrollbackFrameReader,
         offset: Int,
     ): Boolean {
         val deadline = System.nanoTime() + 1_000_000_000L
         while (System.nanoTime() < deadline) {
-            if (session.publisher.current()?.scrollbackOffset == offset) return true
+            if (renderReader.lastRequestedOffset == offset) return true
             Thread.sleep(10)
         }
         return false

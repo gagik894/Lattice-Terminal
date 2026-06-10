@@ -91,13 +91,13 @@ internal class LatticeTabManager(
                             }
                             KeyEvent.VK_E -> {
                                 if (isShiftPressed) {
-                                    selectedPane?.let { splitPane(it, isVertical = true, useSameSession = false) }
+                                    selectedPane?.let { splitPane(it, isVertical = true) }
                                     return@KeyEventDispatcher true
                                 }
                             }
                             KeyEvent.VK_O -> {
                                 if (isShiftPressed) {
-                                    selectedPane?.let { splitPane(it, isVertical = false, useSameSession = false) }
+                                    selectedPane?.let { splitPane(it, isVertical = false) }
                                     return@KeyEventDispatcher true
                                 }
                             }
@@ -115,11 +115,11 @@ internal class LatticeTabManager(
                                 return@KeyEventDispatcher true
                             }
                             KeyEvent.VK_E -> {
-                                selectedPane?.let { splitPane(it, isVertical = true, useSameSession = false) }
+                                selectedPane?.let { splitPane(it, isVertical = true) }
                                 return@KeyEventDispatcher true
                             }
                             KeyEvent.VK_O -> {
-                                selectedPane?.let { splitPane(it, isVertical = false, useSameSession = false) }
+                                selectedPane?.let { splitPane(it, isVertical = false) }
                                 return@KeyEventDispatcher true
                             }
                         }
@@ -217,10 +217,7 @@ internal class LatticeTabManager(
         for (pane in tabPanes) {
             panes.remove(pane)
             pane.close()
-            val isShared = panes.any { it.tab.id == pane.tab.id }
-            if (!isShared) {
-                workspace.closeTab(pane.tab.id)
-            }
+            workspace.closeTab(pane.tab.id)
         }
         tabRoots.remove(id)
         val container = tabContainers.remove(id)
@@ -301,38 +298,31 @@ internal class LatticeTabManager(
     fun splitPane(
         pane: LatticeTerminalPane,
         isVertical: Boolean,
-        useSameSession: Boolean,
     ) {
         val tabId = tabBar.selectedId() ?: return
         val root = tabRoots[tabId] ?: return
 
+        val profile = defaultProfile
+        val workspaceTab =
+            try {
+                workspace.openTab(
+                    profile = profile,
+                    options =
+                        settings.current().let { snapshot ->
+                            TerminalWorkspaceOpenOptions(
+                                columns = snapshot.columns,
+                                rows = snapshot.rows,
+                                treatAmbiguousAsWide = snapshot.treatAmbiguousAsWide,
+                            )
+                        },
+                )
+            } catch (exception: Exception) {
+                showStartError(profile, exception)
+                return
+            }
         val newPane =
-            if (useSameSession) {
-                LatticeTerminalPane.create(pane.tab, settings) { p, x, y ->
-                    showPaneContextMenu(p, p.terminal, x, y)
-                }
-            } else {
-                val profile = defaultProfile
-                val workspaceTab =
-                    try {
-                        workspace.openTab(
-                            profile = profile,
-                            options =
-                                settings.current().let { snapshot ->
-                                    TerminalWorkspaceOpenOptions(
-                                        columns = snapshot.columns,
-                                        rows = snapshot.rows,
-                                        treatAmbiguousAsWide = snapshot.treatAmbiguousAsWide,
-                                    )
-                                },
-                        )
-                    } catch (exception: Exception) {
-                        showStartError(profile, exception)
-                        return
-                    }
-                LatticeTerminalPane.create(workspaceTab, settings) { p, x, y ->
-                    showPaneContextMenu(p, p.terminal, x, y)
-                }
+            LatticeTerminalPane.create(workspaceTab, settings) { p, x, y ->
+                showPaneContextMenu(p, p.terminal, x, y)
             }
 
         panes += newPane
@@ -398,11 +388,7 @@ internal class LatticeTabManager(
 
         panes.remove(pane)
         pane.close()
-
-        val isShared = panes.any { it !== pane && it.tab.id == pane.tab.id }
-        if (!isShared) {
-            workspace.closeTab(pane.tab.id)
-        }
+        workspace.closeTab(pane.tab.id)
 
         val newActive = getActivePane(tabId)
         newActive?.requestFocus()
@@ -447,35 +433,21 @@ internal class LatticeTabManager(
         menu.add(pasteItem)
         menu.addSeparator()
 
-        val splitVertNew =
-            JMenuItem("Split Vertically (New Session)").apply {
+        val splitVert =
+            JMenuItem("Split Vertically").apply {
                 addActionListener {
-                    splitPane(pane, isVertical = true, useSameSession = false)
+                    splitPane(pane, isVertical = true)
                 }
             }
-        val splitHorNew =
-            JMenuItem("Split Horizontally (New Session)").apply {
+        val splitHor =
+            JMenuItem("Split Horizontally").apply {
                 addActionListener {
-                    splitPane(pane, isVertical = false, useSameSession = false)
-                }
-            }
-        val splitVertSame =
-            JMenuItem("Split Vertically (Same Session)").apply {
-                addActionListener {
-                    splitPane(pane, isVertical = true, useSameSession = true)
-                }
-            }
-        val splitHorSame =
-            JMenuItem("Split Horizontally (Same Session)").apply {
-                addActionListener {
-                    splitPane(pane, isVertical = false, useSameSession = true)
+                    splitPane(pane, isVertical = false)
                 }
             }
 
-        menu.add(splitVertNew)
-        menu.add(splitHorNew)
-        menu.add(splitVertSame)
-        menu.add(splitHorSame)
+        menu.add(splitVert)
+        menu.add(splitHor)
 
         val closeItem =
             JMenuItem("Close Pane").apply {

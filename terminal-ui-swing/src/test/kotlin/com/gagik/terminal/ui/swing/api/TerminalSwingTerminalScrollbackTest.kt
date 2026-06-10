@@ -98,7 +98,7 @@ class TerminalSwingTerminalScrollbackTest {
     }
 
     @Test
-    fun `mouse wheel requests scrolled render snapshot through session`() {
+    fun `mouse wheel updates component scrollback viewport`() {
         val terminal = TerminalBuffers.create(width = 3, height = 1, maxHistory = 5)
         val renderReader = ScrollbackFrameReader()
         val session =
@@ -117,9 +117,6 @@ class TerminalSwingTerminalScrollbackTest {
             component.setSize(30, 20)
             component.bind(session)
         }
-        session.requestRender(scrollbackOffset = 0)
-        assertTrue(awaitOffset(session, 0), "initial render was not published")
-
         SwingUtilities.invokeAndWait {
             component.dispatchEvent(
                 MouseWheelEvent(
@@ -138,7 +135,9 @@ class TerminalSwingTerminalScrollbackTest {
             )
         }
 
-        assertTrue(awaitOffset(session, 3), "scrolled render was not published")
+        val state = component.viewportState()
+        assertEquals(3.0, state.scrollbackOffset)
+        assertEquals(3, state.renderOffset)
         assertEquals(3, renderReader.lastRequestedOffset)
         session.close()
     }
@@ -162,9 +161,6 @@ class TerminalSwingTerminalScrollbackTest {
             component.setSize(30, 20)
             component.bind(session)
         }
-        session.requestRender(scrollbackOffset = 0)
-        assertTrue(awaitOffset(session, 0), "initial render was not published")
-
         SwingUtilities.invokeAndWait {
             component.dispatchEvent(
                 MouseWheelEvent(
@@ -186,8 +182,10 @@ class TerminalSwingTerminalScrollbackTest {
             )
         }
 
-        assertTrue(awaitOffset(session, 1), "fractional scroll did not publish crossed line offset")
-        assertTrue((session.publisher.current()?.rows ?: 0) > 1, "fractional scroll did not request overscan rows")
+        val state = component.viewportState()
+        assertEquals(0.75, state.scrollbackOffset)
+        assertEquals(1, state.renderOffset)
+        assertTrue(state.requestedRows > state.visibleRows, "fractional scroll did not request overscan rows")
         session.close()
     }
 
@@ -211,12 +209,8 @@ class TerminalSwingTerminalScrollbackTest {
             component.setSize(30, 20)
             component.bind(session)
         }
-        session.requestRender(scrollbackOffset = 0)
-        assertTrue(awaitOffset(session, 0), "initial render was not published")
-
         component.scrollToScrollbackOffset(4)
 
-        assertTrue(awaitOffset(session, 4), "absolute host scroll was not published")
         drainEdt()
         val state = component.viewportState()
         assertEquals(4, renderReader.lastRequestedOffset)
@@ -252,12 +246,8 @@ class TerminalSwingTerminalScrollbackTest {
             component.setSize(30, 20)
             component.bind(session)
         }
-        session.requestRender(scrollbackOffset = 0)
-        assertTrue(awaitOffset(session, 0), "initial render was not published")
-
         component.scrollViewportBy(0.25)
 
-        assertTrue(awaitOffset(session, 1), "fractional host scroll was not published")
         drainEdt()
         val state = component.viewportState()
         assertEquals(0.25, state.scrollbackOffset)
@@ -265,6 +255,44 @@ class TerminalSwingTerminalScrollbackTest {
         assertTrue(state.requestedRows > state.visibleRows)
         assertEquals(0.25, listener.lastScrollbackOffset.get())
         assertEquals(1, listener.lastRenderOffset.get())
+        session.close()
+    }
+
+    @Test
+    fun `components bound to same session keep independent scrollback viewports`() {
+        val terminal = TerminalBuffers.create(width = 3, height = 1, maxHistory = 5)
+        val session =
+            TerminalSession(
+                terminal = terminal,
+                publisher = TerminalRenderPublisher(3, 1),
+                renderReader = ScrollbackFrameReader(),
+                responseReader = terminal,
+                connector = NoOpConnector,
+                parser = NoOpParser,
+                inputEncoder = NoOpInputEncoder,
+            )
+        val left = TerminalSwingTerminal()
+        val right = TerminalSwingTerminal()
+
+        SwingUtilities.invokeAndWait {
+            left.setSize(30, 20)
+            right.setSize(30, 20)
+            left.bind(session)
+            right.bind(session)
+        }
+        drainEdt()
+
+        left.scrollToScrollbackOffset(4)
+        drainEdt()
+
+        assertEquals(4.0, left.viewportState().scrollbackOffset)
+        assertEquals(0.0, right.viewportState().scrollbackOffset)
+
+        right.scrollToScrollbackOffset(2)
+        drainEdt()
+
+        assertEquals(4.0, left.viewportState().scrollbackOffset)
+        assertEquals(2.0, right.viewportState().scrollbackOffset)
         session.close()
     }
 
@@ -320,18 +348,6 @@ class TerminalSwingTerminalScrollbackTest {
             lastScrollbackOffset.set(scrollbackOffset)
             lastRenderOffset.set(renderOffset)
         }
-    }
-
-    private fun awaitOffset(
-        session: TerminalSession,
-        offset: Int,
-    ): Boolean {
-        val deadline = System.nanoTime() + 1_000_000_000L
-        while (System.nanoTime() < deadline) {
-            if (session.publisher.current()?.scrollbackOffset == offset) return true
-            Thread.sleep(10)
-        }
-        return false
     }
 
     private fun drainEdt() {

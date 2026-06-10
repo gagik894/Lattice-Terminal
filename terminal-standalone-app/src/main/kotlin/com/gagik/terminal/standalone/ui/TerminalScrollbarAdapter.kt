@@ -76,7 +76,7 @@ internal class TerminalScrollbarAdapter(
     }
 
     private fun handleAdjustment(event: AdjustmentEvent) {
-        if (updatingFromTerminal || event.valueIsAdjusting) return
+        if (updatingFromTerminal) return
         if (event.value == publishedScrollbarValue) return
         val targetOffset = TerminalScrollbarMapping.offsetForValue(historySize, event.value)
         publishedScrollbarValue = event.value.coerceIn(0, historySize)
