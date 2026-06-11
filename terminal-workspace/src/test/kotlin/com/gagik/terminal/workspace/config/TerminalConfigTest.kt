@@ -63,7 +63,6 @@ class TerminalConfigTest {
     @Test
     fun `test TerminalWorkspaceConfigManager path resolution`() {
         // Overrides
-        val sysPropPath = TerminalWorkspaceConfigManager.getDefaultPath(osName = "Windows 11")
         // Clean default system property check (which might be set or not during tests, but we can verify our overrides work)
         System.setProperty("lattice.config.path", "/custom/sys/path.toml")
         assertEquals(Path.of("/custom/sys/path.toml"), TerminalWorkspaceConfigManager.getDefaultPath(osName = "Windows 11"))
@@ -114,6 +113,7 @@ class TerminalConfigTest {
         assertFalse(config.treatAmbiguousAsWide)
         assertEquals(600, config.cursorBlinkMillis)
         assertFalse(config.useSystemFallbackFonts)
+        assertEquals("block", config.cursorShape)
 
         // Clean up
         Files.deleteIfExists(configFile)
@@ -136,6 +136,7 @@ class TerminalConfigTest {
                 rows = 35,
                 cursorBlinkMillis = 500,
                 useSystemFallbackFonts = true,
+                cursorShape = "beam",
             )
 
         manager.save(customConfig)

@@ -16,7 +16,6 @@
 package com.gagik.terminal.standalone.ui
 
 import com.gagik.terminal.standalone.config.StandaloneTerminalSettings
-import com.gagik.terminal.ui.swing.settings.TerminalTheme
 import com.gagik.terminal.workspace.TerminalProfile
 import java.awt.CardLayout
 import java.awt.Dimension
@@ -61,7 +60,7 @@ internal class LatticeWindowFactory(
                 onTabSelected = { id -> tabManager.onTabSelected(id) },
                 onTabClose = { id -> tabManager.closeTab(id) },
                 onNewTab = { tabManager.openTab(profiles.first()) },
-                onMenuClick = { x, y -> showDropdownMenu(tabBar, x, y, profiles, tabManager) },
+                onMenuClick = { x, y -> showDropdownMenu(frame, tabBar, x, y, profiles, tabManager) },
                 onTabColorChanged = { id, color -> tabManager.onTabColorChanged(id, color) },
                 onTabRenameRequested = { id, newName -> tabManager.onTabRenameRequested(id, newName) },
             )
@@ -101,6 +100,7 @@ internal class LatticeWindowFactory(
     }
 
     private fun showDropdownMenu(
+        frame: JFrame,
         invoker: java.awt.Component,
         x: Int,
         y: Int,
@@ -125,14 +125,17 @@ internal class LatticeWindowFactory(
 
         popup.addSeparator()
 
-        val settingsMenu =
-            JMenu("Settings").apply {
+        val settingsItem =
+            JMenuItem("Settings...").apply {
                 background = LatticeChrome.popupBackground
                 foreground = LatticeChrome.textPrimary
-                add(buildThemeMenu(tabManager))
-                add(buildWidthItem(tabManager))
+                addActionListener {
+                    LatticeSettingsDialog(frame, settings) {
+                        tabManager.reloadAllPanes()
+                    }.isVisible = true
+                }
             }
-        popup.add(settingsMenu)
+        popup.add(settingsItem)
 
         val commandPaletteItem =
             JMenuItem("Command palette").apply {
@@ -164,44 +167,6 @@ internal class LatticeWindowFactory(
             putClientProperty("JRootPane.titleBarShowTitle", false)
         }
     }
-
-    private fun buildThemeMenu(tabManager: LatticeTabManager): JMenu {
-        val themeMenu =
-            JMenu("Theme").apply {
-                background = LatticeChrome.popupBackground
-                foreground = LatticeChrome.textPrimary
-            }
-        val themeGroup = ButtonGroup()
-        TerminalTheme.entries.forEach { theme ->
-            val item =
-                JRadioButtonMenuItem(theme.displayName(), theme == settings.theme).apply {
-                    background = LatticeChrome.popupBackground
-                    foreground = LatticeChrome.textPrimary
-                }
-            themeGroup.add(item)
-            item.addActionListener {
-                settings.theme = theme
-                tabManager.reloadAllPanes()
-            }
-            themeMenu.add(item)
-        }
-        return themeMenu
-    }
-
-    private fun buildWidthItem(tabManager: LatticeTabManager): JCheckBoxMenuItem =
-        JCheckBoxMenuItem("Ambiguous as wide", settings.treatAmbiguousAsWide).apply {
-            background = LatticeChrome.popupBackground
-            foreground = LatticeChrome.textPrimary
-            addActionListener {
-                settings.treatAmbiguousAsWide = isSelected
-                tabManager.reloadAllPanes()
-            }
-        }
-
-    private fun TerminalTheme.displayName(): String =
-        name.lowercase().split("_").joinToString(" ") {
-            it.replaceFirstChar { char -> if (char.isLowerCase()) char.titlecase() else char.toString() }
-        }
 }
 
 /**

@@ -49,6 +49,48 @@ internal class StandaloneTerminalSettings(
             updateConfig(config.copy(treatAmbiguousAsWide = value))
         }
 
+    var columns: Int
+        get() = config.columns
+        set(value) {
+            updateConfig(config.copy(columns = value))
+        }
+
+    var rows: Int
+        get() = config.rows
+        set(value) {
+            updateConfig(config.copy(rows = value))
+        }
+
+    var fontFamily: String
+        get() = config.fontFamily
+        set(value) {
+            updateConfig(config.copy(fontFamily = value))
+        }
+
+    var fontSize: Int
+        get() = config.fontSize
+        set(value) {
+            updateConfig(config.copy(fontSize = value))
+        }
+
+    var useSystemFallbackFonts: Boolean
+        get() = config.useSystemFallbackFonts
+        set(value) {
+            updateConfig(config.copy(useSystemFallbackFonts = value))
+        }
+
+    var cursorBlinkMillis: Int
+        get() = config.cursorBlinkMillis
+        set(value) {
+            updateConfig(config.copy(cursorBlinkMillis = value))
+        }
+
+    var cursorShape: String
+        get() = config.cursorShape
+        set(value) {
+            updateConfig(config.copy(cursorShape = value))
+        }
+
     fun current(): TerminalSwingSettings =
         TerminalSwingSettings(
             font = Font(config.fontFamily, Font.PLAIN, config.fontSize),

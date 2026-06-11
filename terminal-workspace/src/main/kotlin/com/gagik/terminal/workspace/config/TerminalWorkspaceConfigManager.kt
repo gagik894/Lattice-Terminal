@@ -70,6 +70,7 @@ class TerminalWorkspaceConfigManager(
             val useSystemFallbackFonts =
                 font["use_system_fallback_fonts"]?.toBooleanStrictOrNull()
                     ?: default.useSystemFallbackFonts
+            val cursorShape = behavior["cursor_shape"] ?: default.cursorShape
 
             // Clean and validate inputs to ensure safety boundaries are respected
             val cleanColumns = if (columns > 0) columns else default.columns
@@ -79,6 +80,7 @@ class TerminalWorkspaceConfigManager(
                 if (cursorBlinkMillis > 0) cursorBlinkMillis else default.cursorBlinkMillis
             val cleanTheme = if (theme.isNotBlank()) theme else default.theme
             val cleanFontFamily = if (fontFamily.isNotBlank()) fontFamily else default.fontFamily
+            val cleanCursorShape = if (cursorShape.isNotBlank()) cursorShape else default.cursorShape
 
             TerminalConfig(
                 theme = cleanTheme,
@@ -89,6 +91,7 @@ class TerminalWorkspaceConfigManager(
                 rows = cleanRows,
                 cursorBlinkMillis = cleanCursorBlinkMillis,
                 useSystemFallbackFonts = useSystemFallbackFonts,
+                cursorShape = cleanCursorShape,
             )
         } catch (e: Exception) {
             try {
@@ -152,6 +155,9 @@ class TerminalWorkspaceConfigManager(
         treat_ambiguous_as_wide = ${config.treatAmbiguousAsWide}
         # Cursor blink period in milliseconds
         cursor_blink_millis = ${config.cursorBlinkMillis}
+        # Style of the text cursor (block, underline, beam)
+        # TODO(cursor-shape): support rendering beam and underline styles in the UI layer
+        cursor_shape = "${config.cursorShape}"
         """.trimIndent()
 
     companion object {

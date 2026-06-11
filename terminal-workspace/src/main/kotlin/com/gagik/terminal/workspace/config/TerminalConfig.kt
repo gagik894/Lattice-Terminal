@@ -30,6 +30,7 @@ data class TerminalConfig(
     val rows: Int = 30,
     val cursorBlinkMillis: Int = 600,
     val useSystemFallbackFonts: Boolean = false,
+    val cursorShape: String = "block",
 ) {
     init {
         require(columns > 0) { "columns must be > 0, was $columns" }
@@ -38,5 +39,6 @@ data class TerminalConfig(
         require(cursorBlinkMillis > 0) { "cursorBlinkMillis must be > 0, was $cursorBlinkMillis" }
         require(theme.isNotBlank()) { "theme must not be blank" }
         require(fontFamily.isNotBlank()) { "fontFamily must not be blank" }
+        require(cursorShape.isNotBlank()) { "cursorShape must not be blank" }
     }
 }
