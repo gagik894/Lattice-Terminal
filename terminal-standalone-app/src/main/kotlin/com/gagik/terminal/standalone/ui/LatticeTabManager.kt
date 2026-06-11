@@ -543,8 +543,10 @@ internal class LatticeTabManager(
 
     private inner class StandaloneWorkspaceListener : TerminalWorkspaceListener {
         override fun bell(tab: TerminalWorkspaceTab) {
-            SwingUtilities.invokeLater {
-                frame.toolkit.beep()
+            if (settings.audibleBell) {
+                SwingUtilities.invokeLater {
+                    frame.toolkit.beep()
+                }
             }
         }
 

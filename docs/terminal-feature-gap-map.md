@@ -607,10 +607,19 @@ professional emulator needs explicit contracts for it.
 - `DONE(swing)`: mouse-wheel scrollback updates are owned by the Swing
   component and request offset-specific render-cache publications through the
   session render worker.
-- `TODO(host)`: custom shell path and start directory in PTY session initialization.
+- `DONE(host)`: custom shell path and start directory in PTY session initialization.
+  `shellPath` and `startDirectory` settings are now read at tab-open time via
+  `TerminalProfileRegistry.configuredProfile()` and stamped onto all tab-open
+  paths (new tab, split, initial tab, and dropdown profile picker).
 - `TODO(host)`: custom line spacing/height metrics in the renderer.
 - `TODO(host)`: translucent window opacity support in Swing.
-- `TODO(host)`: system beep sound playback when `TerminalHostEventSink` reports a BEL.
+- `DONE(host)`: audible bell setting (`audibleBell`) is now respected — the
+  standalone app guards `Toolkit.beep()` with the current `settings.audibleBell`
+  value, read live on each bell event.
+- `TODO(parser/core/integration)`: BEL (`\u0007`) byte recognition and
+  dispatch through the parser/core/integration pipeline to the host event sink.
+  Currently the host listener fires correctly from the PTY process exit path
+  but the in-band BEL control character is not yet parsed and dispatched.
 - `TODO(input)`: middle click paste in the UI event handler.
 - `TODO(host)`: UI scrollback controls, scrollbar policy, selection behavior
   while scrolled, and auto-follow/offset-retention policy.

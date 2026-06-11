@@ -192,8 +192,8 @@ class TerminalWorkspaceConfigManager(
         # Style of the text cursor (block, underline, beam)
         # TODO(cursor-shape): support rendering beam and underline styles in the UI layer
         cursor_shape = "${config.cursorShape}"
-        # Trigger terminal bell sound when a bell control character is received
-        # TODO(bell): implement system beep on BEL (\u0007)
+        # Play a system beep when the terminal receives a BEL character
+        # TODO(parser/core/integration): in-band BEL (\u0007) byte recognition and dispatch
         audible_bell = ${config.audibleBell}
         # Automatically paste clipboard contents when the middle mouse button is clicked
         # TODO(input): implement middle click paste in the UI event handler
