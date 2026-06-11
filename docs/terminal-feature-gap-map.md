@@ -607,6 +607,11 @@ professional emulator needs explicit contracts for it.
 - `DONE(swing)`: mouse-wheel scrollback updates are owned by the Swing
   component and request offset-specific render-cache publications through the
   session render worker.
+- `TODO(host)`: custom shell path and start directory in PTY session initialization.
+- `TODO(host)`: custom line spacing/height metrics in the renderer.
+- `TODO(host)`: translucent window opacity support in Swing.
+- `TODO(host)`: system beep sound playback when `TerminalHostEventSink` reports a BEL.
+- `TODO(input)`: middle click paste in the UI event handler.
 - `TODO(host)`: UI scrollback controls, scrollbar policy, selection behavior
   while scrolled, and auto-follow/offset-retention policy.
 - `TODO(host)`: accessibility/export APIs.

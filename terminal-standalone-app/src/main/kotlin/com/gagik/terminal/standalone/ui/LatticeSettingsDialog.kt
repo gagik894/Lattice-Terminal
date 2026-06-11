@@ -25,391 +25,445 @@ import javax.swing.*
 import javax.swing.border.EmptyBorder
 
 /**
- * A redesigned modern, category-card Settings Dialog for the standalone terminal.
- *
- * Exposes full configuration settings bound to TOML, utilizing custom toggle switches
- * and aligned settings rows with headers, subtitles, and standard Cancel/Apply/OK actions.
+ * A highly polished, IDE-style settings dialog featuring a clean sidebar and flat form layouts.
  */
 internal class LatticeSettingsDialog(
     parent: JFrame,
     private val settings: StandaloneTerminalSettings,
-    private val onSave: () -> Unit,
-) : JDialog(parent, "Settings", true) {
+    private val onApply: () -> Unit,
+) : JDialog(parent, "Terminal Settings", true) {
     private val cardLayout = CardLayout()
+
+    // Opaque panel is critical for CardLayout to clear previous artifacts correctly
     private val cardPanel =
         JPanel(cardLayout).apply {
-            isOpaque = false
+            isOpaque = true
+            background = LatticeChrome.surface
         }
-
     private val sidebarPanel =
         JPanel().apply {
             layout = BoxLayout(this, BoxLayout.Y_AXIS)
-            background = LatticeChrome.topBarBackground
-            border =
-                BorderFactory.createCompoundBorder(
-                    BorderFactory.createMatteBorder(0, 0, 0, 1, LatticeChrome.border),
-                    EmptyBorder(20, 10, 20, 10),
-                )
-            preferredSize = Dimension(165, 0)
+            isOpaque = true
+            background = LatticeChrome.surface
+            border = EmptyBorder(8, 0, 8, 0)
+            preferredSize = Dimension(180, -1)
         }
 
-    private val categories = listOf("Appearance", "Behavior")
-    private val categoryLabels = ArrayList<CategoryLabel>()
+    private val categories = mutableListOf<CategoryLabel>()
 
-    // Inputs
-    private val columnsSpinner: JSpinner
-    private val rowsSpinner: JSpinner
-    private val themeCombo: JComboBox<String>
-    private val fontFamilyCombo: JComboBox<String>
-    private val fontSizeSpinner: JSpinner
-    private val treatAmbiguousSwitch: LatticeSwitch
-    private val useSystemFallbackSwitch: LatticeSwitch
-    private val cursorShapeCombo: JComboBox<String>
-    private val cursorBlinkSpinner: JSpinner
+    // Factory Helpers
+    private fun createTextField(
+        initialValue: String,
+        width: Int,
+    ) = JTextField(initialValue).apply { applySizing(this, width) }
+
+    private fun createSpinner(
+        initialValue: Int,
+        min: Int,
+        max: Int,
+        step: Int,
+        width: Int,
+    ) = JSpinner(SpinnerNumberModel(initialValue, min, max, step)).apply {
+        applySizing(this, width)
+    }
+
+    private fun createFloatSpinner(
+        initialValue: Float,
+        min: Double,
+        max: Double,
+        step: Double,
+        width: Int,
+    ) = JSpinner(SpinnerNumberModel(initialValue.toDouble(), min, max, step)).apply {
+        applySizing(this, width)
+    }
+
+    private fun <T> createComboBox(
+        items: Array<T>,
+        initialValue: T,
+        width: Int,
+    ) = JComboBox(items).apply {
+        selectedItem = initialValue
+        applySizing(this, width)
+    }
+
+    // Form Controls - Application
+    private val shellPathField = createTextField(settings.shellPath, 220)
+    private val startDirectoryField = createTextField(settings.startDirectory, 220)
+    private val audibleBellCheckbox = JCheckBox("Audible bell", settings.audibleBell)
+
+    // Form Controls - Appearance
+    private val fontFamilyCombo =
+        createComboBox(GraphicsEnvironment.getLocalGraphicsEnvironment().availableFontFamilyNames, settings.fontFamily, 220)
+    private val fontSizeSpinner = createSpinner(settings.fontSize, 8, 72, 1, 70)
+    private val lineHeightSpinner = createFloatSpinner(settings.lineHeight, 0.5, 3.0, 0.1, 70)
+    private val columnsSpinner = createSpinner(settings.columns, 40, 300, 1, 70)
+    private val rowsSpinner = createSpinner(settings.rows, 10, 100, 1, 70)
+    private val scrollbackSpinner = createSpinner(settings.scrollbackLines, 0, 100000, 100, 80)
+    private val windowOpacitySpinner = createFloatSpinner(settings.windowOpacity, 0.1, 1.0, 0.05, 70)
+    private val themeCombo = createComboBox(TerminalTheme.entries.map { it.name }.toTypedArray(), settings.theme.name, 220)
+
+    // Form Controls - Behavior
+    private val treatAmbiguousCheckbox = JCheckBox("Treat East Asian ambiguous characters as wide", settings.treatAmbiguousAsWide)
+    private val useSystemFallbackCheckbox = JCheckBox("Use system font fallback for missing glyphs", settings.useSystemFallbackFonts)
+    private val pasteOnMiddleClickCheckbox = JCheckBox("Paste on middle mouse button click", settings.pasteOnMiddleClick)
+    private val cursorBlinkSpinner = createSpinner(settings.cursorBlinkMillis, 0, 5000, 50, 70)
+    private val cursorShapeCombo = createComboBox(arrayOf("block", "underline", "beam"), settings.cursorShape.lowercase(Locale.ROOT), 150)
 
     init {
-        contentPane.background = LatticeChrome.surface
-        layout = BorderLayout()
-        minimumSize = Dimension(650, 480)
-        isResizable = false
-
-        val currentSwingSettings = settings.current()
-
-        // Initialize Appearance Controls
-        columnsSpinner =
-            JSpinner(SpinnerNumberModel(currentSwingSettings.columns, 20, 500, 1)).apply {
-                putClientProperty("JComponent.roundRect", true)
-            }
-        rowsSpinner =
-            JSpinner(SpinnerNumberModel(currentSwingSettings.rows, 5, 200, 1)).apply {
-                putClientProperty("JComponent.roundRect", true)
-            }
-        themeCombo =
-            JComboBox(TerminalTheme.entries.map { themeName(it) }.toTypedArray()).apply {
-                selectedItem = themeName(settings.theme)
-                putClientProperty("JComponent.roundRect", true)
-            }
-        val commonFonts =
-            arrayOf("Cascadia Mono", "Cascadia Code", "Consolas", "Fira Code", "JetBrains Mono", "Courier New", Font.MONOSPACED)
-        fontFamilyCombo =
-            JComboBox(commonFonts).apply {
-                selectedItem = currentSwingSettings.font.family
-                isEditable = true
-                putClientProperty("JComponent.roundRect", true)
-            }
-        fontSizeSpinner =
-            JSpinner(SpinnerNumberModel(currentSwingSettings.font.size, 8, 72, 1)).apply {
-                putClientProperty("JComponent.roundRect", true)
-            }
-
-        // Initialize Behavior Controls
-        treatAmbiguousSwitch = LatticeSwitch(settings.treatAmbiguousAsWide) {}
-        useSystemFallbackSwitch = LatticeSwitch(currentSwingSettings.useSystemFallbackFonts) {}
-
-        val cursorShapes = arrayOf("Block", "Underline", "Beam")
-        cursorShapeCombo =
-            JComboBox(cursorShapes).apply {
-                selectedItem = settings.cursorShape.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ROOT) else it.toString() }
-                putClientProperty("JComponent.roundRect", true)
-            }
-
-        cursorBlinkSpinner =
-            JSpinner(SpinnerNumberModel(currentSwingSettings.cursorBlinkMillis, 100, 5000, 50)).apply {
-                putClientProperty("JComponent.roundRect", true)
-            }
-
-        // Add Category Cards
-        cardPanel.add(buildAppearanceCard(), "Appearance")
-        cardPanel.add(buildBehaviorCard(), "Behavior")
-
-        // Setup Sidebar
-        buildSidebar()
-
-        // Assembly
-        add(sidebarPanel, BorderLayout.WEST)
-        add(cardPanel, BorderLayout.CENTER)
-        add(buildBottomControls(), BorderLayout.SOUTH)
-
+        size = Dimension(750, 550)
         setLocationRelativeTo(parent)
-    }
+        layout = BorderLayout()
+        isUndecorated = false
 
-    private fun themeName(theme: TerminalTheme): String =
-        theme.name.lowercase(Locale.ROOT).split("_").joinToString(" ") {
-            it.replaceFirstChar { char -> if (char.isLowerCase()) char.titlecase(Locale.ROOT) else char.toString() }
-        }
-
-    private fun themeByName(name: String): TerminalTheme {
-        val normalized = name.uppercase(Locale.ROOT).replace(" ", "_")
-        return TerminalTheme.entries.firstOrNull { it.name == normalized } ?: TerminalTheme.ONE_DARK
-    }
-
-    private fun buildSidebar() {
-        val titleLabel =
-            JLabel("Settings").apply {
-                foreground = LatticeChrome.textPrimary
-                font = font.deriveFont(Font.BOLD, 18f)
-                alignmentX = LEFT_ALIGNMENT
-                border = EmptyBorder(0, 4, 15, 0)
-            }
-        sidebarPanel.add(titleLabel)
-
-        categories.forEachIndexed { index, name ->
-            val label = CategoryLabel(name, index == 0)
-            label.alignmentX = LEFT_ALIGNMENT
-            label.addMouseListener(
-                object : MouseAdapter() {
-                    override fun mousePressed(e: MouseEvent) {
-                        selectCategory(name)
-                    }
-                },
-            )
-            categoryLabels.add(label)
-            sidebarPanel.add(label)
-            sidebarPanel.add(Box.createVerticalStrut(4))
-        }
-    }
-
-    private fun selectCategory(categoryName: String) {
-        cardLayout.show(cardPanel, categoryName)
-        categoryLabels.forEach { label ->
-            label.setSelected(label.categoryName == categoryName)
-        }
-    }
-
-    private fun buildAppearanceCard(): JPanel {
-        val panel =
-            JPanel().apply {
-                layout = BoxLayout(this, BoxLayout.Y_AXIS)
-                isOpaque = false
-                border = EmptyBorder(25, 25, 25, 25)
-            }
-
-        // Title Header
-        val headerLabel =
-            JLabel("Appearance Settings").apply {
-                foreground = LatticeChrome.textPrimary
-                font = font.deriveFont(Font.BOLD, 16f)
-                alignmentX = LEFT_ALIGNMENT
-            }
-        val subheaderLabel =
-            JLabel("Configure layout sizes, monospace fonts, and color palettes.").apply {
-                foreground = LatticeChrome.textSecondary
-                font = font.deriveFont(Font.PLAIN, 11f)
-                alignmentX = LEFT_ALIGNMENT
-            }
-        panel.add(headerLabel)
-        panel.add(Box.createVerticalStrut(2))
-        panel.add(subheaderLabel)
-        panel.add(Box.createVerticalStrut(20))
-
-        // Group 1: Window Geometry
-        val geometryCard =
-            LatticeSettingsGroupCard("Window Geometry").apply {
-                alignmentX = LEFT_ALIGNMENT
-                addRow(0, "Columns", "Startup width of the terminal grid in character cells", columnsSpinner)
-                addRow(1, "Rows", "Startup height of the terminal grid in character rows", rowsSpinner)
-            }
-        panel.add(geometryCard)
-        panel.add(Box.createVerticalStrut(16))
-
-        // Group 2: Typography
-        val fontCard =
-            LatticeSettingsGroupCard("Typography").apply {
-                alignmentX = LEFT_ALIGNMENT
-                addRow(0, "Font Family", "Primary monospace family used for terminal text runs", fontFamilyCombo)
-                addRow(1, "Font Size (pt)", "Default size of character glyphs in points", fontSizeSpinner)
-            }
-        panel.add(fontCard)
-        panel.add(Box.createVerticalStrut(16))
-
-        // Group 3: Color Palette
-        val themeCard =
-            LatticeSettingsGroupCard("Theme Options").apply {
-                alignmentX = LEFT_ALIGNMENT
-                addRow(0, "Color Theme", "Terminal foreground, background, and ANSI 16-color lookup mapping", themeCombo)
-            }
-        panel.add(themeCard)
-
-        panel.add(Box.createVerticalGlue())
-        return panel
-    }
-
-    private fun buildBehaviorCard(): JPanel {
-        val panel =
-            JPanel().apply {
-                layout = BoxLayout(this, BoxLayout.Y_AXIS)
-                isOpaque = false
-                border = EmptyBorder(25, 25, 25, 25)
-            }
-
-        // Title Header
-        val headerLabel =
-            JLabel("Behavior & Execution").apply {
-                foreground = LatticeChrome.textPrimary
-                font = font.deriveFont(Font.BOLD, 16f)
-                alignmentX = LEFT_ALIGNMENT
-            }
-        val subheaderLabel =
-            JLabel("Customize character width, fallback font resolve policy, and cursor shapes.").apply {
-                foreground = LatticeChrome.textSecondary
-                font = font.deriveFont(Font.PLAIN, 11f)
-                alignmentX = LEFT_ALIGNMENT
-            }
-        panel.add(headerLabel)
-        panel.add(Box.createVerticalStrut(2))
-        panel.add(subheaderLabel)
-        panel.add(Box.createVerticalStrut(20))
-
-        // Group 1: Text Layout
-        val layoutCard =
-            LatticeSettingsGroupCard("Text & Layout").apply {
-                alignmentX = LEFT_ALIGNMENT
-                addRow(0, "Ambiguous as Wide", "Render East Asian ambiguous characters with double cell width", treatAmbiguousSwitch)
-                addRow(
-                    1,
-                    "System Font Fallbacks",
-                    "Query system catalog to resolve characters missing in primary font",
-                    useSystemFallbackSwitch,
+        // Setup Main Container
+        val splitPane =
+            JPanel(BorderLayout()).apply {
+                isOpaque = true
+                background = LatticeChrome.surface
+                add(sidebarPanel, BorderLayout.WEST)
+                add(
+                    JScrollPane(cardPanel).apply {
+                        isOpaque = true
+                        viewport.isOpaque = true
+                        viewport.background = LatticeChrome.surface
+                        border = BorderFactory.createMatteBorder(0, 1, 0, 0, LatticeChrome.border)
+                    },
+                    BorderLayout.CENTER,
                 )
             }
-        panel.add(layoutCard)
-        panel.add(Box.createVerticalStrut(16))
 
-        // Group 2: Cursor Behavior
-        val cursorCard =
-            LatticeSettingsGroupCard("Cursor Settings").apply {
-                alignmentX = LEFT_ALIGNMENT
-                addRow(0, "Cursor Shape", "Visual outline shape representation of the cursor pointer", cursorShapeCombo)
-                addRow(1, "Cursor Blink Period (ms)", "Time interval in milliseconds representing cursor blink cycles", cursorBlinkSpinner)
+        add(splitPane, BorderLayout.CENTER)
+        add(buildFooterPanel(), BorderLayout.SOUTH)
+
+        // Add Pages
+        addPage("Application", buildApplicationPanel())
+        addPage("Appearance", buildAppearancePanel())
+        addPage("Behavior", buildBehaviorPanel())
+
+        selectCategory(categories.first().categoryName)
+    }
+
+    private fun applySizing(
+        component: JComponent,
+        width: Int,
+    ) {
+        component.preferredSize = Dimension(width, 26)
+    }
+
+    private fun addPage(
+        title: String,
+        panel: JPanel,
+    ) {
+        val categoryLabel = CategoryLabel(title)
+        categories.add(categoryLabel)
+        sidebarPanel.add(categoryLabel)
+
+        // Container with padding to hold the content panel
+        val contentContainer =
+            JPanel(BorderLayout()).apply {
+                isOpaque = false
+                border = EmptyBorder(0, 16, 16, 16)
+                add(panel, BorderLayout.NORTH)
             }
-        panel.add(cursorCard)
 
-        panel.add(Box.createVerticalGlue())
+        cardPanel.add(contentContainer, title)
+
+        categoryLabel.addMouseListener(
+            object : MouseAdapter() {
+                override fun mouseClicked(e: MouseEvent?) {
+                    selectCategory(title)
+                }
+            },
+        )
+    }
+
+    private fun selectCategory(title: String) {
+        categories.forEach { it.updateState(it.categoryName == title) }
+        cardLayout.show(cardPanel, title)
+    }
+
+    private fun buildApplicationPanel(): JPanel {
+        val panel =
+            JPanel().apply {
+                layout = BoxLayout(this, BoxLayout.Y_AXIS)
+                isOpaque = false
+            }
+
+        panel.add(LatticeSectionHeader("Project Settings"))
+        val projectSection = createSectionPanel()
+        addFormRow(projectSection, 0, "Shell path:", shellPathField)
+        addFormRow(projectSection, 1, "Start directory:", startDirectoryField)
+        panel.add(projectSection)
+
+        panel.add(LatticeSectionHeader("Application Settings"))
+        val appSection = createSectionPanel()
+        addCheckboxRow(appSection, 0, audibleBellCheckbox)
+        panel.add(appSection)
+
         return panel
     }
 
-    private fun buildBottomControls(): JPanel =
+    private fun buildAppearancePanel(): JPanel {
+        val panel =
+            JPanel().apply {
+                layout = BoxLayout(this, BoxLayout.Y_AXIS)
+                isOpaque = false
+            }
+
+        panel.add(LatticeSectionHeader("Typography & Theme"))
+        val typoSection = createSectionPanel()
+        addFormRow(typoSection, 0, "Font family:", fontFamilyCombo)
+        val lhLabel =
+            JLabel("Line height:").apply {
+                foreground = LatticeChrome.textPrimary
+                font = font.deriveFont(Font.PLAIN, 13f)
+            }
+        addFormRow(typoSection, 1, "Font size:", fontSizeSpinner, Box.createHorizontalStrut(10), lhLabel, lineHeightSpinner)
+        addFormRow(typoSection, 2, "Color theme:", themeCombo)
+        panel.add(typoSection)
+
+        panel.add(LatticeSectionHeader("Window Layout"))
+        val windowSection = createSectionPanel()
+        val rowsLabel =
+            JLabel("Rows:").apply {
+                foreground = LatticeChrome.textPrimary
+                font = font.deriveFont(Font.PLAIN, 13f)
+            }
+        addFormRow(windowSection, 0, "Columns:", columnsSpinner, Box.createHorizontalStrut(10), rowsLabel, rowsSpinner)
+        addFormRow(windowSection, 1, "Scrollback lines:", scrollbackSpinner)
+        addFormRow(windowSection, 2, "Window opacity:", windowOpacitySpinner)
+        panel.add(windowSection)
+
+        return panel
+    }
+
+    private fun buildBehaviorPanel(): JPanel {
+        val panel =
+            JPanel().apply {
+                layout = BoxLayout(this, BoxLayout.Y_AXIS)
+                isOpaque = false
+            }
+
+        panel.add(LatticeSectionHeader("Terminal Behavior"))
+        val behaviorSection = createSectionPanel()
+        addCheckboxRow(
+            behaviorSection,
+            0,
+            treatAmbiguousCheckbox,
+            "Render East Asian ambiguous characters (e.g. smart quotes, emojis) with double cell width.",
+        )
+        addCheckboxRow(
+            behaviorSection,
+            2,
+            useSystemFallbackCheckbox,
+            "Query the system catalog to resolve characters and symbols missing in the primary typeface.",
+        )
+        addCheckboxRow(
+            behaviorSection,
+            4,
+            pasteOnMiddleClickCheckbox,
+        )
+        panel.add(behaviorSection)
+
+        panel.add(LatticeSectionHeader("Cursor Settings"))
+        val cursorSection = createSectionPanel()
+        addFormRow(cursorSection, 0, "Cursor shape:", cursorShapeCombo)
+        addFormRow(cursorSection, 1, "Blink period (ms):", cursorBlinkSpinner)
+        panel.add(cursorSection)
+
+        return panel
+    }
+
+    private fun createSectionPanel(): JPanel =
+        JPanel(GridBagLayout()).apply {
+            isOpaque = false
+            alignmentX = LEFT_ALIGNMENT
+            border = EmptyBorder(0, 16, 0, 0)
+        }
+
+    private fun addFormRow(
+        panel: JPanel,
+        row: Int,
+        labelText: String,
+        vararg components: Component,
+    ) {
+        val label =
+            JLabel(labelText).apply {
+                foreground = LatticeChrome.textPrimary
+                font = font.deriveFont(Font.PLAIN, 13f)
+            }
+
+        val gbc =
+            GridBagConstraints().apply {
+                gridy = row
+                fill = GridBagConstraints.NONE
+                anchor = GridBagConstraints.WEST
+            }
+
+        gbc.gridx = 0
+        gbc.weightx = 0.0
+        gbc.insets = Insets(6, 0, 6, 12)
+        panel.add(label, gbc)
+
+        gbc.gridx = 1
+        gbc.weightx = 1.0
+        gbc.insets = Insets(6, 0, 6, 0)
+
+        if (components.size == 1) {
+            panel.add(components[0], gbc)
+        } else {
+            val wrapper =
+                JPanel(FlowLayout(FlowLayout.LEFT, 10, 0)).apply {
+                    isOpaque = false
+                }
+            components.forEach { wrapper.add(it) }
+            panel.add(wrapper, gbc)
+        }
+    }
+
+    private fun addCheckboxRow(
+        panel: JPanel,
+        row: Int,
+        checkbox: JCheckBox,
+        description: String? = null,
+    ) {
+        val gbc =
+            GridBagConstraints().apply {
+                gridy = row
+                gridx = 0
+                gridwidth = 2
+                weightx = 1.0
+                fill = GridBagConstraints.HORIZONTAL
+                anchor = GridBagConstraints.WEST
+                insets = Insets(4, 0, 0, 0)
+            }
+        panel.add(checkbox, gbc)
+
+        if (description != null) {
+            val descGbc =
+                GridBagConstraints().apply {
+                    gridy = row + 1
+                    gridx = 0
+                    gridwidth = 2
+                    weightx = 1.0
+                    fill = GridBagConstraints.HORIZONTAL
+                    anchor = GridBagConstraints.WEST
+                    insets = Insets(2, 22, 12, 0) // Indent to match checkbox text
+                }
+            val descLabel =
+                JLabel("<html>$description</html>").apply {
+                    foreground = LatticeChrome.textSecondary
+                    font = font.deriveFont(Font.PLAIN, 12f)
+                }
+            panel.add(descLabel, descGbc)
+        }
+    }
+
+    private fun buildFooterPanel(): JPanel =
         JPanel(FlowLayout(FlowLayout.RIGHT, 12, 12)).apply {
+            isOpaque = true
             background = LatticeChrome.surface
             border = BorderFactory.createMatteBorder(1, 0, 0, 0, LatticeChrome.border)
 
-            val cancelButton =
-                JButton("Cancel").apply {
-                    putClientProperty("JButton.buttonType", "roundRect")
-                    background = LatticeChrome.controlBackground
-                    foreground = LatticeChrome.textPrimary
-                    cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+            val okButton =
+                JButton("OK").apply {
                     addActionListener {
+                        applyChanges()
                         dispose()
                     }
+                }
+
+            val cancelButton =
+                JButton("Cancel").apply {
+                    addActionListener { dispose() }
                 }
 
             val applyButton =
                 JButton("Apply").apply {
-                    putClientProperty("JButton.buttonType", "roundRect")
-                    background = LatticeChrome.controlBackground
-                    foreground = LatticeChrome.textPrimary
-                    cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
-                    addActionListener {
-                        saveSettings()
-                    }
+                    addActionListener { applyChanges() }
                 }
 
-            val okButton =
-                JButton("OK").apply {
-                    putClientProperty("JButton.buttonType", "roundRect")
-                    background = LatticeChrome.accent
-                    foreground = Color.WHITE
-                    cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
-                    addActionListener {
-                        saveSettings()
-                        dispose()
-                    }
-                }
-
+            add(okButton)
             add(cancelButton)
             add(applyButton)
-            add(okButton)
+            this@LatticeSettingsDialog.rootPane.defaultButton = okButton
         }
 
-    private fun saveSettings() {
-        val selectedThemeName = themeCombo.selectedItem as String
-        settings.theme = themeByName(selectedThemeName)
-        settings.treatAmbiguousAsWide = treatAmbiguousSwitch.isSelected()
+    private fun applyChanges() {
+        settings.shellPath = shellPathField.text
+        settings.startDirectory = startDirectoryField.text
+        settings.audibleBell = audibleBellCheckbox.isSelected
+        settings.pasteOnMiddleClick = pasteOnMiddleClickCheckbox.isSelected
+        settings.scrollbackLines = scrollbackSpinner.value as Int
+        settings.lineHeight = (lineHeightSpinner.value as Double).toFloat()
+        settings.windowOpacity = (windowOpacitySpinner.value as Double).toFloat()
 
-        settings.columns = columnsSpinner.value as Int
-        settings.rows = rowsSpinner.value as Int
         settings.fontFamily = fontFamilyCombo.selectedItem as String
         settings.fontSize = fontSizeSpinner.value as Int
-        settings.useSystemFallbackFonts = useSystemFallbackSwitch.isSelected()
+        settings.columns = columnsSpinner.value as Int
+        settings.rows = rowsSpinner.value as Int
+        settings.treatAmbiguousAsWide = treatAmbiguousCheckbox.isSelected
+        settings.useSystemFallbackFonts = useSystemFallbackCheckbox.isSelected
         settings.cursorBlinkMillis = cursorBlinkSpinner.value as Int
+        settings.cursorShape = cursorShapeCombo.selectedItem as String
 
-        val selectedShape = (cursorShapeCombo.selectedItem as String).lowercase(Locale.ROOT)
-        settings.cursorShape = selectedShape
+        val themeName = themeCombo.selectedItem as String
+        settings.theme = TerminalTheme.entries.firstOrNull { it.name == themeName } ?: TerminalTheme.TOKYO_NIGHT
 
-        onSave()
+        onApply()
     }
 
     private inner class CategoryLabel(
         val categoryName: String,
-        private var selected: Boolean,
     ) : JPanel() {
+        private var selected = false
         private var hovered = false
+
         private val nameLabel =
             JLabel(categoryName).apply {
-                font = font.deriveFont(if (selected) Font.BOLD else Font.PLAIN, 13f)
-                foreground = if (selected) LatticeChrome.textPrimary else LatticeChrome.textSecondary
-                border = EmptyBorder(0, 8, 0, 0)
+                font = font.deriveFont(Font.PLAIN, 13f)
+                foreground = LatticeChrome.textPrimary
+                border = EmptyBorder(0, 12, 0, 0)
             }
 
         init {
             layout = BorderLayout()
             isOpaque = false
-            border = EmptyBorder(8, 12, 8, 12)
+            maximumSize = Dimension(Int.MAX_VALUE, 32)
+            preferredSize = Dimension(Int.MAX_VALUE, 32)
+
             add(nameLabel, BorderLayout.CENTER)
 
             addMouseListener(
                 object : MouseAdapter() {
-                    override fun mouseEntered(e: MouseEvent) {
+                    override fun mouseEntered(e: MouseEvent?) {
                         hovered = true
                         repaint()
                     }
 
-                    override fun mouseExited(e: MouseEvent) {
+                    override fun mouseExited(e: MouseEvent?) {
                         hovered = false
                         repaint()
                     }
                 },
             )
-            cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
         }
 
-        fun setSelected(newSelected: Boolean) {
-            selected = newSelected
-            nameLabel.font = nameLabel.font.deriveFont(if (selected) Font.BOLD else Font.PLAIN, 13f)
-            nameLabel.foreground = if (selected) LatticeChrome.textPrimary else LatticeChrome.textSecondary
+        fun updateState(isSelected: Boolean) {
+            this.selected = isSelected
+            nameLabel.font = nameLabel.font.deriveFont(if (isSelected) Font.BOLD else Font.PLAIN)
             repaint()
         }
 
         override fun paintComponent(g: Graphics) {
-            super.paintComponent(g)
-            val g2 = g.create() as Graphics2D
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-
             if (selected) {
-                // Background subtle highlight
-                g2.color = LatticeChrome.controlBackground
-                g2.fillRoundRect(0, 0, width, height, 8, 8)
-
-                // Accent vertical line indicator on the left
-                g2.color = LatticeChrome.accent
-                g2.fillRoundRect(2, 4, 3, height - 8, 2, 2)
+                g.color = LatticeChrome.controlHover
+                g.fillRect(8, 0, width - 16, height)
             } else if (hovered) {
-                g2.color = LatticeChrome.tabHoverBackground
-                g2.fillRoundRect(0, 0, width, height, 8, 8)
+                g.color = LatticeChrome.tabHoverBackground
+                g.fillRect(8, 0, width - 16, height)
             }
-
-            g2.dispose()
+            super.paintComponent(g)
         }
     }
 }

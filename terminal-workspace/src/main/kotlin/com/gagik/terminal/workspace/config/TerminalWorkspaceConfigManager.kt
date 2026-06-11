@@ -53,17 +53,22 @@ class TerminalWorkspaceConfigManager(
             val font = parsed["font"] ?: emptyMap()
             val themeSection = parsed["theme"] ?: emptyMap()
             val behavior = parsed["behavior"] ?: emptyMap()
+            val shell = parsed["shell"] ?: emptyMap()
 
             val default = TerminalConfig()
 
             val theme = themeSection["name"] ?: default.theme
+            val shellPath = shell["path"] ?: default.shellPath
+            val startDirectory = shell["start_directory"] ?: default.startDirectory
             val treatAmbiguousAsWide =
                 behavior["treat_ambiguous_as_wide"]?.toBooleanStrictOrNull()
                     ?: default.treatAmbiguousAsWide
             val fontFamily = font["family"] ?: default.fontFamily
             val fontSize = font["size"]?.toIntOrNull() ?: default.fontSize
+            val lineHeight = font["line_height"]?.toFloatOrNull() ?: default.lineHeight
             val columns = window["columns"]?.toIntOrNull() ?: default.columns
             val rows = window["rows"]?.toIntOrNull() ?: default.rows
+            val windowOpacity = window["opacity"]?.toFloatOrNull() ?: default.windowOpacity
             val cursorBlinkMillis =
                 behavior["cursor_blink_millis"]?.toIntOrNull()
                     ?: default.cursorBlinkMillis
@@ -71,16 +76,23 @@ class TerminalWorkspaceConfigManager(
                 font["use_system_fallback_fonts"]?.toBooleanStrictOrNull()
                     ?: default.useSystemFallbackFonts
             val cursorShape = behavior["cursor_shape"] ?: default.cursorShape
+            val audibleBell = behavior["audible_bell"]?.toBooleanStrictOrNull() ?: default.audibleBell
+            val pasteOnMiddleClick = behavior["paste_on_middle_click"]?.toBooleanStrictOrNull() ?: default.pasteOnMiddleClick
+            val scrollbackLines = window["scrollback_lines"]?.toIntOrNull() ?: default.scrollbackLines
 
             // Clean and validate inputs to ensure safety boundaries are respected
             val cleanColumns = if (columns > 0) columns else default.columns
             val cleanRows = if (rows > 0) rows else default.rows
             val cleanFontSize = if (fontSize > 0) fontSize else default.fontSize
+            val cleanLineHeight = if (lineHeight > 0f) lineHeight else default.lineHeight
             val cleanCursorBlinkMillis =
                 if (cursorBlinkMillis > 0) cursorBlinkMillis else default.cursorBlinkMillis
             val cleanTheme = if (theme.isNotBlank()) theme else default.theme
             val cleanFontFamily = if (fontFamily.isNotBlank()) fontFamily else default.fontFamily
             val cleanCursorShape = if (cursorShape.isNotBlank()) cursorShape else default.cursorShape
+            val cleanShellPath = if (shellPath.isNotBlank()) shellPath else default.shellPath
+            val cleanScrollbackLines = if (scrollbackLines >= 0) scrollbackLines else default.scrollbackLines
+            val cleanWindowOpacity = if (windowOpacity in 0.1f..1.0f) windowOpacity else default.windowOpacity
 
             TerminalConfig(
                 theme = cleanTheme,
@@ -92,6 +104,13 @@ class TerminalWorkspaceConfigManager(
                 cursorBlinkMillis = cleanCursorBlinkMillis,
                 useSystemFallbackFonts = useSystemFallbackFonts,
                 cursorShape = cleanCursorShape,
+                shellPath = cleanShellPath,
+                startDirectory = startDirectory,
+                audibleBell = audibleBell,
+                pasteOnMiddleClick = pasteOnMiddleClick,
+                scrollbackLines = cleanScrollbackLines,
+                lineHeight = cleanLineHeight,
+                windowOpacity = cleanWindowOpacity,
             )
         } catch (e: Exception) {
             try {
@@ -132,16 +151,33 @@ class TerminalWorkspaceConfigManager(
         # Power users can edit this file directly to customize behavior.
         # Changes will take effect on next application launch.
 
+        [shell]
+        # Command or path to the shell executable to run
+        # TODO(shell): support custom shell paths when starting PTY sessions
+        path = "${config.shellPath}"
+        # Initial working directory when opening a new tab
+        # TODO(shell): support custom start directories when starting PTY sessions
+        start_directory = "${config.startDirectory}"
+
         [window]
         # Preferred default terminal size in columns and rows
         columns = ${config.columns}
         rows = ${config.rows}
+        # Maximum number of lines to retain in the scrollback buffer
+        # TODO(scrollback): implement history truncation in the core grid
+        scrollback_lines = ${config.scrollbackLines}
+        # Window opacity (1.0 = fully opaque, 0.1 = mostly transparent)
+        # TODO(opacity): support translucent Swing windows in the UI host
+        opacity = ${config.windowOpacity}
 
         [font]
         # Primary monospace font family
         family = "${config.fontFamily}"
         # Font size in points
         size = ${config.fontSize}
+        # Line height multiplier
+        # TODO(typography): support custom line spacing metrics in the text renderer
+        line_height = ${config.lineHeight}
         # Whether the complex-text renderer may use installed system fonts as fallback
         use_system_fallback_fonts = ${config.useSystemFallbackFonts}
 
@@ -158,6 +194,12 @@ class TerminalWorkspaceConfigManager(
         # Style of the text cursor (block, underline, beam)
         # TODO(cursor-shape): support rendering beam and underline styles in the UI layer
         cursor_shape = "${config.cursorShape}"
+        # Trigger terminal bell sound when a bell control character is received
+        # TODO(bell): implement system beep on BEL (\u0007)
+        audible_bell = ${config.audibleBell}
+        # Automatically paste clipboard contents when the middle mouse button is clicked
+        # TODO(input): implement middle click paste in the UI event handler
+        paste_on_middle_click = ${config.pasteOnMiddleClick}
         """.trimIndent()
 
     companion object {

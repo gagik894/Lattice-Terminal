@@ -31,6 +31,13 @@ data class TerminalConfig(
     val cursorBlinkMillis: Int = 600,
     val useSystemFallbackFonts: Boolean = false,
     val cursorShape: String = "block",
+    val shellPath: String = "powershell.exe",
+    val startDirectory: String = System.getProperty("user.home"),
+    val audibleBell: Boolean = true,
+    val pasteOnMiddleClick: Boolean = true,
+    val scrollbackLines: Int = 1000,
+    val lineHeight: Float = 1.0f,
+    val windowOpacity: Float = 1.0f,
 ) {
     init {
         require(columns > 0) { "columns must be > 0, was $columns" }
@@ -40,5 +47,9 @@ data class TerminalConfig(
         require(theme.isNotBlank()) { "theme must not be blank" }
         require(fontFamily.isNotBlank()) { "fontFamily must not be blank" }
         require(cursorShape.isNotBlank()) { "cursorShape must not be blank" }
+        require(shellPath.isNotBlank()) { "shellPath must not be blank" }
+        require(scrollbackLines >= 0) { "scrollbackLines must be >= 0, was $scrollbackLines" }
+        require(lineHeight > 0f) { "lineHeight must be > 0, was $lineHeight" }
+        require(windowOpacity in 0.1f..1.0f) { "windowOpacity must be between 0.1 and 1.0, was $windowOpacity" }
     }
 }

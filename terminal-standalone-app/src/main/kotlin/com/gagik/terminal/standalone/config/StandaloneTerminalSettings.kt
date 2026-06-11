@@ -91,6 +91,48 @@ internal class StandaloneTerminalSettings(
             updateConfig(config.copy(cursorShape = value))
         }
 
+    var shellPath: String
+        get() = config.shellPath
+        set(value) {
+            updateConfig(config.copy(shellPath = value))
+        }
+
+    var startDirectory: String
+        get() = config.startDirectory
+        set(value) {
+            updateConfig(config.copy(startDirectory = value))
+        }
+
+    var audibleBell: Boolean
+        get() = config.audibleBell
+        set(value) {
+            updateConfig(config.copy(audibleBell = value))
+        }
+
+    var pasteOnMiddleClick: Boolean
+        get() = config.pasteOnMiddleClick
+        set(value) {
+            updateConfig(config.copy(pasteOnMiddleClick = value))
+        }
+
+    var scrollbackLines: Int
+        get() = config.scrollbackLines
+        set(value) {
+            updateConfig(config.copy(scrollbackLines = value))
+        }
+
+    var lineHeight: Float
+        get() = config.lineHeight
+        set(value) {
+            updateConfig(config.copy(lineHeight = value))
+        }
+
+    var windowOpacity: Float
+        get() = config.windowOpacity
+        set(value) {
+            updateConfig(config.copy(windowOpacity = value))
+        }
+
     fun current(): TerminalSwingSettings =
         TerminalSwingSettings(
             font = Font(config.fontFamily, Font.PLAIN, config.fontSize),
