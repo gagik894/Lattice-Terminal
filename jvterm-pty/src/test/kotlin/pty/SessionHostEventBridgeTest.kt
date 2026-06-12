@@ -15,10 +15,10 @@
  */
 package com.gagik.terminal.pty
 
-import com.gagik.core.TerminalBuffers
 import com.gagik.terminal.session.TerminalSession
 import com.gagik.terminal.transport.TerminalConnector
 import com.gagik.terminal.transport.TerminalConnectorListener
+import io.github.jvterm.core.TerminalBuffers
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test

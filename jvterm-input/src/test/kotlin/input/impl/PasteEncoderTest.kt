@@ -15,11 +15,11 @@
  */
 package com.gagik.terminal.input.impl
 
-import com.gagik.core.api.TerminalModeBits
 import com.gagik.terminal.input.event.TerminalPasteEvent
 import com.gagik.terminal.input.policy.PasteSanitizationPolicy
 import com.gagik.terminal.input.policy.TerminalInputPolicy
 import com.gagik.terminal.protocol.host.TerminalHostOutput
+import io.github.jvterm.core.api.TerminalModeBits
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Test
 

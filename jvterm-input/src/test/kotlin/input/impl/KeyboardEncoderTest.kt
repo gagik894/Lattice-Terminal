@@ -15,7 +15,6 @@
  */
 package com.gagik.terminal.input.impl
 
-import com.gagik.core.api.TerminalModeBits
 import com.gagik.terminal.input.event.TerminalKey
 import com.gagik.terminal.input.event.TerminalKeyEvent
 import com.gagik.terminal.input.event.TerminalModifiers
@@ -25,6 +24,7 @@ import com.gagik.terminal.protocol.host.TerminalHostOutput
 import com.gagik.terminal.protocol.keyboard.FormatOtherKeysMode
 import com.gagik.terminal.protocol.keyboard.KittyKeyboardProgressiveFlag
 import com.gagik.terminal.protocol.keyboard.ModifyOtherKeysMode
+import io.github.jvterm.core.api.TerminalModeBits
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Test

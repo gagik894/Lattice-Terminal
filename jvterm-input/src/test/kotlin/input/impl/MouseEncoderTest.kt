@@ -15,7 +15,6 @@
  */
 package com.gagik.terminal.input.impl
 
-import com.gagik.core.api.TerminalModeBits
 import com.gagik.terminal.input.event.TerminalModifiers
 import com.gagik.terminal.input.event.TerminalMouseButton
 import com.gagik.terminal.input.event.TerminalMouseEvent
@@ -25,6 +24,7 @@ import com.gagik.terminal.input.policy.TerminalInputPolicy
 import com.gagik.terminal.protocol.host.TerminalHostOutput
 import com.gagik.terminal.protocol.mouse.MouseEncodingMode
 import com.gagik.terminal.protocol.mouse.MouseTrackingMode
+import io.github.jvterm.core.api.TerminalModeBits
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Test
 

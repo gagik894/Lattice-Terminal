@@ -15,7 +15,6 @@
  */
 package com.gagik.terminal.ui.swing.api
 
-import com.gagik.core.TerminalBuffers
 import com.gagik.parser.api.TerminalOutputParser
 import com.gagik.terminal.input.api.TerminalInputEncoder
 import com.gagik.terminal.input.event.TerminalFocusEvent
@@ -34,6 +33,7 @@ import com.gagik.terminal.ui.swing.settings.TerminalClipboardHandler
 import com.gagik.terminal.ui.swing.settings.TerminalClipboardShortcuts
 import com.gagik.terminal.ui.swing.settings.TerminalHyperlinkHandler
 import com.gagik.terminal.ui.swing.settings.TerminalSwingSettings
+import io.github.jvterm.core.TerminalBuffers
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.awt.Insets

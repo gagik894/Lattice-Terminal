@@ -15,7 +15,6 @@
  */
 package com.gagik.terminal.input.impl.keyboard
 
-import com.gagik.core.api.TerminalInputState
 import com.gagik.terminal.input.event.TerminalKey
 import com.gagik.terminal.input.event.TerminalKeyEvent
 import com.gagik.terminal.input.event.TerminalModifiers
@@ -29,6 +28,7 @@ import com.gagik.terminal.protocol.ControlCode
 import com.gagik.terminal.protocol.host.TerminalHostOutput
 import com.gagik.terminal.protocol.keyboard.KittyKeyboardFunctionalKeyCode
 import com.gagik.terminal.protocol.keyboard.KittyKeyboardProgressiveFlag
+import io.github.jvterm.core.api.TerminalInputState
 
 /**
  * Encoder for the Kitty keyboard protocol.

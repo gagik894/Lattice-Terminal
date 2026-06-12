@@ -15,10 +15,6 @@
  */
 package com.gagik.integration
 
-import com.gagik.core.TerminalBuffers
-import com.gagik.core.api.TerminalBufferApi
-import com.gagik.core.model.AttributeColor
-import com.gagik.core.model.UnderlineStyle
 import com.gagik.parser.api.TerminalOutputParser
 import com.gagik.parser.api.TerminalParsers
 import com.gagik.terminal.protocol.MouseEncodingMode
@@ -28,6 +24,10 @@ import com.gagik.terminal.protocol.keyboard.KittyKeyboardProgressiveFlag
 import com.gagik.terminal.protocol.keyboard.ModifyOtherKeysMode
 import com.gagik.terminal.render.api.TerminalRenderCursorShape
 import com.gagik.terminal.render.api.TerminalRenderFrameReader
+import io.github.jvterm.core.TerminalBuffers
+import io.github.jvterm.core.api.TerminalBufferApi
+import io.github.jvterm.core.model.AttributeColor
+import io.github.jvterm.core.model.UnderlineStyle
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested

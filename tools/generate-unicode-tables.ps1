@@ -323,7 +323,7 @@ $emojiVariationBaseSplit = Split-Ranges $emojiVariationBaseRanges $bitsetLimit
 
 $coreParts = [System.Collections.Generic.List[string]]::new()
 $coreParts.Add($copyright.TrimEnd()) | Out-Null
-$coreParts.Add("package com.gagik.core.util") | Out-Null
+$coreParts.Add("package io.github.jvterm.core.util") | Out-Null
 $coreParts.Add("") | Out-Null
 $coreParts.Add("/**") | Out-Null
 $coreParts.Add(" * Unicode $UnicodeVersion terminal width property table generated from UCD data.") | Out-Null

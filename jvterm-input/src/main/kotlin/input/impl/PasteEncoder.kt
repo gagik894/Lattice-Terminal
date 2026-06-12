@@ -15,12 +15,12 @@
  */
 package com.gagik.terminal.input.impl
 
-import com.gagik.core.api.TerminalInputState
 import com.gagik.terminal.input.event.TerminalPasteEvent
 import com.gagik.terminal.input.impl.keyboard.CsiWriter
 import com.gagik.terminal.input.policy.PasteSanitizationPolicy
 import com.gagik.terminal.input.policy.TerminalInputPolicy
 import com.gagik.terminal.protocol.host.TerminalHostOutput
+import io.github.jvterm.core.api.TerminalInputState
 
 internal class PasteEncoder(
     private val output: TerminalHostOutput,

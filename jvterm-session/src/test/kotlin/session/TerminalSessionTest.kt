@@ -15,7 +15,6 @@
  */
 package com.gagik.terminal.session
 
-import com.gagik.core.TerminalBuffers
 import com.gagik.parser.api.TerminalOutputParser
 import com.gagik.terminal.input.api.TerminalInputEncoder
 import com.gagik.terminal.input.event.TerminalFocusEvent
@@ -27,6 +26,7 @@ import com.gagik.terminal.render.cache.TerminalRenderPublisher
 import com.gagik.terminal.testkit.MockConnector
 import com.gagik.terminal.transport.TerminalConnector
 import com.gagik.terminal.transport.TerminalConnectorListener
+import io.github.jvterm.core.TerminalBuffers
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.nio.charset.StandardCharsets
@@ -842,7 +842,7 @@ class TerminalSessionTest {
     }
 
     private class HalfRowParser(
-        private val terminal: com.gagik.core.api.TerminalBufferApi,
+        private val terminal: io.github.jvterm.core.api.TerminalBufferApi,
         private val firstWriteDone: CountDownLatch,
         private val releaseSecondWrite: CountDownLatch,
     ) : TerminalOutputParser {

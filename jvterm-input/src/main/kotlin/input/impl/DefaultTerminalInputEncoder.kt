@@ -15,7 +15,6 @@
  */
 package com.gagik.terminal.input.impl
 
-import com.gagik.core.api.TerminalInputState
 import com.gagik.terminal.input.api.TerminalInputEncoder
 import com.gagik.terminal.input.event.TerminalFocusEvent
 import com.gagik.terminal.input.event.TerminalKeyEvent
@@ -24,6 +23,7 @@ import com.gagik.terminal.input.event.TerminalPasteEvent
 import com.gagik.terminal.input.impl.keyboard.KeyboardEncoder
 import com.gagik.terminal.input.policy.TerminalInputPolicy
 import com.gagik.terminal.protocol.host.TerminalHostOutput
+import io.github.jvterm.core.api.TerminalInputState
 
 /**
  * Default terminal input encoder facade.

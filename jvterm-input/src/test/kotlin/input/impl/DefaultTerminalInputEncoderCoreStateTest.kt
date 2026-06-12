@@ -15,13 +15,13 @@
  */
 package com.gagik.terminal.input.impl
 
-import com.gagik.core.TerminalBuffers
 import com.gagik.terminal.input.event.*
 import com.gagik.terminal.protocol.MouseEncodingMode
 import com.gagik.terminal.protocol.MouseTrackingMode
 import com.gagik.terminal.protocol.host.TerminalHostOutput
 import com.gagik.terminal.protocol.keyboard.FormatOtherKeysMode
 import com.gagik.terminal.protocol.keyboard.ModifyOtherKeysMode
+import io.github.jvterm.core.TerminalBuffers
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Test
 

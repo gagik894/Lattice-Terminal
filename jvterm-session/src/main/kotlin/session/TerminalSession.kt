@@ -15,8 +15,6 @@
  */
 package com.gagik.terminal.session
 
-import com.gagik.core.api.TerminalBufferApi
-import com.gagik.core.api.TerminalHostResponseReader
 import com.gagik.integration.CoreTerminalCommandSink
 import com.gagik.integration.TerminalHostEventSink
 import com.gagik.integration.TerminalHostPolicy
@@ -38,6 +36,8 @@ import com.gagik.terminal.render.cache.TerminalRenderPublisher
 import com.gagik.terminal.transport.TerminalConnector
 import com.gagik.terminal.transport.TerminalConnectorListener
 import com.gagik.terminal.transport.checkBounds
+import io.github.jvterm.core.api.TerminalBufferApi
+import io.github.jvterm.core.api.TerminalHostResponseReader
 import java.util.concurrent.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
