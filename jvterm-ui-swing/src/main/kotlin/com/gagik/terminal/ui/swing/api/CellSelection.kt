@@ -15,9 +15,9 @@
  */
 package com.gagik.terminal.ui.swing.api
 
-import com.gagik.terminal.render.api.TerminalRenderCellFlags
-import com.gagik.terminal.render.cache.TerminalRenderCache
 import com.gagik.terminal.ui.swing.api.CellSelection.Companion.NO_RANGE
+import io.github.jvterm.render.api.TerminalRenderCellFlags
+import io.github.jvterm.render.cache.TerminalRenderCache
 
 /**
  * Half-open terminal cell selection in visible render-cache coordinates.

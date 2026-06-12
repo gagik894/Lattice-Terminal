@@ -15,14 +15,14 @@
  */
 package com.gagik.terminal.ui.swing.render
 
-import com.gagik.terminal.render.api.TerminalColorPalette
-import com.gagik.terminal.render.cache.TerminalRenderCache
 import com.gagik.terminal.ui.swing.api.CellSelection
 import com.gagik.terminal.ui.swing.render.cache.AwtColorCache
 import com.gagik.terminal.ui.swing.render.painter.*
 import com.gagik.terminal.ui.swing.search.TerminalSearchViewportHighlights
 import com.gagik.terminal.ui.swing.settings.TerminalSwingMetrics
 import com.gagik.terminal.ui.swing.settings.TerminalSwingSettings
+import io.github.jvterm.render.api.TerminalColorPalette
+import io.github.jvterm.render.cache.TerminalRenderCache
 import java.awt.Font
 import java.awt.Graphics2D
 import java.awt.Rectangle

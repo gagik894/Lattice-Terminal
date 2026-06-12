@@ -15,8 +15,8 @@
  */
 package com.gagik.terminal.ui.swing.search
 
-import com.gagik.terminal.render.api.*
-import com.gagik.terminal.render.cache.TerminalRenderCache
+import io.github.jvterm.render.api.*
+import io.github.jvterm.render.cache.TerminalRenderCache
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 

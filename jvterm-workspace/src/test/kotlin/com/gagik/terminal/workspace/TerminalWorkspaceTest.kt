@@ -15,8 +15,6 @@
  */
 package com.gagik.terminal.workspace
 
-import com.gagik.terminal.render.api.TerminalRenderFrameReader
-import com.gagik.terminal.render.cache.TerminalRenderPublisher
 import com.gagik.terminal.session.TerminalSession
 import com.gagik.terminal.transport.TerminalConnector
 import com.gagik.terminal.transport.TerminalConnectorListener
@@ -27,6 +25,8 @@ import io.github.jvterm.input.event.TerminalKeyEvent
 import io.github.jvterm.input.event.TerminalMouseEvent
 import io.github.jvterm.input.event.TerminalPasteEvent
 import io.github.jvterm.parser.api.TerminalOutputParser
+import io.github.jvterm.render.api.TerminalRenderFrameReader
+import io.github.jvterm.render.cache.TerminalRenderPublisher
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull

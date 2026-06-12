@@ -15,12 +15,6 @@
  */
 package com.gagik.terminal.session
 
-import com.gagik.terminal.render.api.TerminalColorPalette
-import com.gagik.terminal.render.api.TerminalRenderCursorShape
-import com.gagik.terminal.render.api.TerminalRenderFrameConsumer
-import com.gagik.terminal.render.api.TerminalRenderFrameReader
-import com.gagik.terminal.render.cache.TerminalRenderCache
-import com.gagik.terminal.render.cache.TerminalRenderPublisher
 import com.gagik.terminal.transport.TerminalConnector
 import com.gagik.terminal.transport.TerminalConnectorListener
 import com.gagik.terminal.transport.checkBounds
@@ -38,6 +32,12 @@ import io.github.jvterm.input.impl.DefaultTerminalInputEncoder
 import io.github.jvterm.input.policy.TerminalInputPolicy
 import io.github.jvterm.parser.api.TerminalOutputParser
 import io.github.jvterm.parser.api.TerminalParsers
+import io.github.jvterm.render.api.TerminalColorPalette
+import io.github.jvterm.render.api.TerminalRenderCursorShape
+import io.github.jvterm.render.api.TerminalRenderFrameConsumer
+import io.github.jvterm.render.api.TerminalRenderFrameReader
+import io.github.jvterm.render.cache.TerminalRenderCache
+import io.github.jvterm.render.cache.TerminalRenderPublisher
 import java.util.concurrent.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong

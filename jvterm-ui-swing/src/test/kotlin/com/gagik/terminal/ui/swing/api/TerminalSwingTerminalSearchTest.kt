@@ -15,8 +15,6 @@
  */
 package com.gagik.terminal.ui.swing.api
 
-import com.gagik.terminal.render.api.*
-import com.gagik.terminal.render.cache.TerminalRenderPublisher
 import com.gagik.terminal.session.TerminalSession
 import com.gagik.terminal.transport.TerminalConnector
 import com.gagik.terminal.transport.TerminalConnectorListener
@@ -28,6 +26,8 @@ import io.github.jvterm.input.event.TerminalKeyEvent
 import io.github.jvterm.input.event.TerminalMouseEvent
 import io.github.jvterm.input.event.TerminalPasteEvent
 import io.github.jvterm.parser.api.TerminalOutputParser
+import io.github.jvterm.render.api.*
+import io.github.jvterm.render.cache.TerminalRenderPublisher
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test

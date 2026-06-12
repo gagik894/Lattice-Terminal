@@ -15,8 +15,6 @@
  */
 package io.github.jvterm.core.buffer.impl
 
-import com.gagik.terminal.render.api.TerminalRenderCursorShape
-import com.gagik.terminal.render.api.TerminalRenderFrameReader
 import io.github.jvterm.core.buffer.TerminalBuffer
 import io.github.jvterm.core.engine.CursorEngine
 import io.github.jvterm.core.engine.MutationEngine
@@ -24,6 +22,8 @@ import io.github.jvterm.core.state.TerminalState
 import io.github.jvterm.protocol.MouseEncodingMode
 import io.github.jvterm.protocol.MouseTrackingMode
 import io.github.jvterm.protocol.keyboard.KittyKeyboardProgressiveFlag
+import io.github.jvterm.render.api.TerminalRenderCursorShape
+import io.github.jvterm.render.api.TerminalRenderFrameReader
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
@@ -408,7 +408,7 @@ class TerminalModeControllerImplTest {
         val modeController = TerminalModeControllerImpl(state, CursorEngine(state))
 
         val themePalette =
-            com.gagik.terminal.render.api.TerminalColorPalette(
+            io.github.jvterm.render.api.TerminalColorPalette(
                 defaultForeground = 0xFF111111.toInt(),
                 defaultBackground = 0xFF222222.toInt(),
             )

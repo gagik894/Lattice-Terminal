@@ -15,8 +15,8 @@
  */
 package com.gagik.terminal.ui.swing.render
 
-import com.gagik.terminal.render.api.TerminalRenderAttrs
-import com.gagik.terminal.render.api.TerminalRenderCellFlags
+import io.github.jvterm.render.api.TerminalRenderAttrs
+import io.github.jvterm.render.api.TerminalRenderCellFlags
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.awt.Font

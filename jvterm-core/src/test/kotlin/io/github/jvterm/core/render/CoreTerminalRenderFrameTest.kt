@@ -15,10 +15,10 @@
  */
 package io.github.jvterm.core.render
 
-import com.gagik.terminal.render.api.*
 import io.github.jvterm.core.buffer.TerminalBuffer
 import io.github.jvterm.core.model.AttributeColor
 import io.github.jvterm.core.model.UnderlineStyle
+import io.github.jvterm.render.api.*
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 

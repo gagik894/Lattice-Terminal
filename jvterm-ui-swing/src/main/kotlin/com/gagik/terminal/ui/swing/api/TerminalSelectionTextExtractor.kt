@@ -15,8 +15,8 @@
  */
 package com.gagik.terminal.ui.swing.api
 
-import com.gagik.terminal.render.api.TerminalRenderCellFlags
-import com.gagik.terminal.render.cache.TerminalRenderCache
+import io.github.jvterm.render.api.TerminalRenderCellFlags
+import io.github.jvterm.render.cache.TerminalRenderCache
 
 /**
  * Extracts selected visible text from primitive render-cache rows.

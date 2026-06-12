@@ -15,8 +15,8 @@
  */
 package com.gagik.terminal.ui.swing.search
 
-import com.gagik.terminal.render.api.TerminalRenderCellFlags
-import com.gagik.terminal.render.cache.TerminalRenderCache
+import io.github.jvterm.render.api.TerminalRenderCellFlags
+import io.github.jvterm.render.cache.TerminalRenderCache
 
 /**
  * Scans primitive render-cache rows for literal text matches.

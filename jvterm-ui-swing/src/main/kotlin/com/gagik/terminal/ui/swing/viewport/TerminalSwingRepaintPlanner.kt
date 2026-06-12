@@ -15,11 +15,11 @@
  */
 package com.gagik.terminal.ui.swing.viewport
 
-import com.gagik.terminal.render.api.TerminalRenderCursorShape
-import com.gagik.terminal.render.cache.TerminalRenderCache
 import com.gagik.terminal.ui.swing.render.visualCellRangeSpan
 import com.gagik.terminal.ui.swing.render.visualCellRangeStart
 import com.gagik.terminal.ui.swing.settings.TerminalSwingMetrics
+import io.github.jvterm.render.api.TerminalRenderCursorShape
+import io.github.jvterm.render.cache.TerminalRenderCache
 import kotlin.math.ceil
 import kotlin.math.floor
 

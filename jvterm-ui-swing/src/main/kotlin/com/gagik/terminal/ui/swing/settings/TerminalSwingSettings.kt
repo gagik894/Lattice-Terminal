@@ -15,9 +15,9 @@
  */
 package com.gagik.terminal.ui.swing.settings
 
-import com.gagik.terminal.render.api.TerminalColorPalette
-import com.gagik.terminal.render.api.TerminalRenderCursorShape
 import com.gagik.terminal.ui.swing.api.TerminalSwingTerminal
+import io.github.jvterm.render.api.TerminalColorPalette
+import io.github.jvterm.render.api.TerminalRenderCursorShape
 import java.awt.Font
 import java.awt.GraphicsEnvironment
 import java.awt.Insets

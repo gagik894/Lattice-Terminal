@@ -15,8 +15,8 @@
  */
 package io.github.jvterm.core.buffer
 
-import com.gagik.terminal.render.api.*
 import io.github.jvterm.core.model.AttributeColor
+import io.github.jvterm.render.api.*
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows

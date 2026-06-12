@@ -15,9 +15,9 @@
  */
 package com.gagik.terminal.ui.swing.render.painter
 
-import com.gagik.terminal.render.api.*
 import com.gagik.terminal.ui.swing.render.cache.AwtColorCache
 import com.gagik.terminal.ui.swing.settings.TerminalSwingMetrics
+import io.github.jvterm.render.api.*
 import java.awt.Graphics2D
 
 /**

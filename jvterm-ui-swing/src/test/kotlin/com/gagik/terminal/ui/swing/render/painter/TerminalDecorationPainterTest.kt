@@ -15,14 +15,14 @@
  */
 package com.gagik.terminal.ui.swing.render.painter
 
-import com.gagik.terminal.render.api.TerminalRenderAttrs
-import com.gagik.terminal.render.api.TerminalRenderColorKind
-import com.gagik.terminal.render.api.TerminalRenderExtraAttrs
-import com.gagik.terminal.render.api.TerminalRenderUnderline
 import com.gagik.terminal.ui.swing.render.*
 import com.gagik.terminal.ui.swing.render.cache.AwtColorCache
 import com.gagik.terminal.ui.swing.settings.TerminalSwingMetrics
 import com.gagik.terminal.ui.swing.settings.TerminalSwingSettings
+import io.github.jvterm.render.api.TerminalRenderAttrs
+import io.github.jvterm.render.api.TerminalRenderColorKind
+import io.github.jvterm.render.api.TerminalRenderExtraAttrs
+import io.github.jvterm.render.api.TerminalRenderUnderline
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.awt.Graphics2D

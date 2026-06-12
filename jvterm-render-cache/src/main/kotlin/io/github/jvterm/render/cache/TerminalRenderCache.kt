@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.gagik.terminal.render.cache
+package io.github.jvterm.render.cache
 
-import com.gagik.terminal.render.api.*
+import io.github.jvterm.render.api.*
 
 /**
  * Caller-owned primitive cache for render frames.

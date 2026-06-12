@@ -15,7 +15,7 @@
  */
 package com.gagik.terminal.ui.swing.search
 
-import com.gagik.terminal.render.cache.TerminalRenderCache
+import io.github.jvterm.render.cache.TerminalRenderCache
 
 /**
  * Search matches in stable absolute terminal-row coordinates.

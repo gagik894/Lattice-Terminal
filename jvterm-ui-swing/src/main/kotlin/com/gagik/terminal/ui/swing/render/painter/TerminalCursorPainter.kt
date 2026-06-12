@@ -15,13 +15,13 @@
  */
 package com.gagik.terminal.ui.swing.render.painter
 
-import com.gagik.terminal.render.api.TerminalColorPalette
-import com.gagik.terminal.render.api.TerminalRenderCursorShape
-import com.gagik.terminal.render.cache.TerminalRenderCache
 import com.gagik.terminal.ui.swing.render.cache.AwtColorCache
 import com.gagik.terminal.ui.swing.render.visualCellRangeSpan
 import com.gagik.terminal.ui.swing.render.visualCellRangeStart
 import com.gagik.terminal.ui.swing.settings.TerminalSwingMetrics
+import io.github.jvterm.render.api.TerminalColorPalette
+import io.github.jvterm.render.api.TerminalRenderCursorShape
+import io.github.jvterm.render.cache.TerminalRenderCache
 import java.awt.Graphics2D
 import java.awt.font.FontRenderContext
 

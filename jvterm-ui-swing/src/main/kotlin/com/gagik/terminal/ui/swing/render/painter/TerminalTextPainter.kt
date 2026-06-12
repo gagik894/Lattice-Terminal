@@ -15,10 +15,6 @@
  */
 package com.gagik.terminal.ui.swing.render.painter
 
-import com.gagik.terminal.render.api.TerminalColorPalette
-import com.gagik.terminal.render.api.TerminalRenderAttrs
-import com.gagik.terminal.render.api.TerminalRenderCellFlags
-import com.gagik.terminal.render.cache.TerminalRenderCache
 import com.gagik.terminal.ui.swing.render.*
 import com.gagik.terminal.ui.swing.render.cache.*
 import com.gagik.terminal.ui.swing.render.font.TerminalTextRunBuffer
@@ -26,6 +22,10 @@ import com.gagik.terminal.ui.swing.render.primitives.TerminalCellPrimitivePainte
 import com.gagik.terminal.ui.swing.render.primitives.TerminalPlatformEmojiPainter
 import com.gagik.terminal.ui.swing.settings.TerminalSwingMetrics
 import com.gagik.terminal.ui.swing.settings.TerminalSwingSettings
+import io.github.jvterm.render.api.TerminalColorPalette
+import io.github.jvterm.render.api.TerminalRenderAttrs
+import io.github.jvterm.render.api.TerminalRenderCellFlags
+import io.github.jvterm.render.cache.TerminalRenderCache
 import java.awt.Font
 import java.awt.Graphics2D
 import java.awt.font.FontRenderContext

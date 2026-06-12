@@ -15,7 +15,6 @@
  */
 package io.github.jvterm.host
 
-import com.gagik.terminal.render.api.TerminalRenderCursorShape
 import io.github.jvterm.core.api.TerminalBufferApi
 import io.github.jvterm.core.model.AttributeColor
 import io.github.jvterm.core.model.UnderlineStyle
@@ -25,6 +24,7 @@ import io.github.jvterm.protocol.DecPrivateMode
 import io.github.jvterm.protocol.MouseEncodingMode
 import io.github.jvterm.protocol.MouseTrackingMode
 import io.github.jvterm.protocol.keyboard.*
+import io.github.jvterm.render.api.TerminalRenderCursorShape
 
 /**
  * Production bridge from parser semantic commands to the terminal core.

@@ -15,8 +15,6 @@
  */
 package io.github.jvterm.host
 
-import com.gagik.terminal.render.api.TerminalRenderCursorShape
-import com.gagik.terminal.render.api.TerminalRenderFrameReader
 import io.github.jvterm.core.TerminalBuffers
 import io.github.jvterm.core.api.TerminalBufferApi
 import io.github.jvterm.core.model.AttributeColor
@@ -28,6 +26,8 @@ import io.github.jvterm.protocol.MouseTrackingMode
 import io.github.jvterm.protocol.keyboard.FormatOtherKeysMode
 import io.github.jvterm.protocol.keyboard.KittyKeyboardProgressiveFlag
 import io.github.jvterm.protocol.keyboard.ModifyOtherKeysMode
+import io.github.jvterm.render.api.TerminalRenderCursorShape
+import io.github.jvterm.render.api.TerminalRenderFrameReader
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested

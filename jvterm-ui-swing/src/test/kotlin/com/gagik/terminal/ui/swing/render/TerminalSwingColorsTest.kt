@@ -15,8 +15,8 @@
  */
 package com.gagik.terminal.ui.swing.render
 
-import com.gagik.terminal.render.api.TerminalColorPalette
-import com.gagik.terminal.render.api.TerminalRenderAttrs
+import io.github.jvterm.render.api.TerminalColorPalette
+import io.github.jvterm.render.api.TerminalRenderAttrs
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
