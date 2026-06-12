@@ -15,9 +15,9 @@
  */
 package com.gagik.terminal.ui.swing.input
 
-import com.gagik.terminal.input.event.TerminalKey
-import com.gagik.terminal.input.event.TerminalKeyEvent
-import com.gagik.terminal.input.event.TerminalModifiers
+import io.github.jvterm.input.event.TerminalKey
+import io.github.jvterm.input.event.TerminalKeyEvent
+import io.github.jvterm.input.event.TerminalModifiers
 import java.awt.event.KeyEvent
 
 /**

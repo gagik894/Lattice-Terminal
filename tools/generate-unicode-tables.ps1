@@ -223,7 +223,7 @@ $extendedPictographicRanges = Read-NamedPropertyRanges $emojiPath "Extended_Pict
 
 $parserParts = [System.Collections.Generic.List[string]]::new()
 $parserParts.Add($copyright.TrimEnd()) | Out-Null
-$parserParts.Add("package com.gagik.parser.unicode") | Out-Null
+$parserParts.Add("package io.github.jvterm.parser.unicode") | Out-Null
 $parserParts.Add("") | Out-Null
 $parserParts.Add("/**") | Out-Null
 $parserParts.Add(" * Unicode $UnicodeVersion grapheme break and emoji property table generated from UAX #29 data.") | Out-Null

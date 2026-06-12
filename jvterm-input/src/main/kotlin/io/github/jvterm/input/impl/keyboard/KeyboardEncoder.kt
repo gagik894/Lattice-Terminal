@@ -15,11 +15,11 @@
  */
 package io.github.jvterm.input.impl.keyboard
 
-import com.gagik.terminal.protocol.host.TerminalHostOutput
 import io.github.jvterm.core.api.TerminalInputState
 import io.github.jvterm.input.event.TerminalKeyEvent
 import io.github.jvterm.input.impl.InputScratchBuffer
 import io.github.jvterm.input.policy.TerminalInputPolicy
+import io.github.jvterm.protocol.host.TerminalHostOutput
 
 /**
  * Routing facade for keyboard event encoding.

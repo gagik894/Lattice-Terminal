@@ -15,8 +15,6 @@
  */
 package com.gagik.terminal.ui.swing.api
 
-import com.gagik.terminal.input.event.*
-import com.gagik.terminal.protocol.MouseTrackingMode
 import com.gagik.terminal.render.cache.TerminalRenderCache
 import com.gagik.terminal.session.TerminalSession
 import com.gagik.terminal.ui.swing.input.TerminalSwingKeyMapper
@@ -29,6 +27,8 @@ import com.gagik.terminal.ui.swing.settings.TerminalSwingSettingsProvider
 import com.gagik.terminal.ui.swing.viewport.TerminalRepaintSink
 import com.gagik.terminal.ui.swing.viewport.TerminalSwingRepaintPlanner
 import com.gagik.terminal.ui.swing.viewport.TerminalSwingScrollModel
+import io.github.jvterm.input.event.*
+import io.github.jvterm.protocol.MouseTrackingMode
 import java.awt.*
 import java.awt.event.*
 import java.util.concurrent.atomic.AtomicBoolean

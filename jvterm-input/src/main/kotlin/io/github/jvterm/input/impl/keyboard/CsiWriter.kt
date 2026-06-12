@@ -15,10 +15,10 @@
  */
 package io.github.jvterm.input.impl.keyboard
 
-import com.gagik.terminal.protocol.ControlCode
-import com.gagik.terminal.protocol.host.TerminalHostOutput
 import io.github.jvterm.input.event.TerminalModifiers
 import io.github.jvterm.input.impl.InputScratchBuffer
+import io.github.jvterm.protocol.ControlCode
+import io.github.jvterm.protocol.host.TerminalHostOutput
 
 /**
  * Shared zero-allocation helper for formatting CSI and SS3 terminal sequences.

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.gagik.terminal.pty
+package io.github.jvterm.pty
 
 import com.gagik.terminal.transport.TerminalConnector
 import java.io.IOException
@@ -39,22 +39,22 @@ object PtyConnectors {
         rows: Int = 24,
     ): TerminalConnector {
         val options =
-            TerminalPtyOptions(
+            _root_ide_package_.io.github.jvterm.pty.TerminalPtyOptions(
                 command = command,
                 environment = env,
                 workingDirectory = workingDirectory,
                 columns = columns,
                 rows = rows,
             )
-        return create(options, Pty4jTerminalProcessFactory)
+        return create(options, _root_ide_package_.io.github.jvterm.pty.Pty4jTerminalProcessFactory)
     }
 
     internal fun create(
-        options: TerminalPtyOptions,
-        processFactory: TerminalProcessFactory,
-    ): PtyConnector {
+        options: io.github.jvterm.pty.TerminalPtyOptions,
+        processFactory: io.github.jvterm.pty.TerminalProcessFactory,
+    ): io.github.jvterm.pty.PtyConnector {
         val process = processFactory.start(options)
-        return PtyConnector(
+        return _root_ide_package_.io.github.jvterm.pty.PtyConnector(
             process = process,
             readBufferSize = options.readBufferSize,
             readerThreadName = options.readerThreadName,

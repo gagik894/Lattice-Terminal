@@ -15,13 +15,13 @@
  */
 package com.gagik.terminal.ui.swing.demo
 
-import com.gagik.terminal.pty.TerminalPtyEventListener
-import com.gagik.terminal.pty.TerminalPtyOptions
-import com.gagik.terminal.pty.TerminalPtySessions
 import com.gagik.terminal.session.TerminalSession
 import com.gagik.terminal.ui.swing.api.TerminalSwingTerminal
 import com.gagik.terminal.ui.swing.settings.TerminalSwingSettings
 import com.gagik.terminal.ui.swing.settings.TerminalTheme
+import io.github.jvterm.pty.TerminalPtyEventListener
+import io.github.jvterm.pty.TerminalPtyOptions
+import io.github.jvterm.pty.TerminalPtySessions
 import java.awt.BorderLayout
 import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent

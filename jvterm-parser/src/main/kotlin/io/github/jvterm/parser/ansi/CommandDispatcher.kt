@@ -15,12 +15,12 @@
  */
 package io.github.jvterm.parser.ansi
 
-import com.gagik.terminal.protocol.ControlCode
-import com.gagik.terminal.protocol.keyboard.KittyKeyboardFlagApplicationMode
 import io.github.jvterm.parser.ansi.sgr.SgrDispatcher
 import io.github.jvterm.parser.charset.CharsetMapper
 import io.github.jvterm.parser.runtime.ParserState
 import io.github.jvterm.parser.spi.TerminalCommandSink
+import io.github.jvterm.protocol.ControlCode
+import io.github.jvterm.protocol.keyboard.KittyKeyboardFlagApplicationMode
 
 /**
  * Semantic dispatcher boundary used by ActionEngine.

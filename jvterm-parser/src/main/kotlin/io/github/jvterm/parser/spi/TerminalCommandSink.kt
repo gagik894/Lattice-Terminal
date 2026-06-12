@@ -15,8 +15,8 @@
  */
 package io.github.jvterm.parser.spi
 
-import com.gagik.terminal.protocol.AnsiMode
-import com.gagik.terminal.protocol.DecPrivateMode
+import io.github.jvterm.protocol.AnsiMode
+import io.github.jvterm.protocol.DecPrivateMode
 
 /**
  * Parser-facing terminal command sink.

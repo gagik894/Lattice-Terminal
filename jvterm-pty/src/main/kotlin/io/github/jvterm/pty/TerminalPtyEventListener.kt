@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.gagik.terminal.pty
+package io.github.jvterm.pty
 
 import com.gagik.terminal.session.TerminalSession
 

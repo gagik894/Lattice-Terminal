@@ -15,15 +15,6 @@
  */
 package com.gagik.terminal.session
 
-import com.gagik.parser.api.TerminalOutputParser
-import com.gagik.parser.api.TerminalParsers
-import com.gagik.terminal.input.api.TerminalInputEncoder
-import com.gagik.terminal.input.event.TerminalFocusEvent
-import com.gagik.terminal.input.event.TerminalKeyEvent
-import com.gagik.terminal.input.event.TerminalMouseEvent
-import com.gagik.terminal.input.event.TerminalPasteEvent
-import com.gagik.terminal.input.impl.DefaultTerminalInputEncoder
-import com.gagik.terminal.input.policy.TerminalInputPolicy
 import com.gagik.terminal.render.api.TerminalColorPalette
 import com.gagik.terminal.render.api.TerminalRenderCursorShape
 import com.gagik.terminal.render.api.TerminalRenderFrameConsumer
@@ -38,6 +29,15 @@ import io.github.jvterm.core.api.TerminalHostResponseReader
 import io.github.jvterm.host.CoreTerminalCommandSink
 import io.github.jvterm.host.TerminalHostEventSink
 import io.github.jvterm.host.TerminalHostPolicy
+import io.github.jvterm.input.api.TerminalInputEncoder
+import io.github.jvterm.input.event.TerminalFocusEvent
+import io.github.jvterm.input.event.TerminalKeyEvent
+import io.github.jvterm.input.event.TerminalMouseEvent
+import io.github.jvterm.input.event.TerminalPasteEvent
+import io.github.jvterm.input.impl.DefaultTerminalInputEncoder
+import io.github.jvterm.input.policy.TerminalInputPolicy
+import io.github.jvterm.parser.api.TerminalOutputParser
+import io.github.jvterm.parser.api.TerminalParsers
 import java.util.concurrent.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong

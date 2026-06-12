@@ -15,15 +15,15 @@
  */
 package io.github.jvterm.parser.ansi.mode
 
-import com.gagik.terminal.protocol.AnsiMode
-import com.gagik.terminal.protocol.DecPrivateMode
-import com.gagik.terminal.protocol.keyboard.KittyKeyboardFlagApplicationMode
-import com.gagik.terminal.protocol.keyboard.XtermKeyFormatResource
-import com.gagik.terminal.protocol.keyboard.XtermKeyModifierResource
 import io.github.jvterm.parser.ansi.AnsiCommandDispatcher
 import io.github.jvterm.parser.ansi.RecordingTerminalCommandSink
 import io.github.jvterm.parser.fixture.TerminalParserFixture
 import io.github.jvterm.parser.runtime.ParserState
+import io.github.jvterm.protocol.AnsiMode
+import io.github.jvterm.protocol.DecPrivateMode
+import io.github.jvterm.protocol.keyboard.KittyKeyboardFlagApplicationMode
+import io.github.jvterm.protocol.keyboard.XtermKeyFormatResource
+import io.github.jvterm.protocol.keyboard.XtermKeyModifierResource
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DisplayName

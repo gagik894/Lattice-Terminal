@@ -15,9 +15,9 @@
  */
 package io.github.jvterm.input.impl
 
-import com.gagik.terminal.protocol.host.TerminalHostOutput
 import io.github.jvterm.core.api.TerminalModeBits
 import io.github.jvterm.input.event.TerminalFocusEvent
+import io.github.jvterm.protocol.host.TerminalHostOutput
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Test
 

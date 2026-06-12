@@ -84,7 +84,7 @@ Tracks common DEC private mode parameters toggled via `DECSET` (`CSI ? Pn h`) an
 ---
 
 ### 4. High-Level Core Enums ([`MouseModes.kt (High-Level)`](./src/main/kotlin/protocol/MouseModes.kt))
-Exposes semantic `enum class` definitions in package `com.gagik.terminal.protocol` to represent core state configurations.
+Exposes semantic `enum class` definitions in package `io.github.jvterm.protocol` to represent core state configurations.
 * **`MouseTrackingMode`**: Represents high-level mouse reporting state:
   * `OFF`: Mouse reporting disabled.
   * `X10`: Report button presses only.
@@ -102,12 +102,12 @@ Exposes semantic `enum class` definitions in package `com.gagik.terminal.protoco
 ### 5. Low-Level Performance Constants
 Designed for JIT-friendly performance in hot paths (like input event loops). These constants map high-level core states directly to packed integer bits without producing garbage allocations.
 
-Mouse reporting constants live under package `com.gagik.terminal.protocol.mouse`:
+Mouse reporting constants live under package `io.github.jvterm.protocol.mouse`:
 
-* **`com.gagik.terminal.protocol.mouse.MouseTrackingMode`**: Defines integer constants (`NONE = 0`, `X10 = 1`, `NORMAL = 2`, `BUTTON_EVENT = 3`, `ANY_EVENT = 4`) matching the packed ordinals in the core decoder.
-* **`com.gagik.terminal.protocol.mouse.MouseEncodingMode`**: Defines integer constants (`DEFAULT = 0`, `UTF8 = 1`, `SGR = 2`, `URXVT = 3`).
+* **`io.github.jvterm.protocol.mouse.MouseTrackingMode`**: Defines integer constants (`NONE = 0`, `X10 = 1`, `NORMAL = 2`, `BUTTON_EVENT = 3`, `ANY_EVENT = 4`) matching the packed ordinals in the core decoder.
+* **`io.github.jvterm.protocol.mouse.MouseEncodingMode`**: Defines integer constants (`DEFAULT = 0`, `UTF8 = 1`, `SGR = 2`, `URXVT = 3`).
 
-Keyboard protocol constants live under package `com.gagik.terminal.protocol.keyboard`:
+Keyboard protocol constants live under package `io.github.jvterm.protocol.keyboard`:
 
 * **`ModifyOtherKeysMode`** ([source](./src/main/kotlin/protocol/keyboard/ModifyOtherKeysMode.kt)): Mapped to `DISABLED = 0`, `MODE_1 = 1` (encode legacy-ambiguous modified keys), `MODE_2 = 2` (encode all modified ordinary keys), and `MODE_3 = 3` (encode ordinary keys even without modifiers), matching xterm's modifyOtherKeys states.
 * **`FormatOtherKeysMode`** ([source](./src/main/kotlin/protocol/keyboard/FormatOtherKeysMode.kt)): Mapped to `DEFAULT = 0` for `CSI 27 ; modifier ; codepoint ~` and `CSI_U = 1` for `CSI codepoint ; modifier u`.
@@ -144,7 +144,7 @@ Here are concrete demonstrations of how the `terminal-protocol` vocabulary is im
 In [`ByteClass.kt`](../terminal-parser/src/main/kotlin/parser/ansi/ByteClass.kt), the parser state machine relies on `ControlCode` to map inbound bytes to execution classes:
 
 ```kotlin
-import com.gagik.terminal.protocol.ControlCode
+import io.github.jvterm.protocol.ControlCode
 
 // Build ASCII class map
 for (b in ControlCode.NUL..ControlCode.ETB) {
@@ -158,8 +158,8 @@ map[ControlCode.ESC] = ESCAPE_CLASS
 In [`TerminalModes.kt`](../terminal-core/src/main/kotlin/core/model/TerminalModes.kt), the core state engine tracks the active mouse configuration via the protocol's high-level enums:
 
 ```kotlin
-import com.gagik.terminal.protocol.MouseEncodingMode
-import com.gagik.terminal.protocol.MouseTrackingMode
+import io.github.jvterm.protocol.MouseEncodingMode
+import io.github.jvterm.protocol.MouseTrackingMode
 
 class TerminalModes {
     var mouseTracking: MouseTrackingMode = MouseTrackingMode.OFF
@@ -171,8 +171,8 @@ class TerminalModes {
 In [`MouseEncoder.kt`](../terminal-input/src/main/kotlin/input/impl/MouseEncoder.kt), coordinates are encoded efficiently without allocating object instances by importing performance-optimized primitive modes:
 
 ```kotlin
-import com.gagik.terminal.protocol.mouse.MouseEncodingMode
-import com.gagik.terminal.protocol.mouse.MouseTrackingMode
+import io.github.jvterm.protocol.mouse.MouseEncodingMode
+import io.github.jvterm.protocol.mouse.MouseTrackingMode
 
 fun encode(event: TerminalMouseEvent, tracking: Int, encoding: Int) {
     if (tracking == MouseTrackingMode.NONE) return
@@ -186,8 +186,8 @@ fun encode(event: TerminalMouseEvent, tracking: Int, encoding: Int) {
 Keyboard input protocol constants follow the same primitive-vocabulary model:
 
 ```kotlin
-import com.gagik.terminal.protocol.keyboard.KittyKeyboardProgressiveFlag
-import com.gagik.terminal.protocol.keyboard.ModifyOtherKeysMode
+import io.github.jvterm.protocol.keyboard.KittyKeyboardProgressiveFlag
+import io.github.jvterm.protocol.keyboard.ModifyOtherKeysMode
 
 val xtermMode = ModifyOtherKeysMode.MODE_3
 val kittyFlags = KittyKeyboardProgressiveFlag.DISAMBIGUATE_ESCAPE_CODES

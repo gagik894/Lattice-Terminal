@@ -32,5 +32,5 @@ behavior. Session-level behavior should go through `TerminalSession` plus a
 Native PTY smoke tests are opt-in because PTY4J startup is platform-sensitive:
 
 ```text
-./gradlew :terminal-pty:test --tests "com.gagik.terminal.pty.TerminalPtyRealProcessTest" "-Dterminal.pty.host=true"
+./gradlew :terminal-pty:test --tests "io.github.jvterm.pty.TerminalPtyRealProcessTest" "-Dterminal.pty.host=true"
 ```

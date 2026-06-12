@@ -15,7 +15,7 @@
  */
 package io.github.jvterm.input.impl
 
-import com.gagik.terminal.protocol.host.TerminalHostOutput
+import io.github.jvterm.protocol.host.TerminalHostOutput
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 

@@ -15,11 +15,11 @@
  */
 package io.github.jvterm.parser.ansi
 
-import com.gagik.terminal.protocol.ControlCode
 import io.github.jvterm.parser.ansi.dcs.DcsDispatcher
 import io.github.jvterm.parser.ansi.osc.OscDispatcher
 import io.github.jvterm.parser.runtime.ParserState
 import io.github.jvterm.parser.spi.TerminalCommandSink
+import io.github.jvterm.protocol.ControlCode
 
 /**
  * Executes parser-internal FSM actions against [ParserState].

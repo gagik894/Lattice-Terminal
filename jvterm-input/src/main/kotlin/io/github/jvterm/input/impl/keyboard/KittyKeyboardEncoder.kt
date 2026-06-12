@@ -15,10 +15,6 @@
  */
 package io.github.jvterm.input.impl.keyboard
 
-import com.gagik.terminal.protocol.ControlCode
-import com.gagik.terminal.protocol.host.TerminalHostOutput
-import com.gagik.terminal.protocol.keyboard.KittyKeyboardFunctionalKeyCode
-import com.gagik.terminal.protocol.keyboard.KittyKeyboardProgressiveFlag
 import io.github.jvterm.core.api.TerminalInputState
 import io.github.jvterm.input.event.TerminalKey
 import io.github.jvterm.input.event.TerminalKeyEvent
@@ -29,6 +25,10 @@ import io.github.jvterm.input.policy.BackspacePolicy
 import io.github.jvterm.input.policy.EnterNewLineModePolicy
 import io.github.jvterm.input.policy.MetaKeyPolicy
 import io.github.jvterm.input.policy.TerminalInputPolicy
+import io.github.jvterm.protocol.ControlCode
+import io.github.jvterm.protocol.host.TerminalHostOutput
+import io.github.jvterm.protocol.keyboard.KittyKeyboardFunctionalKeyCode
+import io.github.jvterm.protocol.keyboard.KittyKeyboardProgressiveFlag
 
 /**
  * Encoder for the Kitty keyboard protocol.

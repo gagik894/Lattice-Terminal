@@ -15,10 +15,6 @@
  */
 package io.github.jvterm.input.impl.keyboard
 
-import com.gagik.terminal.protocol.ControlCode
-import com.gagik.terminal.protocol.host.TerminalHostOutput
-import com.gagik.terminal.protocol.keyboard.FormatOtherKeysMode
-import com.gagik.terminal.protocol.keyboard.ModifyOtherKeysMode
 import io.github.jvterm.core.api.TerminalInputState
 import io.github.jvterm.input.event.TerminalKey
 import io.github.jvterm.input.event.TerminalKeyEvent
@@ -26,6 +22,10 @@ import io.github.jvterm.input.event.TerminalModifiers
 import io.github.jvterm.input.impl.InputScratchBuffer
 import io.github.jvterm.input.impl.TerminalSequences
 import io.github.jvterm.input.policy.*
+import io.github.jvterm.protocol.ControlCode
+import io.github.jvterm.protocol.host.TerminalHostOutput
+import io.github.jvterm.protocol.keyboard.FormatOtherKeysMode
+import io.github.jvterm.protocol.keyboard.ModifyOtherKeysMode
 
 /**
  * Encoder for legacy xterm-style keyboard sequences, keypad modes, and modifyOtherKeys modes.

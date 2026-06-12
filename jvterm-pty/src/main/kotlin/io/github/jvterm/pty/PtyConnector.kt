@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.gagik.terminal.pty
+package io.github.jvterm.pty
 
 import com.gagik.terminal.transport.TerminalConnector
 import com.gagik.terminal.transport.TerminalConnectorListener
@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * `terminal-session` and lower layers.
  */
 class PtyConnector internal constructor(
-    private val process: TerminalProcess,
+    private val process: io.github.jvterm.pty.TerminalProcess,
     private val readBufferSize: Int = DEFAULT_READ_BUFFER_SIZE,
     private val readerThreadName: String = DEFAULT_READER_THREAD_NAME,
     private val watcherThreadName: String = DEFAULT_WATCHER_THREAD_NAME,
@@ -73,7 +73,7 @@ class PtyConnector internal constructor(
         readBufferSize: Int = DEFAULT_READ_BUFFER_SIZE,
         readerThreadName: String = DEFAULT_READER_THREAD_NAME,
         watcherThreadName: String = DEFAULT_WATCHER_THREAD_NAME,
-    ) : this(Pty4jTerminalProcess(process), readBufferSize, readerThreadName, watcherThreadName)
+    ) : this(_root_ide_package_.io.github.jvterm.pty.Pty4jTerminalProcess(process), readBufferSize, readerThreadName, watcherThreadName)
 
     init {
         require(readBufferSize > 0) { "readBufferSize must be positive, got $readBufferSize" }

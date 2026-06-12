@@ -15,7 +15,7 @@
  */
 package io.github.jvterm.core.api
 
-import com.gagik.terminal.protocol.keyboard.KittyKeyboardProgressiveFlag
+import io.github.jvterm.protocol.keyboard.KittyKeyboardProgressiveFlag
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 

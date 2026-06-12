@@ -15,10 +15,10 @@
  */
 package io.github.jvterm.parser.ansi
 
-import com.gagik.terminal.protocol.keyboard.FormatOtherKeysMode
-import com.gagik.terminal.protocol.keyboard.ModifyOtherKeysMode
-import com.gagik.terminal.protocol.keyboard.XtermKeyFormatResource
-import com.gagik.terminal.protocol.keyboard.XtermKeyModifierResource
+import io.github.jvterm.protocol.keyboard.FormatOtherKeysMode
+import io.github.jvterm.protocol.keyboard.ModifyOtherKeysMode
+import io.github.jvterm.protocol.keyboard.XtermKeyFormatResource
+import io.github.jvterm.protocol.keyboard.XtermKeyModifierResource
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested

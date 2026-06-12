@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.gagik.terminal.pty
+package io.github.jvterm.pty
 
-import com.gagik.terminal.input.event.TerminalKey
-import com.gagik.terminal.input.event.TerminalKeyEvent
 import com.gagik.terminal.session.TerminalSession
+import io.github.jvterm.input.event.TerminalKey
+import io.github.jvterm.input.event.TerminalKeyEvent
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.io.ByteArrayInputStream

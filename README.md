@@ -95,8 +95,8 @@ The Lattice codebase is split into highly specialized modules with rigid archite
 One of Lattice's greatest strengths is how easily it integrates into existing desktop systems or custom runtimes. Hooking a local system shell (e.g. bash or cmd) to a fully interactive Swing JComponent requires just a few lines of configuration:
 
 ```kotlin
-import com.gagik.terminal.pty.TerminalPtySessions
-import com.gagik.terminal.pty.TerminalPtyOptions
+import io.github.jvterm.pty.TerminalPtySessions
+import io.github.jvterm.pty.TerminalPtyOptions
 import com.gagik.terminal.ui.swing.api.TerminalSwingTerminal
 import com.gagik.terminal.ui.swing.settings.TerminalSwingSettings
 import com.gagik.terminal.ui.swing.settings.TerminalTheme

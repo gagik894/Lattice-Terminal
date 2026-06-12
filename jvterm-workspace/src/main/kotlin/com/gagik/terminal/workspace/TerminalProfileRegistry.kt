@@ -15,7 +15,7 @@
  */
 package com.gagik.terminal.workspace
 
-import com.gagik.terminal.pty.TerminalPtyOptions
+import io.github.jvterm.pty.TerminalPtyOptions
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path

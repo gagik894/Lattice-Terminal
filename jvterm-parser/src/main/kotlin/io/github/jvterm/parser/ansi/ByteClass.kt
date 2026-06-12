@@ -15,8 +15,8 @@
  */
 package io.github.jvterm.parser.ansi
 
-import com.gagik.terminal.protocol.ControlCode
 import io.github.jvterm.parser.ansi.ByteClass.UTF8_PAYLOAD
+import io.github.jvterm.protocol.ControlCode
 
 /**
  * Byte-domain ownership rules for the parser.

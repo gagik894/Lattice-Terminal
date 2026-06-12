@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.gagik.terminal.pty
+package io.github.jvterm.pty
 
-import com.gagik.terminal.input.policy.EnterNewLineModePolicy
-import com.gagik.terminal.input.policy.TerminalInputPolicy
+import io.github.jvterm.input.policy.EnterNewLineModePolicy
+import io.github.jvterm.input.policy.TerminalInputPolicy
 import java.nio.file.Path
 
 /**

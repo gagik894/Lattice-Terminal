@@ -15,10 +15,10 @@
  */
 package io.github.jvterm.core.buffer.impl
 
-import com.gagik.terminal.protocol.MouseEncodingMode
-import com.gagik.terminal.protocol.MouseTrackingMode
-import com.gagik.terminal.protocol.keyboard.KittyKeyboardProgressiveFlag
 import io.github.jvterm.core.TerminalBuffers
+import io.github.jvterm.protocol.MouseEncodingMode
+import io.github.jvterm.protocol.MouseTrackingMode
+import io.github.jvterm.protocol.keyboard.KittyKeyboardProgressiveFlag
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 

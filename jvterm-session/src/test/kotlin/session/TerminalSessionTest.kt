@@ -15,18 +15,18 @@
  */
 package com.gagik.terminal.session
 
-import com.gagik.parser.api.TerminalOutputParser
-import com.gagik.terminal.input.api.TerminalInputEncoder
-import com.gagik.terminal.input.event.TerminalFocusEvent
-import com.gagik.terminal.input.event.TerminalKeyEvent
-import com.gagik.terminal.input.event.TerminalMouseEvent
-import com.gagik.terminal.input.event.TerminalPasteEvent
 import com.gagik.terminal.render.api.*
 import com.gagik.terminal.render.cache.TerminalRenderPublisher
 import com.gagik.terminal.testkit.MockConnector
 import com.gagik.terminal.transport.TerminalConnector
 import com.gagik.terminal.transport.TerminalConnectorListener
 import io.github.jvterm.core.TerminalBuffers
+import io.github.jvterm.input.api.TerminalInputEncoder
+import io.github.jvterm.input.event.TerminalFocusEvent
+import io.github.jvterm.input.event.TerminalKeyEvent
+import io.github.jvterm.input.event.TerminalMouseEvent
+import io.github.jvterm.input.event.TerminalPasteEvent
+import io.github.jvterm.parser.api.TerminalOutputParser
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.nio.charset.StandardCharsets

@@ -157,7 +157,7 @@ Actual OS pseudo-terminal execution is validated via **[TerminalPtyRealProcessTe
 - Verifies that real PTY outputs reach the terminal core, resizes behave correctly without deadlocks, and native process exit codes are successfully captured.
 - **Opt-In Guard**: Native PTY testing requires downloading system-dependent binaries via PTY4J. These tests are gated behind a system property assumption. To execute them locally, supply the opt-in flag:
   ```bash
-  ./gradlew :terminal-pty:test --tests "com.gagik.terminal.pty.TerminalPtyRealProcessTest" "-Dterminal.pty.host=true"
+  ./gradlew :terminal-pty:test --tests "io.github.jvterm.pty.TerminalPtyRealProcessTest" "-Dterminal.pty.host=true"
   ```
 
 ---
@@ -170,5 +170,5 @@ Actual OS pseudo-terminal execution is validated via **[TerminalPtyRealProcessTe
   ```
 - **Run all native host PTY tests**:
   ```bash
-  ./gradlew :terminal-pty:test --tests "com.gagik.terminal.pty.TerminalPtyRealProcessTest" "-Dterminal.pty.host=true"
+  ./gradlew :terminal-pty:test --tests "io.github.jvterm.pty.TerminalPtyRealProcessTest" "-Dterminal.pty.host=true"
   ```

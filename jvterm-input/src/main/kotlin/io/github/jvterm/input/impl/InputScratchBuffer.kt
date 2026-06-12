@@ -15,7 +15,7 @@
  */
 package io.github.jvterm.input.impl
 
-import com.gagik.terminal.protocol.host.TerminalHostOutput
+import io.github.jvterm.protocol.host.TerminalHostOutput
 
 internal class InputScratchBuffer(
     private val bytes: ByteArray = ByteArray(DEFAULT_CAPACITY),

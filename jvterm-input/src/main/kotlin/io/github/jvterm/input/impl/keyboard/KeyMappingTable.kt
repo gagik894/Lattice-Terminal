@@ -15,10 +15,10 @@
  */
 package io.github.jvterm.input.impl.keyboard
 
-import com.gagik.terminal.protocol.ControlCode
-import com.gagik.terminal.protocol.keyboard.KittyKeyboardFunctionalKeyCode
 import io.github.jvterm.input.event.TerminalKey
 import io.github.jvterm.input.impl.TerminalSequences
+import io.github.jvterm.protocol.ControlCode
+import io.github.jvterm.protocol.keyboard.KittyKeyboardFunctionalKeyCode
 
 /**
  * Data-oriented lookup tables for mapping [TerminalKey] values.

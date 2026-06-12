@@ -15,16 +15,16 @@
  */
 package io.github.jvterm.host
 
-import com.gagik.parser.spi.TerminalCommandSink
-import com.gagik.terminal.protocol.AnsiMode
-import com.gagik.terminal.protocol.DecPrivateMode
-import com.gagik.terminal.protocol.MouseEncodingMode
-import com.gagik.terminal.protocol.MouseTrackingMode
-import com.gagik.terminal.protocol.keyboard.*
 import com.gagik.terminal.render.api.TerminalRenderCursorShape
 import io.github.jvterm.core.api.TerminalBufferApi
 import io.github.jvterm.core.model.AttributeColor
 import io.github.jvterm.core.model.UnderlineStyle
+import io.github.jvterm.parser.spi.TerminalCommandSink
+import io.github.jvterm.protocol.AnsiMode
+import io.github.jvterm.protocol.DecPrivateMode
+import io.github.jvterm.protocol.MouseEncodingMode
+import io.github.jvterm.protocol.MouseTrackingMode
+import io.github.jvterm.protocol.keyboard.*
 
 /**
  * Production bridge from parser semantic commands to the terminal core.

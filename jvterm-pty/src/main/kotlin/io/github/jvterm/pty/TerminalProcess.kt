@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.gagik.terminal.pty
+package io.github.jvterm.pty
 
 import com.pty4j.PtyProcess
 import com.pty4j.PtyProcessBuilder
@@ -38,11 +38,11 @@ internal interface TerminalProcess {
 }
 
 internal interface TerminalProcessFactory {
-    fun start(options: TerminalPtyOptions): TerminalProcess
+    fun start(options: io.github.jvterm.pty.TerminalPtyOptions): io.github.jvterm.pty.TerminalProcess
 }
 
-internal object Pty4jTerminalProcessFactory : TerminalProcessFactory {
-    override fun start(options: TerminalPtyOptions): TerminalProcess {
+internal object Pty4jTerminalProcessFactory : io.github.jvterm.pty.TerminalProcessFactory {
+    override fun start(options: io.github.jvterm.pty.TerminalPtyOptions): io.github.jvterm.pty.TerminalProcess {
         val builder =
             PtyProcessBuilder()
                 .setCommand(options.command.toTypedArray())

@@ -15,9 +15,9 @@
  */
 package io.github.jvterm.input.impl
 
-import com.gagik.terminal.protocol.host.TerminalHostOutput
 import io.github.jvterm.core.api.TerminalInputState
 import io.github.jvterm.input.event.TerminalFocusEvent
+import io.github.jvterm.protocol.host.TerminalHostOutput
 
 internal class FocusEncoder(
     private val output: TerminalHostOutput,

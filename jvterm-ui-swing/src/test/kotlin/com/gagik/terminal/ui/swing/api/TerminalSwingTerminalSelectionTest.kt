@@ -15,12 +15,6 @@
  */
 package com.gagik.terminal.ui.swing.api
 
-import com.gagik.parser.api.TerminalOutputParser
-import com.gagik.terminal.input.api.TerminalInputEncoder
-import com.gagik.terminal.input.event.TerminalFocusEvent
-import com.gagik.terminal.input.event.TerminalKeyEvent
-import com.gagik.terminal.input.event.TerminalMouseEvent
-import com.gagik.terminal.input.event.TerminalPasteEvent
 import com.gagik.terminal.render.api.*
 import com.gagik.terminal.render.cache.TerminalRenderPublisher
 import com.gagik.terminal.session.TerminalHyperlinkResolver
@@ -34,6 +28,12 @@ import com.gagik.terminal.ui.swing.settings.TerminalClipboardShortcuts
 import com.gagik.terminal.ui.swing.settings.TerminalHyperlinkHandler
 import com.gagik.terminal.ui.swing.settings.TerminalSwingSettings
 import io.github.jvterm.core.TerminalBuffers
+import io.github.jvterm.input.api.TerminalInputEncoder
+import io.github.jvterm.input.event.TerminalFocusEvent
+import io.github.jvterm.input.event.TerminalKeyEvent
+import io.github.jvterm.input.event.TerminalMouseEvent
+import io.github.jvterm.input.event.TerminalPasteEvent
+import io.github.jvterm.parser.api.TerminalOutputParser
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.awt.Insets
@@ -371,7 +371,7 @@ class TerminalSwingTerminalSelectionTest {
             )
 
         session.start(columns = 5, rows = 1)
-        session.terminal.setMouseTrackingMode(com.gagik.terminal.protocol.MouseTrackingMode.NORMAL)
+        session.terminal.setMouseTrackingMode(io.github.jvterm.protocol.MouseTrackingMode.NORMAL)
 
         SwingUtilities.invokeAndWait {
             component.setSize(300, 80)
@@ -384,8 +384,8 @@ class TerminalSwingTerminalSelectionTest {
         assertNull(input.pasteText.get())
         val mouseEvent = input.lastMouseEvent.get()
         assertNotNull(mouseEvent)
-        assertEquals(com.gagik.terminal.input.event.TerminalMouseButton.MIDDLE, mouseEvent!!.button)
-        assertEquals(com.gagik.terminal.input.event.TerminalMouseEventType.PRESS, mouseEvent.type)
+        assertEquals(io.github.jvterm.input.event.TerminalMouseButton.MIDDLE, mouseEvent!!.button)
+        assertEquals(io.github.jvterm.input.event.TerminalMouseEventType.PRESS, mouseEvent.type)
 
         session.close()
     }

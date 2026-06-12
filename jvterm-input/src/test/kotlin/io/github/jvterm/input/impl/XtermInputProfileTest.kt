@@ -15,14 +15,14 @@
  */
 package io.github.jvterm.input.impl
 
-import com.gagik.terminal.protocol.host.TerminalHostOutput
-import com.gagik.terminal.protocol.keyboard.FormatOtherKeysMode
-import com.gagik.terminal.protocol.keyboard.ModifyOtherKeysMode
-import com.gagik.terminal.protocol.mouse.MouseEncodingMode
-import com.gagik.terminal.protocol.mouse.MouseTrackingMode
 import io.github.jvterm.core.api.TerminalInputState
 import io.github.jvterm.core.api.TerminalModeBits
 import io.github.jvterm.input.event.*
+import io.github.jvterm.protocol.host.TerminalHostOutput
+import io.github.jvterm.protocol.keyboard.FormatOtherKeysMode
+import io.github.jvterm.protocol.keyboard.ModifyOtherKeysMode
+import io.github.jvterm.protocol.mouse.MouseEncodingMode
+import io.github.jvterm.protocol.mouse.MouseTrackingMode
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Test
 
