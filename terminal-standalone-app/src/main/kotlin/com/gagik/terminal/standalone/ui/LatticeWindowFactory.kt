@@ -15,6 +15,7 @@
  */
 package com.gagik.terminal.standalone.ui
 
+import com.formdev.flatlaf.extras.FlatSVGIcon
 import com.gagik.terminal.standalone.config.StandaloneTerminalSettings
 import com.gagik.terminal.workspace.TerminalProfileRegistry
 import java.awt.CardLayout
@@ -159,7 +160,8 @@ internal class LatticeWindowFactory(
         popup.addSeparator()
 
         val settingsItem =
-            JMenuItem("Settings...").apply {
+            JMenuItem("Settings").apply {
+                icon = FlatSVGIcon("com/gagik/terminal/standalone/icons/settings.svg", 16, 16)
                 background = LatticeChrome.popupBackground
                 foreground = LatticeChrome.textPrimary
                 addActionListener {
@@ -170,15 +172,9 @@ internal class LatticeWindowFactory(
             }
         popup.add(settingsItem)
 
-        val commandPaletteItem =
-            JMenuItem("Command palette").apply {
-                background = LatticeChrome.popupBackground
-                foreground = LatticeChrome.textPrimary
-            }
-        popup.add(commandPaletteItem)
-
         val aboutItem =
             JMenuItem("About").apply {
+                icon = FlatSVGIcon("com/gagik/terminal/standalone/icons/about.svg", 16, 16)
                 background = LatticeChrome.popupBackground
                 foreground = LatticeChrome.textPrimary
                 addActionListener {
