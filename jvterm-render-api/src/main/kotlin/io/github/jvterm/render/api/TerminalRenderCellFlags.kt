@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.gagik.terminal.render.api
+package io.github.jvterm.render.api
 
-import com.gagik.terminal.render.api.TerminalRenderCellFlags.CLUSTER
-import com.gagik.terminal.render.api.TerminalRenderCellFlags.CODEPOINT
-import com.gagik.terminal.render.api.TerminalRenderCellFlags.EMPTY
-import com.gagik.terminal.render.api.TerminalRenderCellFlags.WIDE_LEADING
-import com.gagik.terminal.render.api.TerminalRenderCellFlags.WIDE_TRAILING
+import io.github.jvterm.render.api.TerminalRenderCellFlags.CLUSTER
+import io.github.jvterm.render.api.TerminalRenderCellFlags.CODEPOINT
+import io.github.jvterm.render.api.TerminalRenderCellFlags.EMPTY
+import io.github.jvterm.render.api.TerminalRenderCellFlags.WIDE_LEADING
+import io.github.jvterm.render.api.TerminalRenderCellFlags.WIDE_TRAILING
 
 /**
  * Public render cell flag bit set.

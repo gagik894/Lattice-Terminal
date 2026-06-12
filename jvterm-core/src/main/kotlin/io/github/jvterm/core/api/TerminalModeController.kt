@@ -15,9 +15,6 @@
  */
 package io.github.jvterm.core.api
 
-import com.gagik.terminal.render.api.TerminalColorPalette
-import com.gagik.terminal.render.api.TerminalRenderCursorShape
-
 /**
  * Mode-control contract for the terminal buffer.
  *
@@ -112,10 +109,10 @@ interface TerminalModeController {
     fun setCursorBlinking(enabled: Boolean)
 
     /** Sets the cursor shape/style. */
-    fun setCursorShape(shape: TerminalRenderCursorShape)
+    fun setCursorShape(shape: io.github.jvterm.render.api.TerminalRenderCursorShape)
 
     /** Sets the default cursor shape/style restored on reset. */
-    fun setDefaultCursorShape(shape: TerminalRenderCursorShape)
+    fun setDefaultCursorShape(shape: io.github.jvterm.render.api.TerminalRenderCursorShape)
 
     /**
      * Controls how East Asian Ambiguous codepoints are measured for future writes.
@@ -178,7 +175,7 @@ interface TerminalModeController {
      *
      * @param palette the theme color palette configuration.
      */
-    fun setThemePalette(palette: TerminalColorPalette)
+    fun setThemePalette(palette: io.github.jvterm.render.api.TerminalColorPalette)
 
     /**
      * Updates an individual color index in the active 256-color palette.

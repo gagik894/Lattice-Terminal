@@ -15,8 +15,6 @@
  */
 package io.github.jvterm.core.buffer.impl
 
-import com.gagik.terminal.render.api.TerminalColorPalette
-import com.gagik.terminal.render.api.TerminalRenderCursorShape
 import io.github.jvterm.core.api.TerminalModeController
 import io.github.jvterm.core.engine.CursorEngine
 import io.github.jvterm.core.state.TerminalState
@@ -132,13 +130,13 @@ internal class TerminalModeControllerImpl(
         }
     }
 
-    override fun setCursorShape(shape: TerminalRenderCursorShape) {
+    override fun setCursorShape(shape: io.github.jvterm.render.api.TerminalRenderCursorShape) {
         mutateMode {
             state.cursorShape = shape
         }
     }
 
-    override fun setDefaultCursorShape(shape: TerminalRenderCursorShape) {
+    override fun setDefaultCursorShape(shape: io.github.jvterm.render.api.TerminalRenderCursorShape) {
         mutateMode {
             state.defaultCursorShape = shape
         }
@@ -193,7 +191,7 @@ internal class TerminalModeControllerImpl(
         state.markStructureChanged()
     }
 
-    override fun setThemePalette(palette: TerminalColorPalette) {
+    override fun setThemePalette(palette: io.github.jvterm.render.api.TerminalColorPalette) {
         mutateMode {
             state.themePalette = palette
             state.palette = palette

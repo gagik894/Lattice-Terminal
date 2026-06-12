@@ -15,7 +15,6 @@
  */
 package io.github.jvterm.core.buffer.impl
 
-import com.gagik.terminal.render.api.TerminalRenderCursorShape
 import io.github.jvterm.core.api.TerminalResponseChannel
 import io.github.jvterm.core.codec.AttributeCodec
 import io.github.jvterm.core.model.AttributeColor
@@ -201,9 +200,9 @@ internal class TerminalResponseChannelImpl(
             "q" -> {
                 val shapeCode =
                     when (state.cursorShape) {
-                        TerminalRenderCursorShape.BLOCK -> if (state.modes.isCursorBlinking) 1 else 2
-                        TerminalRenderCursorShape.UNDERLINE -> if (state.modes.isCursorBlinking) 3 else 4
-                        TerminalRenderCursorShape.BAR -> if (state.modes.isCursorBlinking) 5 else 6
+                        _root_ide_package_.io.github.jvterm.render.api.TerminalRenderCursorShape.BLOCK -> if (state.modes.isCursorBlinking) 1 else 2
+                        _root_ide_package_.io.github.jvterm.render.api.TerminalRenderCursorShape.UNDERLINE -> if (state.modes.isCursorBlinking) 3 else 4
+                        _root_ide_package_.io.github.jvterm.render.api.TerminalRenderCursorShape.BAR -> if (state.modes.isCursorBlinking) 5 else 6
                     }
                 enqueueDecrqssResponse(status = 1, "$shapeCode q")
             }

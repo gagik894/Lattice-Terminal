@@ -15,7 +15,6 @@
  */
 package io.github.jvterm.app.config
 
-import com.gagik.terminal.render.api.TerminalRenderCursorShape
 import com.gagik.terminal.ui.swing.settings.TerminalSwingSettings
 import com.gagik.terminal.ui.swing.settings.TerminalTheme
 import com.gagik.terminal.workspace.config.TerminalConfig
@@ -150,11 +149,11 @@ internal class StandaloneTerminalSettings(
             shellRequestResizeWindow = config.shellRequestResizeWindow,
         )
 
-    private fun parseCursorShape(shape: String): TerminalRenderCursorShape =
+    private fun parseCursorShape(shape: String): io.github.jvterm.render.api.TerminalRenderCursorShape =
         when (shape.lowercase(Locale.ROOT)) {
-            "beam" -> TerminalRenderCursorShape.BAR
-            "underline" -> TerminalRenderCursorShape.UNDERLINE
-            else -> TerminalRenderCursorShape.BLOCK
+            "beam" -> _root_ide_package_.io.github.jvterm.render.api.TerminalRenderCursorShape.BAR
+            "underline" -> _root_ide_package_.io.github.jvterm.render.api.TerminalRenderCursorShape.UNDERLINE
+            else -> _root_ide_package_.io.github.jvterm.render.api.TerminalRenderCursorShape.BLOCK
         }
 
     private fun updateConfig(newConfig: TerminalConfig) {

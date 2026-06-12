@@ -13,24 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.gagik.terminal.render.api
+package io.github.jvterm.render.api
 
 /**
- * Renderer-facing cursor shape.
+ * Identifies the visible terminal screen buffer.
  */
-enum class TerminalRenderCursorShape {
+enum class TerminalRenderBufferKind {
     /**
-     * Filled cell cursor.
+     * Primary scrollback-backed screen buffer.
      */
-    BLOCK,
+    PRIMARY,
 
     /**
-     * Horizontal underline cursor.
+     * Alternate full-screen application buffer.
      */
-    UNDERLINE,
-
-    /**
-     * Vertical bar cursor.
-     */
-    BAR,
+    ALTERNATE,
 }

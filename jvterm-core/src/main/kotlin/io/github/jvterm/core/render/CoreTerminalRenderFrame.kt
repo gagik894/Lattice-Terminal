@@ -15,8 +15,8 @@
  */
 package io.github.jvterm.core.render
 
-import com.gagik.terminal.render.api.*
 import io.github.jvterm.core.state.TerminalState
+import io.github.jvterm.render.api.*
 
 /**
  * Adapter from core state to the stable public render frame ABI.
@@ -102,27 +102,27 @@ internal class CoreTerminalRenderFrame(
             return state.structureGeneration
         }
 
-    override val activeBuffer: TerminalRenderBufferKind
+    override val activeBuffer: io.github.jvterm.render.api.TerminalRenderBufferKind
         get() {
             checkValid()
             return if (state.isAltScreenActive) {
-                TerminalRenderBufferKind.ALTERNATE
+                _root_ide_package_.io.github.jvterm.render.api.TerminalRenderBufferKind.ALTERNATE
             } else {
-                TerminalRenderBufferKind.PRIMARY
+                _root_ide_package_.io.github.jvterm.render.api.TerminalRenderBufferKind.PRIMARY
             }
         }
 
-    override val palette: TerminalColorPalette
+    override val palette: io.github.jvterm.render.api.TerminalColorPalette
         get() {
             checkValid()
             return state.palette
         }
 
-    override val cursor: TerminalRenderCursor
+    override val cursor: io.github.jvterm.render.api.TerminalRenderCursor
         get() {
             checkValid()
             val row = state.cursor.row + resolvedScrollbackOffset
-            return TerminalRenderCursor(
+            return _root_ide_package_.io.github.jvterm.render.api.TerminalRenderCursor(
                 column = state.cursor.col,
                 row = row,
                 visible = state.modes.isCursorVisible && row in 0 until resolvedRows,
@@ -132,7 +132,7 @@ internal class CoreTerminalRenderFrame(
             )
         }
 
-    override fun copyCursor(sink: TerminalRenderCursorSink) {
+    override fun copyCursor(sink: io.github.jvterm.render.api.TerminalRenderCursorSink) {
         checkValid()
         val row = state.cursor.row + resolvedScrollbackOffset
         sink.onCursor(
@@ -169,8 +169,8 @@ internal class CoreTerminalRenderFrame(
         extraAttrOffset: Int,
         hyperlinkIds: IntArray?,
         hyperlinkOffset: Int,
-        clusterSink: TerminalRenderClusterSink?,
-        clusterDataSink: TerminalRenderClusterDataSink?,
+        clusterSink: io.github.jvterm.render.api.TerminalRenderClusterSink?,
+        clusterDataSink: io.github.jvterm.render.api.TerminalRenderClusterDataSink?,
     ) {
         checkValid()
         checkRow(row)

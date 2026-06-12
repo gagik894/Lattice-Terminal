@@ -13,19 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.gagik.terminal.render.api
+package io.github.jvterm.render.api
 
 /**
- * Identifies the visible terminal screen buffer.
+ * Receives a short-lived [TerminalRenderFrame] during a render read callback.
  */
-enum class TerminalRenderBufferKind {
+fun interface TerminalRenderFrameConsumer {
     /**
-     * Primary scrollback-backed screen buffer.
+     * Consumes [frame] before the enclosing read callback returns.
+     *
+     * @param frame render frame view valid only for the callback duration.
      */
-    PRIMARY,
-
-    /**
-     * Alternate full-screen application buffer.
-     */
-    ALTERNATE,
+    fun accept(frame: TerminalRenderFrame)
 }

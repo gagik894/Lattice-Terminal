@@ -13,16 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.gagik.terminal.render.api
+package io.github.jvterm.render.api
 
 /**
- * Receives a short-lived [TerminalRenderFrame] during a render read callback.
+ * Renderer-facing cursor shape.
  */
-fun interface TerminalRenderFrameConsumer {
+enum class TerminalRenderCursorShape {
     /**
-     * Consumes [frame] before the enclosing read callback returns.
-     *
-     * @param frame render frame view valid only for the callback duration.
+     * Filled cell cursor.
      */
-    fun accept(frame: TerminalRenderFrame)
+    BLOCK,
+
+    /**
+     * Horizontal underline cursor.
+     */
+    UNDERLINE,
+
+    /**
+     * Vertical bar cursor.
+     */
+    BAR,
 }

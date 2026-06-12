@@ -15,9 +15,6 @@
  */
 package io.github.jvterm.core.render
 
-import com.gagik.terminal.render.api.TerminalRenderCellFlags
-import com.gagik.terminal.render.api.TerminalRenderClusterDataSink
-import com.gagik.terminal.render.api.TerminalRenderClusterSink
 import io.github.jvterm.core.codec.AttributeCodec
 import io.github.jvterm.core.model.Line
 import io.github.jvterm.core.model.TerminalConstants
@@ -34,8 +31,8 @@ internal fun Line.copyToRenderAbi(
     extraAttrOffset: Int,
     hyperlinkIds: IntArray?,
     hyperlinkOffset: Int,
-    clusterSink: TerminalRenderClusterSink?,
-    clusterDataSink: TerminalRenderClusterDataSink?,
+    clusterSink: io.github.jvterm.render.api.TerminalRenderClusterSink?,
+    clusterDataSink: io.github.jvterm.render.api.TerminalRenderClusterDataSink?,
     attrTranslator: RenderAttrTranslator,
     clusterScratch: RenderClusterScratch,
     reverseVideo: Boolean,
@@ -87,19 +84,19 @@ private fun Line.cellFlags(
     raw: Int,
 ): Int =
     when {
-        raw == TerminalConstants.EMPTY -> TerminalRenderCellFlags.EMPTY
-        raw == TerminalConstants.WIDE_CHAR_SPACER -> TerminalRenderCellFlags.WIDE_TRAILING
+        raw == TerminalConstants.EMPTY -> _root_ide_package_.io.github.jvterm.render.api.TerminalRenderCellFlags.EMPTY
+        raw == TerminalConstants.WIDE_CHAR_SPACER -> _root_ide_package_.io.github.jvterm.render.api.TerminalRenderCellFlags.WIDE_TRAILING
         raw <= TerminalConstants.CLUSTER_HANDLE_MAX -> {
-            var flags = TerminalRenderCellFlags.CLUSTER
+            var flags = _root_ide_package_.io.github.jvterm.render.api.TerminalRenderCellFlags.CLUSTER
             if (isWideLeading(col)) {
-                flags = flags or TerminalRenderCellFlags.WIDE_LEADING
+                flags = flags or _root_ide_package_.io.github.jvterm.render.api.TerminalRenderCellFlags.WIDE_LEADING
             }
             flags
         }
         else -> {
-            var flags = TerminalRenderCellFlags.CODEPOINT
+            var flags = _root_ide_package_.io.github.jvterm.render.api.TerminalRenderCellFlags.CODEPOINT
             if (isWideLeading(col)) {
-                flags = flags or TerminalRenderCellFlags.WIDE_LEADING
+                flags = flags or _root_ide_package_.io.github.jvterm.render.api.TerminalRenderCellFlags.WIDE_LEADING
             }
             flags
         }

@@ -15,7 +15,6 @@
  */
 package io.github.jvterm.benchmark
 
-import com.gagik.terminal.render.api.TerminalRenderFrameReader
 import com.gagik.terminal.render.cache.TerminalRenderPublisher
 import com.gagik.terminal.session.TerminalSession
 import com.gagik.terminal.transport.TerminalConnector
@@ -46,7 +45,7 @@ open class TerminalLargeInputBenchmark {
 
     private lateinit var bytes: ByteArray
     private lateinit var terminal: TerminalBufferApi
-    private lateinit var renderReader: TerminalRenderFrameReader
+    private lateinit var renderReader: io.github.jvterm.render.api.TerminalRenderFrameReader
     private lateinit var publisher: TerminalRenderPublisher
 
     @Setup(Level.Trial)
@@ -69,7 +68,7 @@ open class TerminalLargeInputBenchmark {
                 height = LARGE_INPUT_ROWS,
                 maxHistory = LARGE_INPUT_LINES,
             )
-        renderReader = terminal as TerminalRenderFrameReader
+        renderReader = terminal as io.github.jvterm.render.api.TerminalRenderFrameReader
         publisher = TerminalRenderPublisher(LARGE_INPUT_COLUMNS, LARGE_INPUT_ROWS)
     }
 
@@ -98,7 +97,7 @@ open class TerminalRenderPublishBenchmark {
     @Param("0", "5000", "15000")
     var scrollbackOffset: Int = 0
 
-    private lateinit var renderReader: TerminalRenderFrameReader
+    private lateinit var renderReader: io.github.jvterm.render.api.TerminalRenderFrameReader
     private lateinit var publisher: TerminalRenderPublisher
 
     @Setup(Level.Trial)
@@ -110,7 +109,7 @@ open class TerminalRenderPublishBenchmark {
                 maxHistory = LARGE_INPUT_LINES,
             )
         writeScrollbackContent(terminal, LARGE_INPUT_LINES, LARGE_INPUT_COLUMNS)
-        renderReader = terminal as TerminalRenderFrameReader
+        renderReader = terminal as io.github.jvterm.render.api.TerminalRenderFrameReader
     }
 
     @Setup(Level.Trial)
@@ -169,7 +168,7 @@ open class TerminalSwingPaintBenchmark {
         }
 
         session = benchmarkSession(terminal)
-        session.publisher.updateAndPublish(terminal as TerminalRenderFrameReader)
+        session.publisher.updateAndPublish(terminal as io.github.jvterm.render.api.TerminalRenderFrameReader)
 
         component =
             TerminalSwingTerminal(

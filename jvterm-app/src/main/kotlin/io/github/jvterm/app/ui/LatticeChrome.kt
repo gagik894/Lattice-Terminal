@@ -15,7 +15,6 @@
  */
 package io.github.jvterm.app.ui
 
-import com.gagik.terminal.render.api.TerminalColorPalette
 import java.awt.Color
 import java.awt.Dimension
 import javax.swing.UIManager
@@ -173,7 +172,7 @@ internal object LatticeChrome {
     /**
      * Derives standalone chrome colors from [palette] and updates Swing defaults.
      */
-    fun applyPalette(palette: TerminalColorPalette) {
+    fun applyPalette(palette: io.github.jvterm.render.api.TerminalColorPalette) {
         val bg = Color(palette.defaultBackground, true)
         val fg = Color(palette.defaultForeground, true)
         val isDark = isDarkColor(bg)

@@ -15,10 +15,6 @@
  */
 package io.github.jvterm.core.render
 
-import com.gagik.terminal.render.api.TerminalRenderAttrs
-import com.gagik.terminal.render.api.TerminalRenderColorKind
-import com.gagik.terminal.render.api.TerminalRenderExtraAttrs
-import com.gagik.terminal.render.api.TerminalRenderUnderline
 import io.github.jvterm.core.codec.AttributeCodec
 import io.github.jvterm.core.model.UnderlineStyle
 
@@ -31,7 +27,7 @@ internal class RenderAttrTranslator {
         extendedAttr: Long,
         reverseVideo: Boolean,
     ): Long =
-        TerminalRenderAttrs.pack(
+        _root_ide_package_.io.github.jvterm.render.api.TerminalRenderAttrs.pack(
             foregroundKind = AttributeCodec.foregroundColorKind(primaryAttr).toRenderColorKind(),
             foregroundValue = AttributeCodec.foregroundColorValue(primaryAttr),
             backgroundKind = AttributeCodec.backgroundColorKind(primaryAttr).toRenderColorKind(),
@@ -47,7 +43,7 @@ internal class RenderAttrTranslator {
         )
 
     fun toRenderExtraAttrWord(extendedAttr: Long): Long =
-        TerminalRenderExtraAttrs.pack(
+        _root_ide_package_.io.github.jvterm.render.api.TerminalRenderExtraAttrs.pack(
             underlineColorKind = AttributeCodec.underlineAttributeColorKind(extendedAttr).toRenderColorKind(),
             underlineColorValue = AttributeCodec.underlineAttributeColorValue(extendedAttr),
             overline = AttributeCodec.isOverline(extendedAttr),
@@ -55,18 +51,18 @@ internal class RenderAttrTranslator {
 
     private fun Int.toRenderColorKind(): Int =
         when (this) {
-            AttributeCodec.COLOR_KIND_INDEXED -> TerminalRenderColorKind.INDEXED
-            AttributeCodec.COLOR_KIND_RGB -> TerminalRenderColorKind.RGB
-            else -> TerminalRenderColorKind.DEFAULT
+            AttributeCodec.COLOR_KIND_INDEXED -> _root_ide_package_.io.github.jvterm.render.api.TerminalRenderColorKind.INDEXED
+            AttributeCodec.COLOR_KIND_RGB -> _root_ide_package_.io.github.jvterm.render.api.TerminalRenderColorKind.RGB
+            else -> _root_ide_package_.io.github.jvterm.render.api.TerminalRenderColorKind.DEFAULT
         }
 
     private fun UnderlineStyle.toRenderUnderline(): Int =
         when (this) {
-            UnderlineStyle.NONE -> TerminalRenderUnderline.NONE
-            UnderlineStyle.SINGLE -> TerminalRenderUnderline.SINGLE
-            UnderlineStyle.DOUBLE -> TerminalRenderUnderline.DOUBLE
-            UnderlineStyle.CURLY -> TerminalRenderUnderline.CURLY
-            UnderlineStyle.DOTTED -> TerminalRenderUnderline.DOTTED
-            UnderlineStyle.DASHED -> TerminalRenderUnderline.DASHED
+            UnderlineStyle.NONE -> _root_ide_package_.io.github.jvterm.render.api.TerminalRenderUnderline.NONE
+            UnderlineStyle.SINGLE -> _root_ide_package_.io.github.jvterm.render.api.TerminalRenderUnderline.SINGLE
+            UnderlineStyle.DOUBLE -> _root_ide_package_.io.github.jvterm.render.api.TerminalRenderUnderline.DOUBLE
+            UnderlineStyle.CURLY -> _root_ide_package_.io.github.jvterm.render.api.TerminalRenderUnderline.CURLY
+            UnderlineStyle.DOTTED -> _root_ide_package_.io.github.jvterm.render.api.TerminalRenderUnderline.DOTTED
+            UnderlineStyle.DASHED -> _root_ide_package_.io.github.jvterm.render.api.TerminalRenderUnderline.DASHED
         }
 }

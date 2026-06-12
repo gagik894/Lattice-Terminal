@@ -1,4 +1,4 @@
-# Terminal Render API (`:terminal-render-api`)
+# Terminal Render API (`:jvterm-render-api`)
 
 **terminal-render-api** defines the strictly bounded, dependency-free public render contract and vocabulary shared across the terminal pipeline. It acts as the immutable, allocation-conscious bridge between the stateful terminal cores, synchronization sessions, rendering caches, and specific UI drawing modules (such as Swing).
 
@@ -12,11 +12,11 @@ The rendering system decouples terminal state mutation from screen painting usin
 
 ```mermaid
 graph TD
-    subgraph Core Module [:terminal-core]
+    subgraph Core Module [:jvterm-core]
         Core[Terminal State & Grid Storage]
     end
     
-    subgraph Render API Module [:terminal-render-api]
+    subgraph Render API Module [:jvterm-render-api]
         Reader[TerminalRenderFrameReader]
         Frame[TerminalRenderFrame]
         Palette[TerminalColorPalette]
@@ -24,11 +24,11 @@ graph TD
         Flags[TerminalRenderCellFlags]
     end
     
-    subgraph Render Cache Module [:terminal-render-cache]
+    subgraph Render Cache Module [:jvterm-render-cache]
         Cache[TerminalRenderCache]
     end
     
-    subgraph Swing UI Module [:terminal-ui-swing]
+    subgraph Swing UI Module [:jvterm-ui-swing]
         Painter[Swing Terminal Painter]
     end
     

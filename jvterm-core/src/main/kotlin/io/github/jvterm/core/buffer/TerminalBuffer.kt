@@ -15,8 +15,6 @@
  */
 package io.github.jvterm.core.buffer
 
-import com.gagik.terminal.render.api.TerminalRenderFrameConsumer
-import com.gagik.terminal.render.api.TerminalRenderFrameReader
 import io.github.jvterm.core.api.*
 import io.github.jvterm.core.buffer.impl.*
 import io.github.jvterm.core.engine.CursorEngine
@@ -40,7 +38,7 @@ import io.github.jvterm.core.state.TerminalState
 internal class TerminalBuffer private constructor(
     private val components: Components,
 ) : TerminalBufferApi,
-    TerminalRenderFrameReader,
+    io.github.jvterm.render.api.TerminalRenderFrameReader,
     TerminalReader by TerminalReaderImpl(components.state),
     TerminalWriter by TerminalWriterImpl(components.state, components.mutationEngine, components.cursorEngine),
     TerminalCursor by TerminalCursorImpl(components.state, components.cursorEngine),
@@ -62,13 +60,13 @@ internal class TerminalBuffer private constructor(
      * Callers that may race with terminal mutation must synchronize externally.
      * `terminal-session` is the intended synchronization point for UI code.
      */
-    override fun readRenderFrame(consumer: TerminalRenderFrameConsumer) {
+    override fun readRenderFrame(consumer: io.github.jvterm.render.api.TerminalRenderFrameConsumer) {
         readRenderFrame(scrollbackOffset = 0, consumer = consumer)
     }
 
     override fun readRenderFrame(
         scrollbackOffset: Int,
-        consumer: TerminalRenderFrameConsumer,
+        consumer: io.github.jvterm.render.api.TerminalRenderFrameConsumer,
     ) {
         renderFrame.use(scrollbackOffset) {
             consumer.accept(renderFrame)
@@ -78,7 +76,7 @@ internal class TerminalBuffer private constructor(
     override fun readRenderFrame(
         scrollbackOffset: Int,
         viewportRows: Int,
-        consumer: TerminalRenderFrameConsumer,
+        consumer: io.github.jvterm.render.api.TerminalRenderFrameConsumer,
     ) {
         renderFrame.use(scrollbackOffset, viewportRows) {
             consumer.accept(renderFrame)
