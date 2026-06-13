@@ -34,7 +34,7 @@ internal class StandaloneTerminalSettings(
 ) {
     private var config: TerminalConfig = configManager.load()
 
-    var theme: io.github.jvterm.ui.swing.settings.TerminalTheme
+    var theme: TerminalTheme
         get() =
             TerminalTheme.entries.firstOrNull {
                 it.name.lowercase(Locale.ROOT).replace('_', '-') == config.theme

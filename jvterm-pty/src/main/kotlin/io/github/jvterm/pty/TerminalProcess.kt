@@ -38,11 +38,11 @@ internal interface TerminalProcess {
 }
 
 internal interface TerminalProcessFactory {
-    fun start(options: io.github.jvterm.pty.TerminalPtyOptions): io.github.jvterm.pty.TerminalProcess
+    fun start(options: TerminalPtyOptions): TerminalProcess
 }
 
-internal object Pty4jTerminalProcessFactory : io.github.jvterm.pty.TerminalProcessFactory {
-    override fun start(options: io.github.jvterm.pty.TerminalPtyOptions): io.github.jvterm.pty.TerminalProcess {
+internal object Pty4jTerminalProcessFactory : TerminalProcessFactory {
+    override fun start(options: TerminalPtyOptions): TerminalProcess {
         val builder =
             PtyProcessBuilder()
                 .setCommand(options.command.toTypedArray())

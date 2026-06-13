@@ -31,7 +31,7 @@ internal class LatticeAboutDialog(
 ) : JDialog(parent, "About Lattice Terminal", true) {
     init {
         contentPane = buildAboutPanel()
-        defaultCloseOperation = JDialog.DISPOSE_ON_CLOSE
+        defaultCloseOperation = DISPOSE_ON_CLOSE
         setSize(460, 280)
         setLocationRelativeTo(parent)
         isResizable = false
@@ -74,14 +74,14 @@ internal class LatticeAboutDialog(
                 background = LatticeChrome.surface
                 isOpaque = false
                 maximumSize = Dimension(Int.MAX_VALUE, 50)
-                alignmentX = Component.LEFT_ALIGNMENT
+                alignmentX = LEFT_ALIGNMENT
             }
 
         // SVG Logo
         val logoIcon = FlatSVGIcon("com/gagik/terminal/standalone/icons/logo.svg", 48, 48)
         val logoLabel =
             JLabel(logoIcon).apply {
-                alignmentY = Component.CENTER_ALIGNMENT
+                alignmentY = CENTER_ALIGNMENT
             }
         panel.add(logoLabel)
         panel.add(Box.createHorizontalStrut(16))
@@ -92,7 +92,7 @@ internal class LatticeAboutDialog(
                 layout = BoxLayout(this, BoxLayout.Y_AXIS)
                 background = LatticeChrome.surface
                 isOpaque = false
-                alignmentY = Component.CENTER_ALIGNMENT
+                alignmentY = CENTER_ALIGNMENT
             }
 
         val titleLabel =
@@ -123,7 +123,7 @@ internal class LatticeAboutDialog(
                 layout = GridLayout(3, 1, 0, 4)
                 background = LatticeChrome.surface
                 isOpaque = false
-                alignmentX = Component.LEFT_ALIGNMENT
+                alignmentX = LEFT_ALIGNMENT
             }
 
         val version = getAppVersion()
@@ -182,7 +182,7 @@ internal class LatticeAboutDialog(
                 background = LatticeChrome.surface
                 isOpaque = false
                 maximumSize = Dimension(Int.MAX_VALUE, 32)
-                alignmentX = Component.LEFT_ALIGNMENT
+                alignmentX = LEFT_ALIGNMENT
             }
 
         panel.add(okButton)

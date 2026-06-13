@@ -120,7 +120,7 @@ internal class Utf8Decoder(
         upperBound = 0xbf
 
         if (continuationSeen != continuationNeeded) {
-            return Utf8DecodeResult.NONE
+            return NONE
         }
 
         val scalar = codepoint
@@ -137,7 +137,7 @@ internal class Utf8Decoder(
 
     fun flushEndOfInput(): Int {
         if (continuationNeeded == 0) {
-            return Utf8DecodeResult.NONE
+            return NONE
         }
         reset()
         return Utf8DecodeResult.emit(replacementCodepoint)
@@ -164,44 +164,44 @@ internal class Utf8Decoder(
                     lower = 0x80,
                     upper = 0xbf,
                 )
-                Utf8DecodeResult.NONE
+                NONE
             }
 
             byteValue == 0xe0 -> {
                 start(0, needed = 2, lower = 0xa0, upper = 0xbf)
-                Utf8DecodeResult.NONE
+                NONE
             }
 
             byteValue in 0xe1..0xec -> {
                 start(byteValue and 0x0f, needed = 2, lower = 0x80, upper = 0xbf)
-                Utf8DecodeResult.NONE
+                NONE
             }
 
             byteValue == 0xed -> {
                 // ED A0..BF would encode surrogate scalars. Reject by constraining first continuation.
                 start(byteValue and 0x0f, needed = 2, lower = 0x80, upper = 0x9f)
-                Utf8DecodeResult.NONE
+                NONE
             }
 
             byteValue in 0xee..0xef -> {
                 start(byteValue and 0x0f, needed = 2, lower = 0x80, upper = 0xbf)
-                Utf8DecodeResult.NONE
+                NONE
             }
 
             byteValue == 0xf0 -> {
                 start(0, needed = 3, lower = 0x90, upper = 0xbf)
-                Utf8DecodeResult.NONE
+                NONE
             }
 
             byteValue in 0xf1..0xf3 -> {
                 start(byteValue and 0x07, needed = 3, lower = 0x80, upper = 0xbf)
-                Utf8DecodeResult.NONE
+                NONE
             }
 
             byteValue == 0xf4 -> {
                 // F4 90..BF would exceed U+10FFFF. Reject by constraining first continuation.
                 start(byteValue and 0x07, needed = 3, lower = 0x80, upper = 0x8f)
-                Utf8DecodeResult.NONE
+                NONE
             }
 
             else -> Utf8DecodeResult.emit(replacementCodepoint)

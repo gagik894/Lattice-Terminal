@@ -39,22 +39,22 @@ object PtyConnectors {
         rows: Int = 24,
     ): TerminalConnector {
         val options =
-          io.github.jvterm.pty.TerminalPtyOptions(
-                command = command,
-                environment = env,
-                workingDirectory = workingDirectory,
-                columns = columns,
-                rows = rows,
-            )
-        return create(options, io.github.jvterm.pty.Pty4jTerminalProcessFactory)
+            TerminalPtyOptions(
+                  command = command,
+                  environment = env,
+                  workingDirectory = workingDirectory,
+                  columns = columns,
+                  rows = rows,
+              )
+        return create(options, Pty4jTerminalProcessFactory)
     }
 
     internal fun create(
-        options: io.github.jvterm.pty.TerminalPtyOptions,
-        processFactory: io.github.jvterm.pty.TerminalProcessFactory,
-    ): io.github.jvterm.pty.PtyConnector {
+        options: TerminalPtyOptions,
+        processFactory: TerminalProcessFactory,
+    ): PtyConnector {
         val process = processFactory.start(options)
-        return io.github.jvterm.pty.PtyConnector(
+        return PtyConnector(
             process = process,
             readBufferSize = options.readBufferSize,
             readerThreadName = options.readerThreadName,

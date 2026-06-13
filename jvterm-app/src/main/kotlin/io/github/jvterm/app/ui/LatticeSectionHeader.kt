@@ -32,7 +32,7 @@ internal class LatticeSectionHeader(
         layout = GridBagLayout()
         isOpaque = false
         border = EmptyBorder(24, 0, 12, 0)
-        alignmentX = Component.LEFT_ALIGNMENT
+        alignmentX = LEFT_ALIGNMENT
         maximumSize = Dimension(Int.MAX_VALUE, 50)
 
         val titleLabel =

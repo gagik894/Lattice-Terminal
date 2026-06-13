@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * `terminal-session` and lower layers.
  */
 class PtyConnector internal constructor(
-    private val process: io.github.jvterm.pty.TerminalProcess,
+    private val process: TerminalProcess,
     private val readBufferSize: Int = DEFAULT_READ_BUFFER_SIZE,
     private val readerThreadName: String = DEFAULT_READER_THREAD_NAME,
     private val watcherThreadName: String = DEFAULT_WATCHER_THREAD_NAME,
@@ -73,7 +73,7 @@ class PtyConnector internal constructor(
         readBufferSize: Int = DEFAULT_READ_BUFFER_SIZE,
         readerThreadName: String = DEFAULT_READER_THREAD_NAME,
         watcherThreadName: String = DEFAULT_WATCHER_THREAD_NAME,
-    ) : this(io.github.jvterm.pty.Pty4jTerminalProcess(process), readBufferSize, readerThreadName, watcherThreadName)
+    ) : this(Pty4jTerminalProcess(process), readBufferSize, readerThreadName, watcherThreadName)
 
     init {
         require(readBufferSize > 0) { "readBufferSize must be positive, got $readBufferSize" }

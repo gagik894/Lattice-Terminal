@@ -202,14 +202,14 @@ open class TerminalBufferAttributeBenchmark : TerminalRenderFrameConsumer {
 @Warmup(iterations = 3, time = 1, timeUnit = TimeUnit.SECONDS)
 @Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
 @Fork(1)
-open class TerminalBufferClusterBenchmark : io.github.jvterm.render.api.TerminalRenderFrameConsumer {
+open class TerminalBufferClusterBenchmark : TerminalRenderFrameConsumer {
     @Param("0", "1", "100")
     var clusterPercent: Int = 0
 
     private val width = 80
     private val height = 24
     private lateinit var buffer: TerminalBufferApi
-    private lateinit var reader: io.github.jvterm.render.api.TerminalRenderFrameReader
+    private lateinit var reader: TerminalRenderFrameReader
     private lateinit var codeWords: IntArray
     private lateinit var attrWords: LongArray
     private lateinit var flags: IntArray
@@ -222,7 +222,7 @@ open class TerminalBufferClusterBenchmark : io.github.jvterm.render.api.Terminal
     @Setup
     open fun setup() {
         buffer = TerminalBuffers.create(width, height)
-        reader = buffer as io.github.jvterm.render.api.TerminalRenderFrameReader
+        reader = buffer as TerminalRenderFrameReader
         codeWords = IntArray(width)
         attrWords = LongArray(width)
         flags = IntArray(width)
@@ -239,7 +239,7 @@ open class TerminalBufferClusterBenchmark : io.github.jvterm.render.api.Terminal
         }
     }
 
-    override fun accept(frame: io.github.jvterm.render.api.TerminalRenderFrame) {
+    override fun accept(frame: TerminalRenderFrame) {
         if (runWithDataSink) {
             for (row in 0 until height) {
                 frame.copyLine(

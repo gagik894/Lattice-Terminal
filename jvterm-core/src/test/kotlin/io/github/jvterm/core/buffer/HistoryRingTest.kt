@@ -89,9 +89,9 @@ class HistoryRingTest {
             l3.setCell(0, 'C'.code, 0)
 
             // Expect logical index 0 = Oldest ('A')
-            assertEquals(l1, ring[0], "Index 0 should be the first pushed line")
-            assertEquals(l2, ring[1], "Index 1 should be the second pushed line")
-            assertEquals(l3, ring[2], "Index 2 should be the third pushed line")
+            assertSame(l1, ring[0], "Index 0 should be the first pushed line")
+            assertSame(l2, ring[1], "Index 1 should be the second pushed line")
+            assertSame(l3, ring[2], "Index 2 should be the third pushed line")
         }
     }
 
@@ -120,9 +120,9 @@ class HistoryRingTest {
             assertEquals(3, ring.size, "Size should remain at capacity")
 
             // Check logical indices
-            assertEquals(b, ring[0], "Index 0 should now be B (oldest)")
-            assertEquals(c, ring[1], "Index 1 should now be C")
-            assertEquals(d, ring[2], "Index 2 should now be D (newest)")
+            assertSame(b, ring[0], "Index 0 should now be B (oldest)")
+            assertSame(c, ring[1], "Index 1 should now be C")
+            assertSame(d, ring[2], "Index 2 should now be D (newest)")
         }
 
         @Test
@@ -246,9 +246,9 @@ class HistoryRingTest {
             ring.rotateUp(1, 1)
 
             // After rotating single-line region [1,1], nothing should change
-            assertEquals(l0, ring[0])
-            assertEquals(l1, ring[1])
-            assertEquals(l2, ring[2])
+            assertSame(l0, ring[0])
+            assertSame(l1, ring[1])
+            assertSame(l2, ring[2])
         }
 
         @Test
@@ -267,10 +267,10 @@ class HistoryRingTest {
             // Rotate up [1, 2]: l2 moves to l1, l1 moves to position 2
             ring.rotateUp(1, 2)
 
-            assertEquals(l0, ring[0], "Line at 0 should remain unchanged")
-            assertEquals(l2, ring[1], "Line at 1 should be from old position 2")
-            assertEquals(l1, ring[2], "Line at 2 should be from old position 1")
-            assertEquals(l3, ring[3], "Line at 3 should remain unchanged")
+            assertSame(l0, ring[0], "Line at 0 should remain unchanged")
+            assertSame(l2, ring[1], "Line at 1 should be from old position 2")
+            assertSame(l1, ring[2], "Line at 2 should be from old position 1")
+            assertSame(l3, ring[3], "Line at 3 should remain unchanged")
         }
 
         @Test
@@ -286,9 +286,9 @@ class HistoryRingTest {
 
             ring.rotateUp(0, 2)
 
-            assertEquals(l1, ring[0], "Index 0 should now have old l1")
-            assertEquals(l2, ring[1], "Index 1 should now have old l2")
-            assertEquals(l0, ring[2], "Index 2 should now have old l0")
+            assertSame(l1, ring[0], "Index 0 should now have old l1")
+            assertSame(l2, ring[1], "Index 1 should now have old l2")
+            assertSame(l0, ring[2], "Index 2 should now have old l0")
         }
 
         @Test
@@ -326,9 +326,9 @@ class HistoryRingTest {
             ring.rotateUp(0, 2)
 
             // After 3 rotations on 3-element range, should return to original
-            assertEquals(l0, ring[0])
-            assertEquals(l1, ring[1])
-            assertEquals(l2, ring[2])
+            assertSame(l0, ring[0])
+            assertSame(l1, ring[1])
+            assertSame(l2, ring[2])
         }
     }
 
@@ -349,9 +349,9 @@ class HistoryRingTest {
             ring.rotateDown(1, 1)
 
             // After rotating single-line region [1,1], nothing should change
-            assertEquals(l0, ring[0])
-            assertEquals(l1, ring[1])
-            assertEquals(l2, ring[2])
+            assertSame(l0, ring[0])
+            assertSame(l1, ring[1])
+            assertSame(l2, ring[2])
         }
 
         @Test
@@ -370,10 +370,10 @@ class HistoryRingTest {
             // Rotate down [1, 2]: l1 moves to l2, l2 moves to position 1
             ring.rotateDown(1, 2)
 
-            assertEquals(l0, ring[0], "Line at 0 should remain unchanged")
-            assertEquals(l2, ring[1], "Line at 1 should be from old position 2")
-            assertEquals(l1, ring[2], "Line at 2 should be from old position 1")
-            assertEquals(l3, ring[3], "Line at 3 should remain unchanged")
+            assertSame(l0, ring[0], "Line at 0 should remain unchanged")
+            assertSame(l2, ring[1], "Line at 1 should be from old position 2")
+            assertSame(l1, ring[2], "Line at 2 should be from old position 1")
+            assertSame(l3, ring[3], "Line at 3 should remain unchanged")
         }
 
         @Test
@@ -389,9 +389,9 @@ class HistoryRingTest {
 
             ring.rotateDown(0, 2)
 
-            assertEquals(l2, ring[0], "Index 0 should now have old l2")
-            assertEquals(l0, ring[1], "Index 1 should now have old l0")
-            assertEquals(l1, ring[2], "Index 2 should now have old l1")
+            assertSame(l2, ring[0], "Index 0 should now have old l2")
+            assertSame(l0, ring[1], "Index 1 should now have old l0")
+            assertSame(l1, ring[2], "Index 2 should now have old l1")
         }
 
         @Test
@@ -426,9 +426,9 @@ class HistoryRingTest {
             ring.rotateDown(0, 2)
             ring.rotateDown(0, 2)
 
-            assertEquals(l1, ring[0])
-            assertEquals(l2, ring[1])
-            assertEquals(l0, ring[2])
+            assertSame(l1, ring[0])
+            assertSame(l2, ring[1])
+            assertSame(l0, ring[2])
         }
     }
 
@@ -447,10 +447,10 @@ class HistoryRingTest {
             ring.rotateUp(0, 3)
             ring.rotateDown(0, 3)
 
-            assertEquals(l0, ring[0])
-            assertEquals(l1, ring[1])
-            assertEquals(l2, ring[2])
-            assertEquals(l3, ring[3])
+            assertSame(l0, ring[0])
+            assertSame(l1, ring[1])
+            assertSame(l2, ring[2])
+            assertSame(l3, ring[3])
         }
 
         @Test
@@ -465,10 +465,10 @@ class HistoryRingTest {
             ring.rotateDown(0, 3)
             ring.rotateUp(0, 3)
 
-            assertEquals(l0, ring[0])
-            assertEquals(l1, ring[1])
-            assertEquals(l2, ring[2])
-            assertEquals(l3, ring[3])
+            assertSame(l0, ring[0])
+            assertSame(l1, ring[1])
+            assertSame(l2, ring[2])
+            assertSame(l3, ring[3])
         }
     }
 
@@ -520,9 +520,9 @@ class HistoryRingTest {
 
             // Push when full: l1 is recycled, becomes l3
             // Result: [l2, l0, l3]
-            assertEquals(l2, ring[0])
-            assertEquals(l0, ring[1])
-            assertEquals(l3, ring[2])
+            assertSame(l2, ring[0])
+            assertSame(l0, ring[1])
+            assertSame(l3, ring[2])
             assertEquals(3, ring.size)
         }
 
@@ -550,7 +550,7 @@ class HistoryRingTest {
             ring.rotateDown(0, 0)
 
             assertEquals(1, ring.size)
-            assertEquals(l0, ring[0])
+            assertSame(l0, ring[0])
         }
     }
 }

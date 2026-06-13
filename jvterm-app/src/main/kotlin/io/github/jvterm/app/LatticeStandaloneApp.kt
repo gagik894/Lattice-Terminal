@@ -23,13 +23,13 @@ import javax.swing.SwingUtilities
  */
 fun main(args: Array<String>) {
     SwingUtilities.invokeLater {
-      io.github.jvterm.app.LatticeStandaloneApp.start(args.toList())
+      LatticeStandaloneApp.start(args.toList())
     }
 }
 
 private object LatticeStandaloneApp {
     fun start(args: List<String>) {
-      io.github.jvterm.app.StandaloneLookAndFeel.install()
+      StandaloneLookAndFeel.install()
 
         val settings = io.github.jvterm.app.config.StandaloneTerminalSettings()
       io.github.jvterm.app.ui.LatticeChrome

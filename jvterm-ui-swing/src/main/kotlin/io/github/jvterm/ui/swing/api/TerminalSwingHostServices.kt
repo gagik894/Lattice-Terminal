@@ -63,7 +63,7 @@ fun interface TerminalUiDispatcher {
  * scrollback viewport changes.
  */
 data class TerminalSwingHostServices(
-    val uiDispatcher: TerminalUiDispatcher = TerminalUiDispatcher.SWING,
+    val uiDispatcher: TerminalUiDispatcher = SWING,
     val clipboardHandler: TerminalClipboardHandler = TerminalClipboardHandler.SYSTEM,
     val hyperlinkHandler: TerminalHyperlinkHandler = TerminalHyperlinkHandler.SYSTEM,
     val viewportListener: TerminalViewportListener = TerminalViewportListener.NONE,
