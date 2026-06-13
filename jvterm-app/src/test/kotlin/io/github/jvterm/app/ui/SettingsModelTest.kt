@@ -29,7 +29,7 @@ class SettingsModelTest {
 
     @BeforeTest
     fun setUp() {
-        tempFile = Files.createTempFile("lattice-settings-test", ".toml")
+        tempFile = Files.createTempFile("jvterm-settings-test", ".toml")
         val manager = TerminalWorkspaceConfigManager(tempFile)
         settings = JvTermSettings(manager)
         registry = TerminalProfileRegistry(executableExists = { false })

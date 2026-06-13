@@ -19,7 +19,7 @@ import java.nio.file.Path
 import javax.swing.SwingUtilities
 
 /**
- * Starts the Lattice standalone terminal application.
+ * Starts the JvTerm standalone terminal application.
  */
 fun main(args: Array<String>) {
     SwingUtilities.invokeLater {

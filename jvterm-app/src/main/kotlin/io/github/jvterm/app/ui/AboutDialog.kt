@@ -23,12 +23,12 @@ import javax.swing.*
 import javax.swing.border.EmptyBorder
 
 /**
- * A clean, professional about dialog showcasing the Lattice Terminal brand,
+ * A clean, professional about dialog showcasing the JvTerm Terminal brand,
  * version information, and developer credits.
  */
 internal class AboutDialog(
     parent: JFrame,
-) : JDialog(parent, "About Lattice Terminal", true) {
+) : JDialog(parent, "About JvTerm Terminal", true) {
     init {
         contentPane = buildAboutPanel()
         defaultCloseOperation = DISPOSE_ON_CLOSE
@@ -96,7 +96,7 @@ internal class AboutDialog(
             }
 
         val titleLabel =
-            JLabel("Lattice Terminal").apply {
+            JLabel("JvTerm Terminal").apply {
                 font = Font("Dialog", Font.BOLD, 20)
                 foreground = Chrome.textPrimary
             }
