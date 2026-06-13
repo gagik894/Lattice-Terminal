@@ -16,8 +16,8 @@
 package io.github.jvterm.app.ui
 
 import com.formdev.flatlaf.extras.FlatSVGIcon
-import com.gagik.terminal.workspace.TerminalProfileRegistry
 import io.github.jvterm.app.config.StandaloneTerminalSettings
+import io.github.jvterm.workspace.TerminalProfileRegistry
 import java.awt.CardLayout
 import java.awt.Dimension
 import java.awt.event.WindowAdapter
@@ -71,7 +71,7 @@ internal class LatticeWindowFactory(
         // Builds a fresh configured profile from the current settings each time
         // a new default tab or split is opened. This means shell changes in the
         // Settings dialog take effect on the very next new tab without a restart.
-        val defaultProfileProvider: () -> com.gagik.terminal.workspace.TerminalProfile = {
+        val defaultProfileProvider: () -> io.github.jvterm.workspace.TerminalProfile = {
             profileRegistry.configuredProfile(
                 shellPath = settings.shellPath,
                 workingDirectory =
@@ -130,9 +130,9 @@ internal class LatticeWindowFactory(
         invoker: java.awt.Component,
         x: Int,
         y: Int,
-        profiles: List<com.gagik.terminal.workspace.TerminalProfile>,
+        profiles: List<io.github.jvterm.workspace.TerminalProfile>,
         tabManager: LatticeTabManager,
-        defaultProfileProvider: () -> com.gagik.terminal.workspace.TerminalProfile,
+        defaultProfileProvider: () -> io.github.jvterm.workspace.TerminalProfile,
     ) {
         val popup =
             JPopupMenu().apply {

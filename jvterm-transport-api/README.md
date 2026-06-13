@@ -48,7 +48,7 @@ To maintain clean architecture and prevent coupling, the following rules apply t
 
 ## Core Interfaces
 
-The module consists of two main, dependency-free interfaces under the `com.gagik.terminal.transport` package:
+The module consists of two main, dependency-free interfaces under the `io.github.jvterm.transport` package:
 
 ```mermaid
 classDiagram

@@ -132,9 +132,9 @@ Rather than repainting the entire terminal component, `TerminalSwingRepaintPlann
 To place a functional, interactive terminal component in your Swing layout:
 
 ```kotlin
-import com.gagik.terminal.ui.swing.api.TerminalSwingTerminal
-import com.gagik.terminal.ui.swing.settings.TerminalSwingSettings
-import com.gagik.terminal.ui.swing.settings.TerminalTheme
+import io.github.jvterm.ui.swing.api.TerminalSwingTerminal
+import io.github.jvterm.ui.swing.settings.TerminalSwingSettings
+import io.github.jvterm.ui.swing.settings.TerminalTheme
 import java.awt.BorderLayout
 import javax.swing.JFrame
 import javax.swing.JPanel

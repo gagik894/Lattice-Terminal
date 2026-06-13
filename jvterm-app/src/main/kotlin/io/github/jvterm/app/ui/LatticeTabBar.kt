@@ -15,7 +15,7 @@
  */
 package io.github.jvterm.app.ui
 
-import com.gagik.terminal.workspace.TerminalProfileKind
+import io.github.jvterm.workspace.TerminalProfileKind
 import java.awt.*
 import java.awt.event.*
 import java.awt.geom.Path2D

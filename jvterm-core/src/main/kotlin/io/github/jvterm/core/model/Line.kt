@@ -468,7 +468,7 @@ internal class Line(
 }
 
 /**
- * A read-only, zero-allocation sentinel returned by [com.gagik.terminal.buffer.TerminalBufferApi.getLine]
+ * A read-only, zero-allocation sentinel returned by [io.github.jvterm.buffer.TerminalBufferApi.getLine]
  * when the requested row is out of bounds. Avoids null checks in the renderer.
  */
 internal object VoidLine : TerminalLineApi {

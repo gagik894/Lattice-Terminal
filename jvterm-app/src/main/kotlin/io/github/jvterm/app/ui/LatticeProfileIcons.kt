@@ -16,7 +16,7 @@
 package io.github.jvterm.app.ui
 
 import com.formdev.flatlaf.extras.FlatSVGIcon
-import com.gagik.terminal.workspace.TerminalProfileKind
+import io.github.jvterm.workspace.TerminalProfileKind
 import java.awt.AlphaComposite
 import java.awt.Graphics2D
 import java.util.*

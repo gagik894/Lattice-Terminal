@@ -15,8 +15,8 @@
  */
 package io.github.jvterm.app.ui
 
-import com.gagik.terminal.ui.swing.api.TerminalSwingTerminal
-import com.gagik.terminal.ui.swing.api.TerminalViewportListener
+import io.github.jvterm.ui.swing.api.TerminalSwingTerminal
+import io.github.jvterm.ui.swing.api.TerminalViewportListener
 import java.awt.event.AdjustmentEvent
 import javax.swing.JScrollBar
 

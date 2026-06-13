@@ -15,9 +15,9 @@
  */
 package io.github.jvterm.app.ui
 
-import com.gagik.terminal.workspace.TerminalProfileRegistry
-import com.gagik.terminal.workspace.config.TerminalWorkspaceConfigManager
 import io.github.jvterm.app.config.StandaloneTerminalSettings
+import io.github.jvterm.workspace.TerminalProfileRegistry
+import io.github.jvterm.workspace.config.TerminalWorkspaceConfigManager
 import java.nio.file.Files
 import kotlin.test.*
 

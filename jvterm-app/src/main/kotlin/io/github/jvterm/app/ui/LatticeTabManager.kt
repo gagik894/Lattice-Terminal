@@ -15,8 +15,8 @@
  */
 package io.github.jvterm.app.ui
 
-import com.gagik.terminal.workspace.*
 import io.github.jvterm.app.config.StandaloneTerminalSettings
+import io.github.jvterm.workspace.*
 import java.awt.*
 import java.awt.event.InputEvent
 import java.awt.event.KeyEvent

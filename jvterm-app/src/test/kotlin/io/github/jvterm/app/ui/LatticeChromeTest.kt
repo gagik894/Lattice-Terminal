@@ -15,7 +15,7 @@
  */
 package io.github.jvterm.app.ui
 
-import com.gagik.terminal.ui.swing.settings.TerminalTheme
+import io.github.jvterm.ui.swing.settings.TerminalTheme
 import javax.swing.UIManager
 import kotlin.test.Test
 import kotlin.test.assertEquals

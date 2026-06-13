@@ -97,9 +97,9 @@ One of Lattice's greatest strengths is how easily it integrates into existing de
 ```kotlin
 import io.github.jvterm.pty.TerminalPtySessions
 import io.github.jvterm.pty.TerminalPtyOptions
-import com.gagik.terminal.ui.swing.api.TerminalSwingTerminal
-import com.gagik.terminal.ui.swing.settings.TerminalSwingSettings
-import com.gagik.terminal.ui.swing.settings.TerminalTheme
+import io.github.jvterm.ui.swing.api.TerminalSwingTerminal
+import io.github.jvterm.ui.swing.settings.TerminalSwingSettings
+import io.github.jvterm.ui.swing.settings.TerminalTheme
 import java.awt.BorderLayout
 import javax.swing.JFrame
 import javax.swing.JPanel

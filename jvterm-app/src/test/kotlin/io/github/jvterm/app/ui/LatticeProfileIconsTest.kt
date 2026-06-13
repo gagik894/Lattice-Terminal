@@ -15,7 +15,7 @@
  */
 package io.github.jvterm.app.ui
 
-import com.gagik.terminal.workspace.TerminalProfileKind
+import io.github.jvterm.workspace.TerminalProfileKind
 import java.awt.image.BufferedImage
 import kotlin.test.Test
 import kotlin.test.assertTrue

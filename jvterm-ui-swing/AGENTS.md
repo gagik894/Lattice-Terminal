@@ -1,6 +1,6 @@
 # Terminal UI Swing Agent Guide
 
-`terminal-ui-swing` owns the reusable Swing terminal UI. It converts terminal
+`jvterm-ui-swing` owns the reusable Swing terminal UI. It converts terminal
 render frames and user input into a desktop component without knowing which
 transport produced the byte stream.
 
@@ -9,11 +9,11 @@ host, and other Swing hosts.
 
 ## Package Layout
 
-- `com.gagik.terminal.ui.swing.api`: public host-facing Swing component APIs.
-- `com.gagik.terminal.ui.swing.settings`: public immutable settings and palette
+- `io.github.jvterm.ui.swing.api`: public host-facing Swing component APIs.
+- `io.github.jvterm.ui.swing.settings`: public immutable settings and palette
   snapshots, plus internal frozen metrics.
-- `com.gagik.terminal.ui.swing.input`: Swing-to-terminal input event adapters.
-- `com.gagik.terminal.ui.swing.render`: Java2D painters and renderer-local
+- `io.github.jvterm.ui.swing.input`: Swing-to-terminal input event adapters.
+- `io.github.jvterm.ui.swing.render`: Java2D painters and renderer-local
   primitive caches.
 
 Keep reusable public surfaces narrow. Implementation packages should stay
@@ -21,7 +21,7 @@ internal unless hosts genuinely need the type as part of the UI contract.
 
 ## Responsibilities
 
-`terminal-ui-swing` owns:
+`jvterm-ui-swing` owns:
 
 - public Swing terminal component APIs.
 - internal Swing component layering.
@@ -41,21 +41,21 @@ interfaces rather than assembling internal painting/cursor pieces themselves.
 
 ## Allowed Dependencies
 
-`terminal-ui-swing` may depend on:
+`jvtetrm-ui-swing` may depend on:
 
-- `terminal-session`
-- `terminal-input`
-- `terminal-render-api`
-- `terminal-render-cache`
+- `jvtetrm-session`
+- `jvtetrm-input`
+- `jvtetrm-render-api`
+- `jvtetrm-render-cache`
 
 It may also use standard JDK/Swing/AWT APIs.
 
 ## Forbidden Dependencies
 
-`terminal-ui-swing` must not depend on:
+`jvtetrm-ui-swing` must not depend on:
 
 - IntelliJ Platform APIs.
-- `terminal-pty`.
+- `jvtetrm-pty`.
 - SSH, WebSocket, or other transport implementations.
 - standalone application modules.
 - plugin modules.
@@ -64,7 +64,7 @@ Transport selection belongs outside this module.
 
 ## Boundary Rules
 
-`terminal-ui-swing` must not:
+`jvtetrm-ui-swing` must not:
 
 - parse ANSI, VT, OSC, DCS, or terminal output protocols.
 - implement terminal grid mutation rules.
@@ -191,7 +191,7 @@ Examples:
 - Standalone host can provide window assembly, system clipboard, system
   font fallback, local config, PTY startup, and app lifecycle.
 
-Those host concepts must enter `terminal-ui-swing` only through small
+Those host concepts must enter `jvtetrm-ui-swing` only through small
 interfaces.
 
 ## Testing

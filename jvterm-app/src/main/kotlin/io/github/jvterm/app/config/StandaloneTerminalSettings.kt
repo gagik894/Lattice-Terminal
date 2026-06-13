@@ -15,8 +15,8 @@
  */
 package io.github.jvterm.app.config
 
-import com.gagik.terminal.ui.swing.settings.TerminalSwingSettings
-import com.gagik.terminal.ui.swing.settings.TerminalTheme
+import io.github.jvterm.ui.swing.settings.TerminalSwingSettings
+import io.github.jvterm.ui.swing.settings.TerminalTheme
 import io.github.jvterm.workspace.config.TerminalConfig
 import io.github.jvterm.workspace.config.TerminalWorkspaceConfigManager
 import java.awt.Font
@@ -34,7 +34,7 @@ internal class StandaloneTerminalSettings(
 ) {
     private var config: TerminalConfig = configManager.load()
 
-    var theme: TerminalTheme
+    var theme: io.github.jvterm.ui.swing.settings.TerminalTheme
         get() =
             TerminalTheme.entries.firstOrNull {
                 it.name.lowercase(Locale.ROOT).replace('_', '-') == config.theme

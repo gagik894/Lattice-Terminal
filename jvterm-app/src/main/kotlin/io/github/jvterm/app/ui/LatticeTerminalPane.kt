@@ -15,10 +15,10 @@
  */
 package io.github.jvterm.app.ui
 
-import com.gagik.terminal.ui.swing.api.TerminalSwingHostServices
-import com.gagik.terminal.ui.swing.api.TerminalSwingTerminal
-import com.gagik.terminal.workspace.TerminalWorkspaceTab
 import io.github.jvterm.app.config.StandaloneTerminalSettings
+import io.github.jvterm.ui.swing.api.TerminalSwingHostServices
+import io.github.jvterm.ui.swing.api.TerminalSwingTerminal
+import io.github.jvterm.workspace.TerminalWorkspaceTab
 import java.awt.Adjustable
 import java.awt.BorderLayout
 import javax.swing.JPanel
