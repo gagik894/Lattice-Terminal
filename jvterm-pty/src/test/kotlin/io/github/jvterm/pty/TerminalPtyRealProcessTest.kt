@@ -27,7 +27,7 @@ class TerminalPtyRealProcessTest {
         assumeNativePty()
 
         val session =
-            TerminalPtySessions.start(
+            TerminalSessions.localPty(
                 TerminalPtyOptions(
                     command = printCommand("hello"),
                     workingDirectory = Path.of(System.getProperty("user.home")),
@@ -48,7 +48,7 @@ class TerminalPtyRealProcessTest {
         assumeNativePty()
 
         val session =
-            TerminalPtySessions.start(
+            TerminalSessions.localPty(
                 TerminalPtyOptions(
                     command = sleepCommand(seconds = 2),
                     columns = 40,
@@ -68,7 +68,7 @@ class TerminalPtyRealProcessTest {
         assumeNativePty()
 
         val session =
-            TerminalPtySessions.start(
+            TerminalSessions.localPty(
                 TerminalPtyOptions(
                     command = sleepCommand(seconds = 5),
                     columns = 40,
@@ -86,7 +86,7 @@ class TerminalPtyRealProcessTest {
         assumeNativePty()
 
         val session =
-            TerminalPtySessions.start(
+            TerminalSessions.localPty(
                 TerminalPtyOptions(
                     command = exitCommand(7),
                     columns = 40,
@@ -105,7 +105,7 @@ class TerminalPtyRealProcessTest {
 
         val expectedCount = 12_000
         val session =
-            TerminalPtySessions.start(
+            TerminalSessions.localPty(
                 TerminalPtyOptions(
                     command = repeatCommand('x', expectedCount),
                     columns = 200,

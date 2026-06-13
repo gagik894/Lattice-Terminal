@@ -17,8 +17,8 @@ package io.github.jvterm.core.buffer.impl
 
 import io.github.jvterm.core.codec.AttributeCodec
 import io.github.jvterm.core.engine.MutationEngine
-import io.github.jvterm.core.model.AttributeColor
-import io.github.jvterm.core.model.Attributes
+import io.github.jvterm.core.model.CellAttributes
+import io.github.jvterm.core.model.CellColor
 import io.github.jvterm.core.model.UnderlineStyle
 import io.github.jvterm.core.state.TerminalState
 import org.junit.jupiter.api.Assertions.assertAll
@@ -56,9 +56,9 @@ class TerminalInspectorImplTest {
         mutation.printCodepoint('X'.code, 1)
 
         val expected =
-            Attributes(
-                foreground = AttributeColor.indexed(2),
-                background = AttributeColor.indexed(6),
+            CellAttributes(
+                foreground = CellColor.indexed(2),
+                background = CellColor.indexed(6),
                 bold = true,
                 italic = true,
                 underlineStyle = UnderlineStyle.NONE,

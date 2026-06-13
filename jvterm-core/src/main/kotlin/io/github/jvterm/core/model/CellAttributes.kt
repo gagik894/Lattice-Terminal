@@ -19,7 +19,7 @@ package io.github.jvterm.core.model
  * Public representation of cell attributes for UI/rendering.
  *
  * [foreground], [background], and [underlineColor] are renderer-facing color
- * descriptors. [underlineColor] uses [AttributeColor.DEFAULT] to mean "derive
+ * descriptors. [underlineColor] uses [CellColor.DEFAULT] to mean "derive
  * from the effective foreground color" unless the renderer has a different
  * product policy.
  *
@@ -41,10 +41,10 @@ package io.github.jvterm.core.model
  * @property selectiveEraseProtected Whether DEC selective erase skips the cell.
  * @property hyperlinkId OSC 8 hyperlink handle; `0` means no hyperlink.
  */
-data class Attributes(
-    val foreground: AttributeColor = AttributeColor.DEFAULT,
-    val background: AttributeColor = AttributeColor.DEFAULT,
-    val underlineColor: AttributeColor = AttributeColor.DEFAULT,
+data class CellAttributes(
+    val foreground: CellColor = CellColor.DEFAULT,
+    val background: CellColor = CellColor.DEFAULT,
+    val underlineColor: CellColor = CellColor.DEFAULT,
     val bold: Boolean = false,
     val faint: Boolean = false,
     val italic: Boolean = false,
@@ -65,24 +65,24 @@ data class Attributes(
 /**
  * Renderer-facing color descriptor for a cell attribute.
  *
- * [value] is unused for [AttributeColorKind.DEFAULT], is `0..255` for
- * [AttributeColorKind.INDEXED], and is `0xRRGGBB` for [AttributeColorKind.RGB].
+ * [value] is unused for [CellColorKind.DEFAULT], is `0..255` for
+ * [CellColorKind.INDEXED], and is `0xRRGGBB` for [CellColorKind.RGB].
  */
-data class AttributeColor(
-    val kind: AttributeColorKind,
+data class CellColor(
+    val kind: CellColorKind,
     val value: Int = 0,
 ) {
     init {
         when (kind) {
-            AttributeColorKind.DEFAULT ->
+            CellColorKind.DEFAULT ->
                 require(value == 0) {
                     "default color value must be 0, was $value"
                 }
-            AttributeColorKind.INDEXED ->
+            CellColorKind.INDEXED ->
                 require(value in 0..255) {
                     "indexed color value must be in 0..255, was $value"
                 }
-            AttributeColorKind.RGB ->
+            CellColorKind.RGB ->
                 require(value in 0..0xFF_FF_FF) {
                     "RGB color value must be in 0x000000..0xFFFFFF, was $value"
                 }
@@ -91,11 +91,11 @@ data class AttributeColor(
 
     companion object {
         /** Terminal default color descriptor. */
-        val DEFAULT = AttributeColor(AttributeColorKind.DEFAULT)
+        val DEFAULT = CellColor(CellColorKind.DEFAULT)
 
         private val INDEXED_COLORS =
             Array(256) { index ->
-                AttributeColor(AttributeColorKind.INDEXED, index)
+                CellColor(CellColorKind.INDEXED, index)
             }
 
         /**
@@ -104,7 +104,7 @@ data class AttributeColor(
          * @param index Palette index in `0..255`.
          * @return Indexed color descriptor.
          */
-        fun indexed(index: Int): AttributeColor {
+        fun indexed(index: Int): CellColor {
             require(index in 0..255) { "indexed color value must be in 0..255, was $index" }
             return INDEXED_COLORS[index]
         }
@@ -121,11 +121,11 @@ data class AttributeColor(
             red: Int,
             green: Int,
             blue: Int,
-        ): AttributeColor {
+        ): CellColor {
             require(red in 0..255) { "red must be in 0..255, was $red" }
             require(green in 0..255) { "green must be in 0..255, was $green" }
             require(blue in 0..255) { "blue must be in 0..255, was $blue" }
-            return AttributeColor(AttributeColorKind.RGB, (red shl 16) or (green shl 8) or blue)
+            return CellColor(CellColorKind.RGB, (red shl 16) or (green shl 8) or blue)
         }
 
         /**
@@ -134,12 +134,12 @@ data class AttributeColor(
          * @param rgb Packed RGB value in `0x000000..0xFFFFFF`.
          * @return RGB color descriptor.
          */
-        fun rgb(rgb: Int): AttributeColor = AttributeColor(AttributeColorKind.RGB, rgb)
+        fun rgb(rgb: Int): CellColor = CellColor(CellColorKind.RGB, rgb)
     }
 }
 
-/** Kind tag for [AttributeColor]. */
-enum class AttributeColorKind {
+/** Kind tag for [CellColor]. */
+enum class CellColorKind {
     /** Terminal default color. */
     DEFAULT,
 

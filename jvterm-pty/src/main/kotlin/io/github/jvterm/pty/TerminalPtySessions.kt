@@ -22,7 +22,7 @@ import java.io.IOException
 /**
  * Factory for local PTY-backed terminal sessions.
  */
-object TerminalPtySessions {
+internal object TerminalPtySessions {
     /**
      * Starts a PTY process and connects it to parser, core, host, and
      * input encoding components.
@@ -35,8 +35,6 @@ object TerminalPtySessions {
      * @return running terminal session.
      * @throws IOException when PTY4J cannot start the process.
      */
-    @JvmStatic
-    @JvmOverloads
     @Throws(IOException::class)
     fun start(options: TerminalPtyOptions = TerminalPtyOptions()): TerminalSession = start(options, Pty4jTerminalProcessFactory)
 

@@ -17,8 +17,8 @@ package io.github.jvterm.core.buffer.impl
 
 import io.github.jvterm.core.api.TerminalResponseChannel
 import io.github.jvterm.core.codec.AttributeCodec
-import io.github.jvterm.core.model.AttributeColor
-import io.github.jvterm.core.model.AttributeColorKind
+import io.github.jvterm.core.model.CellColor
+import io.github.jvterm.core.model.CellColorKind
 import io.github.jvterm.core.model.UnderlineStyle
 import io.github.jvterm.core.state.TerminalState
 
@@ -387,9 +387,9 @@ internal class TerminalResponseChannelImpl(
                 attrs.strikethrough ||
                 attrs.overline ||
                 attrs.underlineStyle != UnderlineStyle.NONE ||
-                attrs.foreground != AttributeColor.DEFAULT ||
-                attrs.background != AttributeColor.DEFAULT ||
-                attrs.underlineColor != AttributeColor.DEFAULT
+                attrs.foreground != CellColor.DEFAULT ||
+                attrs.background != CellColor.DEFAULT ||
+                attrs.underlineColor != CellColor.DEFAULT
 
         if (!hasAttr) {
             return "0m"
@@ -421,13 +421,13 @@ internal class TerminalResponseChannelImpl(
     /** Appends foreground or background SGR codes for the given [color]. */
     private fun appendColorSgr(
         list: MutableList<String>,
-        color: AttributeColor,
+        color: CellColor,
         base8: Int,
         base16: Int,
         extBase: Int,
     ) {
         when (color.kind) {
-            AttributeColorKind.INDEXED -> {
+            CellColorKind.INDEXED -> {
                 val idx = color.value
                 if (idx < 8) {
                     list.add((base8 + idx).toString())
@@ -437,32 +437,32 @@ internal class TerminalResponseChannelImpl(
                     list.add("$extBase;5;$idx")
                 }
             }
-            AttributeColorKind.RGB -> {
+            CellColorKind.RGB -> {
                 val r = (color.value ushr 16) and 0xFF
                 val g = (color.value ushr 8) and 0xFF
                 val b = color.value and 0xFF
                 list.add("$extBase;2;$r;$g;$b")
             }
-            AttributeColorKind.DEFAULT -> {}
+            CellColorKind.DEFAULT -> {}
         }
     }
 
     /** Appends underline color SGR codes (58;5;N or 58;2;R;G;B). */
     private fun appendUnderlineColorSgr(
         list: MutableList<String>,
-        color: AttributeColor,
+        color: CellColor,
     ) {
         when (color.kind) {
-            AttributeColorKind.INDEXED -> {
+            CellColorKind.INDEXED -> {
                 list.add("58;5;${color.value}")
             }
-            AttributeColorKind.RGB -> {
+            CellColorKind.RGB -> {
                 val r = (color.value ushr 16) and 0xFF
                 val g = (color.value ushr 8) and 0xFF
                 val b = color.value and 0xFF
                 list.add("58;2;$r;$g;$b")
             }
-            AttributeColorKind.DEFAULT -> {}
+            CellColorKind.DEFAULT -> {}
         }
     }
 

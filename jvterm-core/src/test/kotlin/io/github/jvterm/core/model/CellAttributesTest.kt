@@ -19,23 +19,23 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 
-@DisplayName("Attributes")
-class AttributesTest {
+@DisplayName("CellAttributes")
+class CellAttributesTest {
     @Test
     fun `indexed colors reuse cached descriptors`() {
         assertAll(
-            { assertSame(AttributeColor.indexed(0), AttributeColor.indexed(0)) },
-            { assertSame(AttributeColor.indexed(255), AttributeColor.indexed(255)) },
-            { assertEquals(AttributeColorKind.INDEXED, AttributeColor.indexed(42).kind) },
-            { assertEquals(42, AttributeColor.indexed(42).value) },
+            { assertSame(CellColor.indexed(0), CellColor.indexed(0)) },
+            { assertSame(CellColor.indexed(255), CellColor.indexed(255)) },
+            { assertEquals(CellColorKind.INDEXED, CellColor.indexed(42).kind) },
+            { assertEquals(42, CellColor.indexed(42).value) },
         )
     }
 
     @Test
     fun `indexed colors reject out-of-range palette indexes`() {
         assertAll(
-            { assertThrows(IllegalArgumentException::class.java) { AttributeColor.indexed(-1) } },
-            { assertThrows(IllegalArgumentException::class.java) { AttributeColor.indexed(256) } },
+            { assertThrows(IllegalArgumentException::class.java) { CellColor.indexed(-1) } },
+            { assertThrows(IllegalArgumentException::class.java) { CellColor.indexed(256) } },
         )
     }
 }

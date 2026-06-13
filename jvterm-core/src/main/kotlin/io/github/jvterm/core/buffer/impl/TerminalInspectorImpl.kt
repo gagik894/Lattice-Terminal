@@ -17,7 +17,7 @@ package io.github.jvterm.core.buffer.impl
 
 import io.github.jvterm.core.api.TerminalInspector
 import io.github.jvterm.core.codec.AttributeCodec
-import io.github.jvterm.core.model.Attributes
+import io.github.jvterm.core.model.CellAttributes
 import io.github.jvterm.core.model.Line
 import io.github.jvterm.core.state.TerminalState
 
@@ -27,7 +27,7 @@ internal class TerminalInspectorImpl(
     override fun getAttrAt(
         col: Int,
         row: Int,
-    ): Attributes? {
+    ): CellAttributes? {
         if (!state.dimensions.isValidCol(col) || !state.dimensions.isValidRow(row)) return null
         val line = visibleLine(row) ?: return null
         val rawAttr = if (line.width == 0) state.pen.currentAttr else line.getPackedAttr(col)

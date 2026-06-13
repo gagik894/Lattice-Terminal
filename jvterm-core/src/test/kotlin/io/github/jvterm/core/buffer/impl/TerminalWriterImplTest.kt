@@ -18,8 +18,8 @@ package io.github.jvterm.core.buffer.impl
 import io.github.jvterm.core.codec.AttributeCodec
 import io.github.jvterm.core.engine.CursorEngine
 import io.github.jvterm.core.engine.MutationEngine
-import io.github.jvterm.core.model.AttributeColor
-import io.github.jvterm.core.model.Attributes
+import io.github.jvterm.core.model.CellAttributes
+import io.github.jvterm.core.model.CellColor
 import io.github.jvterm.core.model.UnderlineStyle
 import io.github.jvterm.core.state.TerminalState
 import org.junit.jupiter.api.Assertions.*
@@ -40,9 +40,9 @@ class TerminalWriterImplTest {
             { assertEquals(0, state.cursor.row) },
             {
                 assertEquals(
-                    Attributes(
-                        foreground = AttributeColor.indexed(2),
-                        background = AttributeColor.indexed(6),
+                    CellAttributes(
+                        foreground = CellColor.indexed(2),
+                        background = CellColor.indexed(6),
                         bold = true,
                         italic = true,
                         underlineStyle = UnderlineStyle.NONE,
@@ -62,8 +62,8 @@ class TerminalWriterImplTest {
         val writer = TerminalWriterImpl(state, MutationEngine(state), CursorEngine(state))
 
         writer.setPenColors(
-            foreground = AttributeColor.rgb(0x10, 0x20, 0x30),
-            background = AttributeColor.indexed(231),
+            foreground = CellColor.rgb(0x10, 0x20, 0x30),
+            background = CellColor.indexed(231),
             underlineStyle = UnderlineStyle.SINGLE,
             inverse = true,
         )
@@ -76,8 +76,8 @@ class TerminalWriterImplTest {
             )
 
         assertAll(
-            { assertEquals(AttributeColor.rgb(0x10, 0x20, 0x30), unpacked.foreground) },
-            { assertEquals(AttributeColor.indexed(231), unpacked.background) },
+            { assertEquals(CellColor.rgb(0x10, 0x20, 0x30), unpacked.foreground) },
+            { assertEquals(CellColor.indexed(231), unpacked.background) },
             { assertEquals(UnderlineStyle.SINGLE, unpacked.underlineStyle) },
             { assertTrue(unpacked.inverse) },
         )

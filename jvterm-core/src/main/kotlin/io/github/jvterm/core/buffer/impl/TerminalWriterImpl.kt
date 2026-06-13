@@ -18,7 +18,7 @@ package io.github.jvterm.core.buffer.impl
 import io.github.jvterm.core.api.TerminalWriter
 import io.github.jvterm.core.engine.CursorEngine
 import io.github.jvterm.core.engine.MutationEngine
-import io.github.jvterm.core.model.AttributeColor
+import io.github.jvterm.core.model.CellColor
 import io.github.jvterm.core.model.UnderlineStyle
 import io.github.jvterm.core.state.TerminalState
 import io.github.jvterm.core.util.UnicodeWidth
@@ -190,9 +190,9 @@ internal class TerminalWriterImpl(
     }
 
     override fun setPenColors(
-        foreground: AttributeColor,
-        background: AttributeColor,
-        underlineColor: AttributeColor,
+        foreground: CellColor,
+        background: CellColor,
+        underlineColor: CellColor,
         bold: Boolean,
         faint: Boolean,
         italic: Boolean,
